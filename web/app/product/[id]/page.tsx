@@ -192,6 +192,10 @@ export default function ProductDetails({ params }: { params: { id: string } }) {
         const accountPubkey = params.id;
         fetchProductDetails(accountPubkey)
             .then((res) => {
+<<<<<<< HEAD
+                console.log('product details', res);
+=======
+>>>>>>> @{-1}
                 setVariables({
                     id: res?.id.toNumber(),
                     associatedId: "1234"
@@ -290,7 +294,11 @@ export default function ProductDetails({ params }: { params: { id: string } }) {
                                         </div>
                                     </div>
 
+<<<<<<< HEAD
+                                    <a onClick={buyListing} className="btn btn-white">
+=======
                                     <a onClick={buyListing} className="btn btn-white" style={{ justifyContent: "center" }}>
+>>>>>>> @{-1}
                                         INVEST IN FRACTIONS
                                     </a>
                                 </div>

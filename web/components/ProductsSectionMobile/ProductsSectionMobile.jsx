@@ -1,29 +1,33 @@
 import "@/styles/ProductsSectionMobile.scss";
 import { useEffect, useState } from "react";
 import { useRouter }from "next/navigation";
-// import products from "@/components/Utils/productData";
+import products from "@/components/Utils/productData";
 import { fetchProducts } from "@/hooks/fetchProducts";
 const ProductsSectionMobile = () => {
     const [products, setProducts] = useState({ available: [], comingSoon: [] });
     const router = useRouter();
-    useEffect(() => {
-        fetchProducts().then((products) => {
-            console.log('listed products', products)
-            setProducts(products);
-        });
-    }, []);
+
+    // useEffect(() => {
+    //     fetchProducts().then((products) => {
+    //         console.log('listed products', products)
+    //         setProducts(products);
+    //     });
+    // }, []);
+
     return (
         <section className="products ">
             {/* available */}
             <div className="products__available ">
                 <h2 className="display">Currently available</h2>
-
                 <div className="products__available__slider">
                     {products.available.map((item) => {
                         return (
                             <div
                                 key={item.id}
                                 className="products__available__slider__item"
+                                onClick={() => {
+                                    router.push(`/product/${item.accountPubkey.toString()}`)
+                                }}
                             >
                                 <img
                                     src="/assets/product-border-bg.png"
