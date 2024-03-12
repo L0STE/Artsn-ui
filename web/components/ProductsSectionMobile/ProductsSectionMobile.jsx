@@ -1,41 +1,24 @@
 import "@/styles/ProductsSectionMobile.scss";
 import { useEffect, useState } from "react";
 import { useRouter }from "next/navigation";
-<<<<<<< HEAD
-// import products from "@/components/Utils/productData";
+import products from "@/components/Utils/productData";
 import { fetchProducts } from "@/hooks/fetchProducts";
 const ProductsSectionMobile = () => {
     const [products, setProducts] = useState({ available: [], comingSoon: [] });
     const router = useRouter();
-    useEffect(() => {
-        fetchProducts().then((products) => {
-            console.log('listed products', products)
-            setProducts(products);
-        });
-    }, []);
-=======
-import products from "@/components/Utils/productData";
-import { fetchProducts } from "@/hooks/fetchProducts";
-const ProductsSectionMobile = () => {
-    // const [products, setProducts] = useState({ available: [], comingSoon: [] });
-    const router = useRouter();
+
     // useEffect(() => {
     //     fetchProducts().then((products) => {
     //         console.log('listed products', products)
     //         setProducts(products);
     //     });
     // }, []);
->>>>>>> @{-1}
+
     return (
         <section className="products ">
             {/* available */}
             <div className="products__available ">
-<<<<<<< HEAD
-                <h2 className="display-3 uppercase">Currently Available</h2>
-=======
                 <h2 className="display">Currently available</h2>
->>>>>>> @{-1}
-
                 <div className="products__available__slider">
                     {products.available.map((item) => {
                         return (
@@ -96,8 +79,8 @@ const ProductsSectionMobile = () => {
                                     <button 
                                         className="collect-btn"
                                         onClick={() => {
-                                            // router.push(`/product/${item.accountPubkey.toString()}`)
-                                            router.push(`/product/1`);
+                                            router.push(`/product/${item.accountPubkey.toString()}`)
+                                            // router.push(`/product/1`);
                                         }}
                                     >
                                         <p className="text">COLLECT NOW (TESTNET)</p>
