@@ -516,6 +516,40 @@ a {
   font-size: 2rem !important;
 }
 
+/* dashboard resets */
+.ant-menu {
+  & li:last-child {
+    margin-top: auto !important ;
+  }
+}
+
+.ant-menu-item-selected {
+  background-color: #17171b !important;
+}
+
+body
+  > div:nth-child(1)
+  > div
+  > div
+  > div.ant-layout.ant-layout-has-sider.css-dev-only-do-not-override-1xg9z9n
+  > aside
+  > div
+  > ul
+  > li:nth-child(4) {
+  position: absolute;
+  bottom: 0;
+}
+
+.ant-radio-button-checked {
+  background-color: #23b371;
+  overflow: hidden;
+  border: none !important;
+}
+
+.ant-radio-button-wrapper-checked {
+  border-color: #23b371 !important;
+}
+
 /* // global components */
 
 .hr {

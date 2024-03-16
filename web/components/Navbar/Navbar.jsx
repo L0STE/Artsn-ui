@@ -23,7 +23,7 @@ function Navbar() {
   const [buyerProfileExists, setBuyerProfileExists] = useState(false);
   const pathname = usePathname();
 
-  if (pathname === '/dashboard' || pathname === '/dashboard/') {
+  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
     return null;
   }
 
