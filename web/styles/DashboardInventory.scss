@@ -119,4 +119,18 @@
       }
     }
   }
+
+  &__body {
+    &__table {
+      &__action {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        & > .btn-table {
+          color: white;
+        }
+      }
+    }
+  }
 }

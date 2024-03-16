@@ -147,6 +147,7 @@ const DashboardLayout = ({ children }) => {
             padding: 24,
             minHeight: 280,
             backgroundColor: '#17171b',
+            overflowY: 'scroll',
           }}
         >
           {children}

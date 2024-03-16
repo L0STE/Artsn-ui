@@ -550,6 +550,110 @@ body
   border-color: #23b371 !important;
 }
 
+/* ant design table */
+
+.ant-table-cell {
+  background-color: #17171b !important;
+  color: #ffffff !important;
+  border-color: #3d3d3d !important;
+
+  &::before {
+    background-color: transparent !important;
+  }
+}
+
+.ant-table-column-sorter {
+  color: white !important;
+}
+
+.ant-table-column-sorter-up.active,
+.ant-table-column-sorter-down.active {
+  color: #03d181 !important;
+}
+
+/* dashbaord profile page */
+.ant-upload {
+  color: white;
+}
+
+.ant-upload-wrapper {
+  width: unset !important;
+  min-height: 110px;
+}
+
+.ant-input {
+  background-color: #17171b !important;
+  color: #fff !important;
+
+  border-color: #ffffff33 !important;
+
+  &::placeholder {
+    color: #585858 !important;
+  }
+}
+
+.ant-input-disabled {
+  color: #585858 !important;
+
+  background-color: #17171b !important;
+
+  border-color: #ffffff33 !important;
+
+  &::placeholder {
+    color: #585858 !important;
+  }
+}
+
+/* dashboard settings page */
+.ant-select-selector {
+  background-color: #17171b !important;
+  color: #fff !important;
+
+  border-color: #ffffff33 !important;
+}
+.ant-select-arrow {
+  color: #fff !important;
+}
+
+.ant-select-selection-item {
+  color: #fff !important;
+}
+
+.ant-select-item-option-content {
+  background-color: #17171b !important;
+  color: #fff !important;
+}
+
+.ant-select-selection-placeholder {
+  color: #fff !important;
+}
+
+.rc-virtual-list-holder-inner {
+  background-color: #17171b !important;
+  color: #fff !important;
+}
+
+.ant-select-dropdown {
+  background-color: #17171b !important;
+  color: #fff !important;
+}
+
+.ant-select-item-option-selected {
+  background-color: #1e1e22 !important;
+
+  .ant-select-item-option-content {
+    background-color: #1e1e22 !important;
+    color: #fff !important;
+  }
+}
+
+.ant-btn-default {
+  background-color: #17171b !important;
+  color: #fff !important;
+
+  border-color: #ffffff33 !important;
+}
+
 /* // global components */
 
 .hr {
@@ -705,6 +809,24 @@ body
 
   @media only screen and (max-width: 600px) {
     padding: 1rem 1.5rem !important;
+  }
+}
+
+.btn-table {
+  font-family: Inter;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+
+  border: 1px solid #23b371;
+  padding: 0.6rem 2.6rem;
+  border-radius: 1.2rem;
+  cursor: pointer;
+  background-color: transparent;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: rgba(3, 209, 129, 0.2);
   }
 }
 

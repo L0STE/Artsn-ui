@@ -2,10 +2,12 @@
 import React, { useState } from 'react';
 import '../../styles/DashboardInventory.scss';
 
-import { Radio } from 'antd';
+import { Radio, Table } from 'antd';
 import { FiArrowUpRight } from 'react-icons/fi';
 
 import { Line } from '@ant-design/plots';
+
+// Graph configurations
 
 const optionsWithDisabled = [
   { label: 'Weekly', value: 'Weekly' },
@@ -29,8 +31,6 @@ const config = {
 
   autoFit: true,
 
-  colors: ['#FF6B3B'],
-
   theme: 'classicDark',
   point: {
     shapeField: 'square',
@@ -43,8 +43,150 @@ const config = {
   },
   style: {
     lineWidth: 3,
+    lineFill: 'green',
   },
 };
+
+// table configurations and data
+const dataSource = [
+  {
+    key: 1,
+    no: 1,
+    item: 'Item 1',
+    title: 'Audemars Piguet Royal Oak Extra Thin, 2019',
+    value: 264,
+    amount: 7314,
+  },
+  {
+    key: 2,
+    no: 2,
+    item: 'Item 2',
+    title: 'Audemars Piguet Royal Oak Extra Thin, 2019',
+    value: 492,
+    amount: 2451,
+  },
+  {
+    key: 3,
+    no: 3,
+    item: 'Item 3',
+    title: 'Audemars Piguet Royal Oak Extra Thin, 2019',
+    value: 716,
+    amount: 5963,
+  },
+  {
+    key: 4,
+    no: 4,
+    item: 'Item 4',
+    title: 'Audemars Piguet Royal Oak Extra Thin, 2019',
+    value: 275,
+    amount: 8532,
+  },
+  {
+    key: 5,
+    no: 5,
+    item: 'Item 5',
+    title: 'Audemars Piguet Royal Oak Extra Thin, 2019',
+    value: 809,
+    amount: 4144,
+  },
+  {
+    key: 6,
+    no: 6,
+    item: 'Item 6',
+    title: 'Audemars Piguet Royal Oak Extra Thin, 2019',
+    value: 188,
+    amount: 1360,
+  },
+  {
+    key: 7,
+    no: 7,
+    item: 'Item 7',
+    title: 'Audemars Piguet Royal Oak Extra Thin, 2019',
+    value: 460,
+    amount: 1878,
+  },
+  {
+    key: 8,
+    no: 8,
+    item: 'Item 8',
+    title: 'Audemars Piguet Royal Oak Extra Thin, 2019',
+    value: 892,
+    amount: 8100,
+  },
+  {
+    key: 9,
+    no: 9,
+    item: 'Item 9',
+    title: 'Audemars Piguet Royal Oak Extra Thin, 2019',
+    value: 935,
+    amount: 6213,
+  },
+  {
+    key: 10,
+    no: 10,
+    item: 'Item 10',
+    title: 'Title 10',
+    value: 358,
+    amount: 6324,
+  },
+];
+
+const columns = [
+  {
+    title: '',
+    dataIndex: 'no',
+    key: 'no',
+
+    width: 10,
+  },
+  {
+    title: 'Item',
+    dataIndex: 'item',
+    key: 'item',
+
+    render: (text, record) => (
+      <img
+        width={40}
+        height={40}
+        src="/assets/home/products/Audemars-piguet-Royaloak.webp"
+        alt=""
+      />
+    ),
+  },
+  {
+    title: 'Title',
+    dataIndex: 'title',
+    key: 'title',
+  },
+  {
+    title: 'Value',
+    dataIndex: 'value',
+    key: 'value',
+
+    render: (text, record) => <p>{`${text}ETH`}</p>,
+  },
+
+  {
+    title: 'Amount',
+    dataIndex: 'amount',
+    key: 'amount',
+
+    sorter: (a, b) => a.amount - b.amount,
+  },
+  {
+    title: 'Action',
+    dataIndex: 'action',
+    key: 'action',
+
+    render: (text, record) => (
+      <div className="dashboard-inventory__body__table__action">
+        <button className="btn-table">See</button>
+        <button className="btn-table">Buy More</button>
+        <button className="btn-table">Trade</button>
+      </div>
+    ),
+  },
+];
 
 const Dashboard = () => {
   const [value4, setValue4] = useState('Weekly');
@@ -114,7 +256,20 @@ const Dashboard = () => {
           </p>
         </div>
       </div>
-      <div className="dashboard-inventory__body">Table</div>
+      <div className="dashboard-inventory__body">
+        <Table
+          style={{
+            border: '1px solid #3d3d3d',
+            borderRadius: '10px',
+            overflow: 'hidden',
+          }}
+          size="medium"
+          scroll={{ x: 'max-content' }}
+          // bordered={true}
+          dataSource={dataSource}
+          columns={columns}
+        />
+      </div>
     </div>
   );
 };
