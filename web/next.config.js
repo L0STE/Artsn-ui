@@ -7,9 +7,6 @@ const { composePlugins, withNx } = require('@nx/next');
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
-  experimental: {
-    esmExternals: 'loose',
-  },
   webpack: (config) => {
     config.externals = [
       ...(config.externals || []),

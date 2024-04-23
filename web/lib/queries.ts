@@ -32,34 +32,3 @@ export const allListings = gql`
         }
     }
 `;
-
-export const user = gql`
-    query($wallet: String!) {
-        users(query: { wallet: $wallet }) {
-            _id
-            fullName
-            userName
-            email
-            wallet
-            currencyPreference
-            profileImg
-        }
-    }
-`;
-
-export const userProfileBasic = gql`
-    query($wallet: String!) {
-        users(query: { wallet: $wallet }) {
-            profileImg
-            userName
-        }
-    }
-`;
-
-export const userCurrencyPref = gql`
-    query($wallet: String!) {
-        users(query: { wallet: $wallet }) {
-            currencyPreference
-        }
-    }
-`;
