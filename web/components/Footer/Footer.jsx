@@ -22,8 +22,8 @@ const Footer = () => {
             </Link>
             <p className="body-mob">Own and Collect Luxury Goods</p>
             <p className="body-regular">
-              The Artisan is a digital boutique specializing in fractionalized
-              high-end collectibles
+              The Artisan is a digital boutique for collecting and owning
+              fractionalized high-end assets.
             </p>
             <div className="icons">
               <img
@@ -42,15 +42,10 @@ const Footer = () => {
           <div className="footer-column--2">
             <p className="heading">Browse</p>
             <div className="footer__list">
-              <a href="/market" className="footer__link">
-                The Market
+              <a href="#" className="footer__link">
+                Start Collecting
               </a>
-              <a href="/fi" className="footer__link">
-                TheFi
-              </a>
-              <a href="https://theboutique-vr.com/" className="footer__link">
-                The Boutique
-              </a>
+
               <a href="/about" className="footer__link">
                 About Us
               </a>
@@ -64,9 +59,6 @@ const Footer = () => {
               </a>
               <a href="/privacy" className="footer__link">
                 Privacy Policy
-              </a>
-              <a href="/help" className="footer__link">
-                Help Center
               </a>
             </div>
           </div>

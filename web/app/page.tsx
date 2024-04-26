@@ -18,7 +18,11 @@ import Image from 'next/image';
 import solanaSwissIcon from '../public/assets/home/solana-swiss-icons.webp';
 import aboutIllustration from '../public/assets/home/home-about-illustraiton.webp';
 
-import homeBriefIllustration from '../public/assets/home/home-brief-illustration.webp';
+import homeBriefIllustration from '../public/assets/home/home-brief-illustraiton.webp';
+
+import productImage from '../public/assets/dummy-product.png';
+
+const featuredProducts = [1, 2, 3];
 
 // how it works images
 import howWorks1 from '../public/assets/home/how-it-works-1.webp';
@@ -227,12 +231,64 @@ const Home = () => {
         </div>
       </section>
 
-      <div className="home__bottom-cta ">
+      {/* products section */}
+      <section className="home__featured padding">
+        <div className="boxed">
+          <h2 className="heading-1">
+            Explore the collections available on the platform.
+          </h2>
+
+          <div className="home__featured__items-cont">
+            {featuredProducts.map((product) => {
+              return (
+                <div key={product} className="home__featured__items-cont__item">
+                  <img
+                    src="/assets/product-border-bg.png"
+                    alt=""
+                    className="home__featured__items-cont__item__bg"
+                  />
+                  <div className="item-top">
+                    <Image
+                      src={productImage}
+                      alt="product-img"
+                      className="item-top-img"
+                    />
+                  </div>
+                  <div className="item-body">
+                    <h3 className="heading-6">
+                      Audemars Piguet Royal Oak Extra Thin, 2019
+                    </h3>
+
+                    <div className="item-body-details">
+                      <div className="item-body-details-set">
+                        <p className="label-5">RELEASE</p>
+                        <p className="label-3">TBA</p>
+                      </div>
+
+                      <div className="item-body-details-set">
+                        <p className="label-5">STARTING FROM</p>
+                        <p className="label-3">100$</p>
+                      </div>
+
+                      <div className="item-body-details-set">
+                        <p className="label-5">EARNING POTENTIAL</p>
+                        <p className="label-3 green">+8,1% y*</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <div className="home__bottom-cta padding">
         {/* <div className="boxed"> */}
         <CTA1Card />
 
         {/* hwo it works section */}
-        <section className="home__working padding">
+        <section className="home__working ">
           <div className="boxed">
             <h2 className="heading-1">How It Works</h2>
             <div className="home__working__steps">
