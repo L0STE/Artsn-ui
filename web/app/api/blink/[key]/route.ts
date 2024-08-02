@@ -7,7 +7,7 @@ import {
     createPostResponse,
     ActionPostResponse,
   } from "@solana/actions";
-import { IDL, Fragment, PROGRAM_ID, USDC_MINT} from "@/components/Utils/idl";
+import { IDL, ArtsnCore, PROGRAM_ID, USDC_MINT} from "@/components/Protocol/idl";
 import {
     SYSVAR_INSTRUCTIONS_PUBKEY,
     PublicKey,
@@ -45,7 +45,7 @@ export async function POST(_: Request, { params }: { params: { key : number } })
     // @ts-expect-error - wallet is dummy variable, signing is not needed
     const provider = new anchor.AnchorProvider(connection, wallet, {});
     const programId = new PublicKey(PROGRAM_ID);
-    const program = new anchor.Program<Fragment>(IDL, programId, provider);
+    const program = new anchor.Program<ArtsnCore>(IDL, provider);
 
     try {
         // const req = await request.json();
@@ -107,7 +107,8 @@ export async function POST(_: Request, { params }: { params: { key : number } })
         // );
 
         const profileInitIx = await await program.methods
-            .initializeProfileAccount()
+            //@ts-expect-error - missing arguments
+            .initializeProfile()
             .accounts({
                 user: buyer_publicKey,
                 profile: buyerProfile,
@@ -119,6 +120,7 @@ export async function POST(_: Request, { params }: { params: { key : number } })
         const feePayer = Keypair.fromSecretKey(b58.decode(feeKey));
 
         const buyShareIx = await program.methods
+        //@ts-expect-error - missing arguments
             .buyListing()
             .accounts({
                 // buyer: buyer_publicKey,
