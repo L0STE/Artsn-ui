@@ -5,6 +5,7 @@ import "@/styles/Navbar.scss";
 // import { Link, useLocation } from "react-router-dom";
 import Link from "next/link";
 import Image from "next/image";
+import { WalletMultiButton  } from '@solana/wallet-adapter-react-ui';
 
 // import navbrand from "../../assets/navbrand-full.webp";
 import { CgProfile } from "react-icons/cg";
@@ -62,22 +63,22 @@ function Navbar() {
   ];
 
   const mobileNavLinks = [
-    {
-      to: '/market',
-      name: 'The Market',
-    },
-    {
-      to: '/fi',
-      name: 'TheFi',
-    },
-    {
-      to: 'https://theboutique-vr.com/',
-      name: 'The Boutique',
-    },
-    {
-      to: '/faq',
-      name: 'FAQs',
-    },
+    // {
+    //   to: '/market',
+    //   name: 'The Market',
+    // },
+    // {
+    //   to: '/fi',
+    //   name: 'TheFi',
+    // },
+    // {
+    //   to: 'https://theboutique-vr.com/',
+    //   name: 'The Boutique',
+    // },
+    // {
+    //   to: '/faq',
+    //   name: 'FAQs',
+    // },
     {
       to: '/collect-fraction',
       name: 'Fragment'
@@ -210,8 +211,7 @@ function Navbar() {
                       <span className="material-symbols-outlined">
                           <IoMenu
                               className="icon-menu"
-                              width={25}
-                              height={25}
+                              style={{ fontSize: "30px" }}
                           />
                       </span>
                   </div>
@@ -254,6 +254,18 @@ function Navbar() {
             </div>
           </div>
           <div className="header-mob-body">
+
+            {((publicKey && !web3AuthPublicKey) || (web3AuthPublicKey && !publicKey)) && (
+              <CgProfile className="profile-icon" 
+                  onClick={()=> {
+                    if(buyerProfileExists){
+                      router.push("/dashboard")
+                    } else {
+                      setDisplayProfileModal(true)
+                    }
+                  }}
+              />
+            )}
             {mobileNavLinks.map((link) => {
               const isActive = pathname === link.href;
 
@@ -292,15 +304,38 @@ function Navbar() {
                   : 'Start Collecting'}
               </button>
             )}
-
-            {publicKey | web3AuthPublicKey && buyerProfileExists && (
-              <CgProfile
-                className="profile-icon"
-                onClick={() => {
-                  setDisplayLogin(!displayLogin);
-                  toggleNavbar();
+            {publicKey && (
+              <WalletMultiButton
+                className="wallet-btn"
+                style={{ 
+                  borderRadius: '7px', 
+                  height: '36px', 
+                  width: '100%',
+                  background: 'linear-gradient(92.89deg, rgba(255, 153, 0, 0.26) 6.43%, rgba(151, 71, 255, 0.26) 100%), linear-gradient(93.85deg, #ff9900d3 1.67%, #9747ffd2 100%)',
+                  fontFamily: 'Inter',
+                  fontWeight: '300',
+                  fontStyle: 'normal',
+                  fontSize: '1.2rem',
+                  lineHeight: '16px',
+                  letterSpacing: '-2.6%',
+                  border: '1px solid linear-gradient(92.89deg, rgba(255, 153, 0, 0.26) 6.43%, rgba(151, 71, 255, 0.26) 100%), linear-gradient(93.85deg, #FF9900 1.67%, #9747FF 100%)',
                 }}
               />
+            )}
+            {web3AuthPublicKey && (
+              <button 
+                onClick={() => logout().then((res) => {
+                  if(res) {
+                    setLoggedIn(false);
+                  }
+                })} 
+                className="google-login-btn" 
+              >
+                <CgGoogle className="google-icon" />
+                <p className="google-login-text" style={{width: 'fit-content'}}>
+                  Log Out
+                </p>
+              </button>
             )}
           </div>
         </div>

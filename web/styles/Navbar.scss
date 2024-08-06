@@ -1,19 +1,33 @@
 // Navigation bar
-.navbar {
-    font-family: Montserrat;
-    padding: 28px 20px 28px 20px;
-    width: 100vw;
-}
+// .navbar {
+//     font-family: Montserrat;
+//     padding: 28px 20px 28px 20px;
+//     width: 100vw;
+// }
 header {
     width: 100%;
     z-index: 10;
 }
 
 .navbrand {
-    display: flex;
+    display: none;
     align-items: center;
     text-decoration: none;
     gap: 1rem;
+}
+
+.header-container-mob {
+    display: flex;
+    flex-direction: row;
+    display: flex;
+    width: 100vw;
+    height: 84px;
+    // center the content and space-between the content
+    padding: 5px 25px 18px 25px;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+
 }
 
 .navbrand img {
@@ -60,7 +74,7 @@ header {
 
 .header-right {
     width: max-content;
-    display: flex;
+    display: none;
     align-items: center;
     margin-right: 10px;
     gap: 3rem;
@@ -88,6 +102,8 @@ header {
     z-index: 1;
 }
 
+
+
 .close-login {
     display: none;
 }
@@ -106,13 +122,13 @@ header {
     text-decoration: none;
 }
 
-.header-container-mob {
-    display: none;
-}
+// .header-container-mob {
+//     display: none;
+// }
 
-.header-right-mob {
-    display: none;
-}
+// .header-right-mob {
+//     display: none;
+// }
 
 .header-mob {
     width: 100vw;
@@ -140,6 +156,7 @@ header {
     }
 }
 
+
 .header-mob-body {
     width: 100%;
     height: 100%;
@@ -150,6 +167,7 @@ header {
     justify-content: flex-start;
     padding-top: 6vh;
     height: 90vh;
+    gap: 6rem;
 }
 
 .header-mob-body a {
@@ -207,7 +225,8 @@ header {
         align-items: center;
 
         .icon-menu {
-            font-size: 2.5rem;
+            font-size: 30px;
+            display: none;
         }
     }
 
@@ -260,6 +279,7 @@ header {
         display: flex;
         gap: 1rem;
         align-items: center;
+        
     }
 
     .header-mob-head-right {
