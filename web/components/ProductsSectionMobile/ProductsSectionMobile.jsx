@@ -42,15 +42,12 @@ const ProductsSectionMobile = () => {
             {/* available */}
             {!productsLoading && (
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
-                    <p className="caption-1" style={{ marginBottom: '2rem' }}>Available Watches</p>
                     <div className="products__available" >
                         <div className="products__available__slider">
                             <EmblaCarousel slides={products.availableWatches} options={OPTIONS} />   
                         </div>
                     </div>
-                    <p className="caption-1" style={{ marginBottom: '2rem' }}>Available Diamonds</p>
-                    <div className="products__available" >
-                        
+                    <div className="products__available" > 
                         <div className="products__available__slider">
                             <EmblaCarousel slides={products.availableDiamonds} options={OPTIONS} />   
                         </div>

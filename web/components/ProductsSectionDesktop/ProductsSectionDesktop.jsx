@@ -35,12 +35,10 @@ const ProductsSectionDesktop = () => {
             {/* Available */}
             {!productsLoading && (
             <div className="products__available ">
-                <p className="caption-1">Available</p>
                 <div className="products__available__slider">
                     <EmblaCarousel slides={products.availableWatches} options={OPTIONS} />   
                 </div>
                 <div className="products__available__slider">
-                    Diamonds
                     <EmblaCarousel slides={products.availableDiamonds} options={OPTIONS} />   
                 </div>
             </div>

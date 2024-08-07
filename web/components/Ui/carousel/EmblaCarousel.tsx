@@ -35,7 +35,58 @@ const EmblaCarousel: React.FC<PropType> = (props) => {
     <section className="embla">
       <div className="embla__viewport" ref={emblaRef}>
         <div className="embla__container">
-
+          
+          <div
+            className="products__available__slider__item"
+          >
+            <div className="item-top">
+                {/* <img
+                    // src={Audemar}
+                    src={`https://artisan-solana.s3.eu-central-1.amazonaws.com/${item.accountPubkey}-0.jpg`}
+                    alt="product"
+                    className="item-top-img"
+                /> */}
+            </div>
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginTop: '1rem'
+            }}>
+                  {/* this is the "category" card that displays what category follows, in this case watches */}
+              <h2
+                style={{
+                  color: 'white',
+                  fontSize: '7rem',
+                }}
+              >
+                {slides && slides[0].objectType.watch ? 'Watches' : 'Diamonds'}
+              </h2>
+              {slides && slides.length > 0 && (
+                <ul>
+                  {/* collection length = slides.length */}
+                  <li
+                    style={{
+                      color: 'white',
+                      fontSize: '2rem',
+                    }}
+                  >
+                    Product Count: {slides.length}
+                  </li>
+                  <li
+                    style={{
+                      color: 'white',
+                      fontSize: '2rem',
+                    }}
+                  >
+                    {/* total the price */}
+                    Total Value: {slides.reduce((acc: number, item: any) => acc + Number(item.price), 0)}
+                  </li>
+                </ul>
+              )}
+            </div>
+        </div>
           {slides && slides.length > 0 && 
             (slides?.map((item: any, index: number) => (
                 <div

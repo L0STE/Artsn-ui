@@ -147,9 +147,7 @@ function Navbar() {
       <header className="">
         <div className="boxed">
           <div className="header-content">
-            <Link className="navbrand" href="/">
-                <Image className="navbrand-img" src={NavBrand} alt="brand image" />{" "}
-            </Link>
+            
             {/* <div className="header-left">
                 
             </div> */}
@@ -218,7 +216,10 @@ function Navbar() {
               </div>
               <div className="header-center-mob">
                   <Link className="navbrand-mob" href="/">
-                      <Image className="navbrand-img" src={Logo} alt="logo" />{" "}
+                    <Image className="navbrand-img" src={Logo} alt="logo" />{" "}
+                  </Link>
+                  <Link className="navbrand-mob-lg" href="/">
+                    <Image className="navbrand-img" src={NavBrand} alt="brand image" />{" "}
                   </Link>
               </div>
               <div className="header-right-mob">
@@ -234,11 +235,15 @@ function Navbar() {
         </div>
       </header>
       <div
-        className="header-mob padding"
-        style={{ display: navbar ? "block" : "none" }}
+        className="header-mob"
+        style={{ display: navbar ? "block" : "none"}}
       >
+        <div 
+          className="mobile-backdrop"
+          onClick={toggleNavbar}
+        />
         <div className="box">
-          <div className="header-mob-head padding">
+          <div className="header-mob-head" style={{marginLeft: '4rem', zIndex: 12}}>
             <Link className="navbrand" href="/">
                 <Image className="navbrand-img" src={NavBrand} alt="brand image" />{" "}
             </Link>

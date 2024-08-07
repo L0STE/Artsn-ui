@@ -164,6 +164,20 @@ const Home = () => {
   
         <div className="home__about padding">
           <div className="boxed">
+            {/* products section */}
+            <section className="home__featured padding">
+              <div className="boxed">
+                <h2 className="heading-1">
+                  Available Collections
+                </h2>
+      
+                <div className="home__featured__items-cont">
+                  {/* Products section */}
+                  {/* {isMobile ? <ProductsSectionMobile /> : <ProductsSectionDesktop />}  */}
+                  <ProductsSectionMobile />
+                </div>
+              </div>
+            </section>
             <div className="home__about__illustration">
               <Image
                 className="home__about__illustration__img"
@@ -272,20 +286,7 @@ const Home = () => {
           </div>
         </section>
   
-        {/* products section */}
-        <section className="home__featured padding">
-          <div className="boxed">
-            <h2 className="heading-1">
-              Explore the collections available on the platform.
-            </h2>
-  
-            <div className="home__featured__items-cont">
-              {/* Products section */}
-              {/* {isMobile ? <ProductsSectionMobile /> : <ProductsSectionDesktop />}  */}
-              <ProductsSectionMobile />
-            </div>
-          </div>
-        </section>
+        
   
         <div className="home__bottom-cta padding">
           {/* <div className="boxed"> */}

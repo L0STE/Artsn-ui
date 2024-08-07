@@ -99,9 +99,18 @@ header {
     background-color: rgba(0, 0, 0, 0.5);
     height: 100vh;
     width: 100vw;
-    z-index: 1;
+    // z-index: 1;/
 }
 
+.mobile-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    height: 100vh;
+    width: 60vw;
+    // z-index: 1;/
+}
 
 
 .close-login {
@@ -131,14 +140,14 @@ header {
 // }
 
 .header-mob {
-    width: 100vw;
+    width: 40vw;
     height: 100vh;
     background-color: #17171b;
 
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 1000;
+    z-index: 10;
     display: none;
 }
 
@@ -150,7 +159,7 @@ header {
     gap: 2rem;
     padding-top: 2rem;
     padding-bottom: 2rem;
-
+    z-index: 10;
     .close-icon {
         font-size: 2.5rem;
     }
@@ -181,6 +190,17 @@ header {
     font-weight: 600;
     line-height: normal;
 }
+
+.navbrand-mob {
+    display: none;
+}
+
+.navbrand-mob-lg img{
+    width: 24rem;
+    height: auto;
+}
+
+
 
 @media screen and (max-width: 1200px) {
     .nav-link {
@@ -239,17 +259,24 @@ header {
 @media screen and (max-width: 999px) {
     .navbar {
         padding: 0 0 0 0;
-        margin-bottom: 5rem;
+        // margin-bottom: 5rem;
     }
 
-    .navbrand {
+    .navbrand-mob-lg {
         display: none;
+    }
+
+    .navbrand-mob {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
 
     .navbrand-mob img {
         width: 80px;
         height: 80px;
         flex-shrink: 0;
+        
     }
 
     .header-container-mob {
