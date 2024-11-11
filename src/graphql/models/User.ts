@@ -22,6 +22,7 @@ const User = new mongoose.Schema({
     updatedAt: Date
   },
   kycInfo: {
+    idvId: String,
     kycStatus: String,
     kycCompletionDate: Date,
     kycDocuments: [{

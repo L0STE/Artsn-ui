@@ -63,6 +63,7 @@ export const typeDefs = gql`
   }
 
   type KYCInfo {
+    idvId: String
     kycStatus: String!
     kycCompletionDate: String
     kycDocuments: [KYCDocument]
@@ -122,6 +123,7 @@ export const typeDefs = gql`
     email: String
     baseProfile: UpdateBaseProfileInput
     investorInfo: UpdateInvestorInfoInput
+    kycInfo: UpdateKYCInfoInput
   }
 
   input UpdateBaseProfileInput {
@@ -144,6 +146,19 @@ export const typeDefs = gql`
     investmentDate: String
     amount: Float
     transactionId: String
+  }
+
+  input UpdateKYCInfoInput {
+    idvId: String
+    kycStatus: String
+    kycCompletionDate: String
+    kycDocuments: [KYCDocumentInput]
+  }
+
+  input KYCDocumentInput {
+    documentType: String
+    documentUrl: String
+    verificationStatus: String
   }
 
   type Listing {

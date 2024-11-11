@@ -58,7 +58,6 @@ interface KYCVerificationProps {
 
 const KycForm = ({ onComplete, className }: KYCVerificationProps) => {
   const { startKYCVerification, kycStatus, loading, verificationUrl } = useKYC();
-  
   const form = useForm<KYCFormValues>({
     resolver: zodResolver(kycFormSchema),
     defaultValues: {

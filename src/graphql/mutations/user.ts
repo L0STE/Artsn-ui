@@ -98,6 +98,7 @@ export const UPDATE_USER = gql`
         updatedAt
       }
       kycInfo {
+        idvId
         kycStatus
         kycCompletionDate
       }

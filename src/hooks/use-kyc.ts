@@ -1,7 +1,8 @@
-// hooks/use-kyc.ts
 import { useState, useCallback } from 'react';
 import { useAuth} from '@/providers/Web3AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import { UPDATE_USER } from '@/graphql/mutations/user';
+import { useMutation } from '@apollo/client';
 
 interface KYCRegistration {
   dateOfBirth: string;
@@ -35,14 +36,26 @@ export const useKYC = (): UseKYCReturn => {
   const [error, setError] = useState<string | null>(null);
   const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
   
-  const { getUserInfo } = useAuth();
+  const [updateUser, { loading: updateLoading, error: updateError }] = useMutation(UPDATE_USER, {
+    onCompleted: (data) => {
+      console.log('Update user mutation completed:', data);
+    },
+    onError: (error) => {
+      console.error('Update user mutation error:', error);
+    }
+  });
+  
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const startKYCVerification = useCallback(async (registration: KYCRegistration) => {
     try {
       setLoading(true);
       setError(null);
-      const userInfo = await getUserInfo();
+      
+      console.log('Starting KYC verification with user:', user);
+      console.log('Registration data:', registration);
+
       // Create identity verification
       const response = await fetch('/api/kyc/create', {
         method: 'POST',
@@ -50,7 +63,7 @@ export const useKYC = (): UseKYCReturn => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          externalReferenceId: userInfo?.publicKey,
+          externalReferenceId: user?.publicKey,
           registration,
         }),
       });
@@ -61,10 +74,50 @@ export const useKYC = (): UseKYCReturn => {
       }
 
       const { id }: CreateIDVResponse = await response.json();
+      console.log('Received IDV ID:', id);
+
+      try {
+        console.log('Updating user with data:', {
+          _id: user?._id,
+          input: {
+            firstName: registration.firstName,
+            lastName: registration.lastName,
+            email: registration.email,
+            kycInfo: {
+              idvId: id,
+              kycStatus: 'PENDING',
+            },
+          },
+        });
+
+        const { data: mutationData } = await updateUser({
+          variables: {
+            _id: user!._id,
+            input: {
+              firstName: registration.firstName,
+              lastName: registration.lastName,
+              email: registration.email,
+              kycInfo: {
+                idvId: id,
+                kycStatus: 'PENDING',
+              },
+            },
+          },
+        });
+
+        console.log('Update user mutation response:', mutationData);
+
+        if (!mutationData?.updateUser) {
+          throw new Error('Failed to update user information');
+        }
+      } catch (mutationError) {
+        console.error('Mutation error:', mutationError);
+        throw new Error(`Failed to update user: ${mutationError instanceof Error ? mutationError.message : 'Unknown error'}`);
+      }
       
       // Generate verification URL
       const url = `${ONDATO_IDV_URL}/?id=${id}`;
-      console.log('verification url:', url);
+      console.log('Generated verification URL:', url);
       setVerificationUrl(url);
       setKYCStatus('pending');
       
@@ -77,6 +130,7 @@ export const useKYC = (): UseKYCReturn => {
       window.open(url, '_blank');
 
     } catch (err) {
+      console.error('KYC verification error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to start KYC verification';
       setError(errorMessage);
       setKYCStatus('failed');
@@ -89,13 +143,13 @@ export const useKYC = (): UseKYCReturn => {
     } finally {
       setLoading(false);
     }
-  }, [getUserInfo, toast]);
+  }, [user, updateUser, toast]);
 
   return {
     startKYCVerification,
     kycStatus,
     error,
-    loading,
+    loading: loading || updateLoading,
     verificationUrl,
   };
 };

@@ -48,7 +48,7 @@ export default function DashboardFeature() {
   const { currentPrice, priceChange, dayRange } = useSolanaPrice();
   const [showKYCDialog, setShowKYCDialog] = useState(false);
   const [isVerified, setIsVerified] = useState<String>('Unverified');
-
+  
   const { toast } = useToast();
   const rpc = new RPC(provider)
   const getBalance = async () => {
