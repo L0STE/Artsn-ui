@@ -9,7 +9,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { AssetV1 } from '@metaplex-foundation/mpl-core';
 import { Card } from '@/components/ui/card';
 import { IconCurrencyDollar, IconCurrencySolana } from '@tabler/icons-react';
-import { CrossCircledIcon, Share1Icon } from '@radix-ui/react-icons';
+import { CheckCircledIcon, CrossCircledIcon, Share1Icon } from '@radix-ui/react-icons';
 import PortfolioGraph from './PortfolioGraph';
 import TopGainer from './TopGainer';
 import ArtisansTable from './ArtisansTable';
@@ -22,11 +22,13 @@ import { ArtsnCore, getArtisanProgram } from '@/components/blockchain/artisan-ex
 import TrendingUp from './TrendingUp';
 import { TrendingUp as TrendingIcon } from "lucide-react"
 import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
+import KYCVerification from '@/components/kyc/KycForm';
 import { useToast } from '@/hooks/use-toast';
 // import { useSolanaRPC } from "@/components/blockchain/solana-rpc";
 import RPC from '@/components/blockchain/solana-rpc';
 import { set } from 'lodash';
 import { useSolanaPrice } from '@/hooks/use-solana-price';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 
 // Dynamically import Joyride with ssr disabled
 const Joyride = dynamic(() => import('react-joyride'), { ssr: false });
@@ -44,6 +46,9 @@ export default function DashboardFeature() {
   const [joyrideStatus, setJoyrideStatus] = useState('idle');
   const { user: authUser, loading, provider } = useAuth();
   const { currentPrice, priceChange, dayRange } = useSolanaPrice();
+  const [showKYCDialog, setShowKYCDialog] = useState(false);
+  const [isVerified, setIsVerified] = useState<String>('Unverified');
+
   const { toast } = useToast();
   const rpc = new RPC(provider)
   const getBalance = async () => {
@@ -64,6 +69,7 @@ export default function DashboardFeature() {
       lastName: authUser.lastName || '',
       username: authUser.username || '',
       publicKey: authUser.publicKey || null,
+      isVerified: authUser.kycInfo?.kycStatus || 'Unverified',
       points: 100,
       rank: 2,
       walletValue:  0,
@@ -74,6 +80,13 @@ export default function DashboardFeature() {
       allTimeHighDaysAgo: 2,
     };
   }, [authUser]);
+
+  useEffect(() => {
+    if (user) {
+      console.log("DASHBOARD USER ->", user);
+      setIsVerified(user.isVerified);
+    }
+  }, [user]);
 
   const steps = [
     {
@@ -117,6 +130,15 @@ export default function DashboardFeature() {
       );
     }
     setJoyrideStatus(status);
+  };
+
+  const handleVerificationComplete = () => {
+    setIsVerified('PENDING');
+    setShowKYCDialog(false);
+    toast({
+      title: "Verification Submitted",
+      description: "Your verification is being processed. We'll notify you once it's complete.",
+    });
   };
 
   const copyToClipboard = (text: any) => {
@@ -239,6 +261,35 @@ export default function DashboardFeature() {
     }
   }, [authUser]);
 
+  const VerificationStatus = () => {
+    if (isVerified === 'VERIFIED') {
+      return (
+        <div className="flex items-center gap-2 text-[#fff] bg-green-700/20 text-green-500 rounded-lg px-3 py-[6px] text-sm md:text-base">
+          <CheckCircledIcon />
+          <span>Verified</span>
+        </div>
+      );
+    }
+
+    // if (isVerified === 'PENDING') {
+    //   return (
+    //     <div className="flex items-center gap-2 text-[#fff] bg-yellow-700/20 text-yellow-500 rounded-lg px-3 py-[6px] text-sm md:text-base">
+    //       <span>Pending</span>
+    //     </div>
+    //   );
+    // }
+
+    return (
+      <button
+        onClick={() => setShowKYCDialog(true)}
+        className="flex items-center gap-2 text-[#fff] bg-[#3F3F46] hover:bg-[#4F4F56] transition-colors rounded-lg px-3 py-[6px] text-sm md:text-base cursor-pointer"
+      >
+        <CrossCircledIcon />
+        <span>Unverified</span>
+      </button>
+    );
+  };
+
   if (loading || !user) {
     return <LoadingSpinner />;
   }
@@ -260,6 +311,14 @@ export default function DashboardFeature() {
           callback={handleJoyrideCallback}
         />
       )}
+      <Dialog open={showKYCDialog} onOpenChange={setShowKYCDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Complete Your Verification</DialogTitle>
+          </DialogHeader>
+          <KYCVerification onComplete={handleVerificationComplete} />
+        </DialogContent>
+      </Dialog>
       <div className="flex flex-col bg-bg pt-6 mt-12 md:pt-14 pb-4 md:pb-8 gap-4 md:gap-8 items-center w-full overflow-auto px-4 md:px-0">
         {/* Header Section */}
         <div className="flex flex-row md:flex-row items-start md:items-center text-secondary gap-2 md:gap-4 w-full md:w-11/12">
@@ -270,10 +329,7 @@ export default function DashboardFeature() {
             </span>
           </motion.h1>
           <div className="flex flex-col-reverse items-start md:flex-row md:items-center gap-2">
-            <div className="flex items-center gap-2 text-[#fff] bg-[#3F3F46] rounded-lg px-3 py-[6px] text-sm md:text-base">
-              <CrossCircledIcon />
-              <span>Unverified</span>
-            </div>
+            <VerificationStatus />
             <Button
               onClick={() => setRunTour(true)}
               className="bg-bg text-secondary rounded-xl border border-zinc-300 dark:border-zinc-700 text-sm md:text-base"
