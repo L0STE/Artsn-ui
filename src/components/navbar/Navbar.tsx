@@ -920,7 +920,6 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links, scrollThreshold = 
                 Explore the Marketplace <ChevronRightIcon />
               </Link>
             </Button>
-              { loading && <div className='animate-pulse'>Loading...</div> }
               {/* <LoginDialog _isOpen={true} /> */}
               {renderAuthComponent()}
         </ul>

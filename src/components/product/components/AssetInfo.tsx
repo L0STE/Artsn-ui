@@ -37,13 +37,23 @@ export default function AssetInfo({ asset }: { asset: any }) {
   const [isBuying, setIsBuying] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [userBalance, setUserBalance] = useState<{ sol: any; usdc: any; }>({ sol: 0, usdc: 0 });
   const { handleCopy, copied } = useHandleShare();
   const { user } = useAuth();
   const increment = () => {if(amount < 4)setAmount(amount + 1)};
   const decrement = () => {if(amount > 1) setAmount(amount - 1)};
   const router = useRouter();
   const rpc = new RPC(provider!);
-
+  const getBalance = async () => {
+    try {
+      const balance = await rpc.getBalance();
+      console.log('balance', balance);
+      setUserBalance(balance);
+      return balance;
+    } catch (error) {
+      console.error('Error fetching balance', error);
+    }
+  }
   const getAccounts = async () => {
     const accounts = await rpc.getAccounts();
     return accounts;
@@ -201,7 +211,11 @@ export default function AssetInfo({ asset }: { asset: any }) {
     ) {
         buyStripeListing(amount);
     }
-  }, [user]);
+
+    if(user && user.publicKey && provider){
+      getBalance();
+    }
+  }, [user, provider]);
 
   return (
     <section className="bg-white rounded-3xl border-gray p-5 mb-5">
@@ -298,22 +312,38 @@ export default function AssetInfo({ asset }: { asset: any }) {
                 This action will purchase you {amount} fractions of the asset. Are you sure you want to continue?
                 <Separator className="my-2 bg-slate-300"/>  
                 <div className="flex flex-row justify-between gap-4 items-center px-4">
-                <div className="flex flex-row gap-2 items-center">
-                  <Image
-                    src={asset.offChainData.images[0]}
-                    alt={asset.attributes[0].value.toString()}
-                    width={100}
-                    height={100}
-                    className="rounded-3xl mt-5 border-gray border border-solid"
-                  />
-                  <div className="flex flex-col gap-2">
-                    <p className="text-lg font-semibold text-secondary">{asset.attributes[0].value.toString()} - {asset.attributes[1].value.toString()}</p>
-                    <p className="text-sm text-secondary" >x{" "}{amount}{" "}Fractions</p>
+                  <div className="flex flex-row gap-2 items-center">
+                    <Image
+                      src={asset.offChainData.images[0]}
+                      alt={asset.attributes[0].value.toString()}
+                      width={100}
+                      height={100}
+                      className="rounded-3xl mt-5 border-gray border border-solid"
+                    />
+                    <div className="flex flex-col gap-2">
+                      <p className="text-lg font-semibold text-secondary">{asset.attributes[0].value.toString()} - {asset.attributes[1].value.toString()}</p>
+                      <p className="text-sm text-secondary" >x{" "}{amount}{" "}Fractions</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-gray-500">${Number(asset.onChainData.price)}</p> 
+                </div>    
+                <Separator className="my-2 bg-slate-300"/>  
+                <div className="flex flex-col w-full justify-between items-center px-4">
+                  <div className="flex flex-row w-full justify-between gap-4 items-center px-4">
+                    <p className="text-lg font-semibold text-secondary">Your Balance</p>
+                    <p className="text-lg font-semibold text-secondary">${userBalance.usdc}</p>
+                  </div>
+                  <div className="flex flex-row w-full justify-between gap-4 items-center px-4">
+                    <p className="text-lg font-semibold text-secondary">Total</p>
+                    <p className="text-lg font-semibold text-secondary">${amount * Number(asset.onChainData.price)}</p>
+                  </div>
+                  <Separator className="my-2 bg-slate-300"/>
+                  <div className="flex flex-row w-full justify-between gap-4 items-center px-4">
+                    <p className="text-lg font-semibold text-secondary">Remaining Balance</p>
+                    <p className="text-lg font-semibold text-secondary">${userBalance.usdc - (amount * Number(asset.onChainData.price))}</p>
                   </div>
                 </div>
-                
-                <p className="text-sm text-gray-500">${Number(asset.onChainData.price)}</p> 
-              </div>    
               </AlertDialogDescription>
               ) : (
                 <AlertDialogDescription>
@@ -329,7 +359,13 @@ export default function AssetInfo({ asset }: { asset: any }) {
               {!isBuying && !isComplete && (
                 <div className="flex flex-col justify-between gap-2 items-center px-4 w-full">
                   <Separator className="bg-slate-300"/>    
-                  <Button className="w-full rounded-xl bg-secondary text-primary hover:bg-primary hover:text-secondary" onClick={()=> handleBuy()}>Pay with crypto</Button>
+                  <Button 
+                    className="w-full rounded-xl bg-secondary text-primary hover:bg-primary hover:text-secondary" 
+                    onClick={()=> handleBuy()}
+                    disabled={userBalance.usdc < (amount * Number(asset.onChainData.price))}
+                  >
+                    Pay with crypto
+                  </Button>
                   <Button className="w-full rounded-xl bg-secondary text-primary hover:bg-primary hover:text-secondary" onClick={()=> buyStripe()}><CreditCard className="mr-2"/>Pay with card</Button>
                 </div>
               )}

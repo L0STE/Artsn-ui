@@ -20,7 +20,7 @@ export function UiLayout({
   links: { label: string; path: string }[];
 }) {
   
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams() || undefined;
   return (
     <div className="h-full flex flex-col bg-bg items-center w-full overflow-none">
       <Navbar searchParams={searchParams} links={links} scrollThreshold={1} blurAmount={400} />

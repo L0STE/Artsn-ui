@@ -10,7 +10,11 @@ export const useHandleShare = () => {
         setTimeout(() => {
         setCopied(false);
         }, 2000);
+        toast({
+        title: 'Copied to clipboard',
+        description: text,
+        })
     };
-    
+
     return { copied, handleCopy };
 };
