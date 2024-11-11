@@ -639,7 +639,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links, scrollThreshold = 
 
   // Effect to sync user state
   useEffect(() => {
-    if (user && !authState.userWallet) {
+    if (user && !authState.userWallet && provider) {
       getBalance();
       setAuthState(prev => ({
         ...prev,

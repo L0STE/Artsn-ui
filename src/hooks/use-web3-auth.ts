@@ -59,11 +59,6 @@ export const useWeb3Auth = () => {
         web3auth.configureAdapter(adapter);
       });
 
-      console.log('adapters available', 
-        injectedAdapters
-          .map((adapter) => adapter.name)
-          .join(', ')
-      );
       const availableAdapters = injectedAdapters.map((adapter) => adapter.name);
 
       await web3auth.init();
@@ -73,13 +68,10 @@ export const useWeb3Auth = () => {
 
         const rpc = new RPC(web3auth.provider!);
         const accounts = await rpc?.getAccounts();
-        console.log('accounts', accounts);
         const publicKey = accounts![0];
-        console.log('publicKey', publicKey);
         const{ idToken }= await web3auth.authenticateUser();
         const user = await web3auth.getUserInfo();
 
-        console.log('user', user);
 
         const userObject= {
             email: user.email || '',
@@ -87,8 +79,6 @@ export const useWeb3Auth = () => {
             username: user.name || '',
             profilePictureUrl: user.profileImage || '',
         };  
-        console.log('logging in with userObject', userObject);
-        console.log('user object', userObject);
 
         setUserWallet(userObject.publicKey);
 

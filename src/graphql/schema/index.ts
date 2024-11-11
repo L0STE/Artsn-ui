@@ -161,27 +161,31 @@ export const typeDefs = gql`
     verificationStatus: String
   }
 
-  type Listing {
-    associatedId: String!
-    images: [String!]
-    assetDetails: String
-    expectedNetReturn: String
-    marketValue: String
-    pastReturns: String
-    earningPotential: String
-    earningPotentialDuration: String
-    reference: String
-    currency: String
-    description: String
-    model: String
-    totalViews: String
-    totalShares: String
-    totalLikes: String
+  input ListingSortInput {
+    expectedNetReturn: Int
+    createdAt: Int
     sold: Int
-    total: Int
+  }
+
+  type Listing {
+    _id: ID!
+    assetDetails: String
+    associatedId: String
+    earningPotential: Float
+    earningPotentialDuration: String
+    expectedNetReturn: Float
+    images: [String]
+    marketValue: Float
+    pastReturns: Float
+    currency: String
+    model: String
+    offerViews: Int
+    sold: Int
+    total: Float
     mintAddress: String
     about: String
     type: String
+    createdAt: String
   }
 
   type Query {
@@ -189,7 +193,10 @@ export const typeDefs = gql`
     isUserRegistered(publicKey: String!): Boolean!
     checkEmail(email: String!): User
     getListing(associatedId: String!): Listing
-    getAllListings: [Listing]
+    getAllListings(sort: ListingSortInput, limit: Int, offset: Int): [Listing!]!
+    getListingsByNetReturn(limit: Int, offset: Int): [Listing!]!
+    getRecentListings(limit: Int, offset: Int): [Listing!]!
+    getMostSoldListings(limit: Int, offset: Int): [Listing!]!
   }
 
   type Mutation {

@@ -119,7 +119,7 @@ const Settings = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
   const [updateUser] = useMutation(UPDATE_USER);
-  const { user, checkAuth } = useAuth();
+  const { user } = useAuth();
   // Initial form state
   const [formData, setFormData] = useState({
     firstName: "",

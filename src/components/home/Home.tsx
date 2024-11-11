@@ -83,7 +83,7 @@ export default function Home() {
                 <motion.picture className='flex flex-row justify-center h-full' style={{ zIndex: '20'}}>
                     <Image 
                         src={
-                            selected == 0 ? '/products/freak-watch.png' :
+                            selected == 0 ? '/products/rolex-bg.svg' :
                             selected == 1 ? '/products/car7.svg' :
                             selected == 2 ? '/products/diamonds2.svg' :
                             selected == 3 ? '/products/whisky2.svg' : '/products/freak.svg'

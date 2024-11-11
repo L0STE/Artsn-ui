@@ -34,6 +34,13 @@ const InvitationCTA = () => {
           />
         </div>
       </CardContent>
+
+      {/* Overlay */}
+      <div className="absolute inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center rounded-3xl">
+        <div className="bg-white/90 px-6 py-3 rounded-lg shadow-lg">
+          <p className="text-xl font-semibold text-gray-800">Feature Coming Soon</p>
+        </div>
+      </div>
     </Card>
   );
 };

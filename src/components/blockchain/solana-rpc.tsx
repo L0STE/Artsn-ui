@@ -1,5 +1,6 @@
 import {
     Connection,
+    GetProgramAccountsFilter,
     LAMPORTS_PER_SOL,
     PublicKey,
     SystemProgram,
@@ -9,12 +10,12 @@ import {
 } from "@solana/web3.js";
 import { USDC_MINT } from "./artisan-exports";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults"
-import { createGenericFile, createSignerFromKeypair, publicKey, signerIdentity } from "@metaplex-foundation/umi"
+import { createGenericFile, createSignerFromKeypair, publicKey, signerIdentity, usd } from "@metaplex-foundation/umi"
 import { CustomChainConfig, IProvider } from "@web3auth/base";
 import { SolanaWallet } from "@web3auth/solana-provider";
 import * as b58 from "bs58";
 import { get } from "http";
-import { getAccount, getAssociatedTokenAddress, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { getAccount, getAssociatedTokenAddress, getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { rpcManager } from '@/lib/rpc/rpc-manager';
 const RPC = rpcManager.getConnection();
 
@@ -44,6 +45,38 @@ const RPC = rpcManager.getConnection();
         return [];
       }
     }
+
+    async getTokenAccountBalance(wallet: string, solanaConnection: Connection) {
+      const filters:GetProgramAccountsFilter[] = [
+        {
+          dataSize: 165,    //size of account (bytes)
+        },
+        {
+          memcmp: {
+            offset: 32,     //location of our query in the account (bytes)
+            bytes: wallet,  //our search criteria, a base58 encoded string
+          },            
+        },
+        //Add this search parameter
+        {
+            memcmp: {
+              offset: 0, //number of bytes
+              bytes: USDC_MINT.toBase58(), //base58 encoded string
+            },
+        }];
+        const accounts = await solanaConnection.getParsedProgramAccounts(
+            TOKEN_PROGRAM_ID, //new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+            {filters: filters}
+        );
+        accounts.forEach((account, i) => {
+            //Parse the account data
+            const parsedAccountInfo:any = account.account.data;
+            const mintAddress:string = parsedAccountInfo["parsed"]["info"]["mint"];
+            const tokenBalance: number = parsedAccountInfo["parsed"]["info"]["tokenAmount"]["uiAmount"];
+        });
+        // @ts-ignore - return the first account's balance
+        return accounts[0].account.data.parsed.info.tokenAmount.uiAmount;
+      }
   
     async getBalance(): Promise<{sol: any, usdc: any}> {
       try {
@@ -54,13 +87,13 @@ const RPC = rpcManager.getConnection();
         console.log('balance***:', balance);
         const usdcAta = await getAssociatedTokenAddress(new PublicKey(accounts[0]), new PublicKey(USDC_MINT));
         console.log('usdcAta:', usdcAta.toString());
-        // const usdcBalance = await conn.getTokenAccountBalance(usdcAta);
-        // console.log('usdcBalance****:', usdcBalance);
+        const usdcBalance = await this.getTokenAccountBalance(accounts[0], conn);
+        console.log('usdcBalance****:', usdcBalance);
         // // const amount = Number(usdcBalance.amount);
         // console.log('usdcBalance:', usdcBalance);
         const obj = {
           sol: (balance / LAMPORTS_PER_SOL),
-          usdc: 27,
+          usdc: usdcBalance
         }
         return obj;
       } catch (error) {

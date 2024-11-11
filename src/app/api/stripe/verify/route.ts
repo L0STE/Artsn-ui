@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!);
 export async function POST(req: NextRequest) {
   try {
     const { sessionId, assetId, amount, ref } = await req.json();
-
+    console.log('Verifying payment:', sessionId);
     // Input validation
     if (!sessionId || !assetId || !amount || !ref) {
       return NextResponse.json(
@@ -72,6 +72,8 @@ export async function POST(req: NextRequest) {
       },
       { upsert: true }
     );
+
+    console.log('Payment verified:', sessionId);
 
     // Return success with session details
     return NextResponse.json({
