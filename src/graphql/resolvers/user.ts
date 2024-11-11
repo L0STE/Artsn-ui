@@ -229,8 +229,8 @@ export const userResolvers: IResolvers<any, Context> = {
             instagram: '',
             website: ''
           },
-          kycInfo: currentUser.kycInfo || {
-            idvId: '',
+          kycInfo: {
+            idvId: input.kycInfo?.idvId || '',
             kycStatus: 'PENDING',
             kycCompletionDate: currentUser.baseProfile.createdAt,
             kycDocuments: []

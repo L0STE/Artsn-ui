@@ -31,7 +31,7 @@ const PortfolioGraph = () => {
       <CardContent className="p-6">
         <div className="flex flex-col-reverse md:flex-row justify-between gap-4 md:gap-10 items-start md:items-center mb-6">
           <h2 className="text-xl font-semibold text-secondary ">
-            Wallet Value
+            Vault Value
           </h2>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
