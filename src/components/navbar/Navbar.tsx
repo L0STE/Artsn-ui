@@ -767,9 +767,9 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links, scrollThreshold = 
 
   // Render login or user dropdown based on auth state
   const renderAuthComponent = () => {
-    if (loading) {
-      return <div className="animate-pulse">Loading...</div>;
-    }
+    // if (loading) {
+    //   return <div className="animate-pulse">Loading...</div>;
+    // }
 
     if (authState.userObject && authState.userWallet && !_params && userBalance ) {
       return <UserDropdown user={authState.userObject} userBalance={userBalance} />;
@@ -920,6 +920,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links, scrollThreshold = 
                 Explore the Marketplace <ChevronRightIcon />
               </Link>
             </Button>
+              {/* { loading && <div className='animate-pulse'>Loading...</div> } */}
               {/* <LoginDialog _isOpen={true} /> */}
               {renderAuthComponent()}
         </ul>

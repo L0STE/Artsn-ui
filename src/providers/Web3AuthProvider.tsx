@@ -483,6 +483,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [client, router, web3Logout, toast]);
 
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   // Monitor web3auth connection status
   useEffect(() => {
     if (web3auth?.connected && !user) {

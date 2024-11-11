@@ -100,7 +100,7 @@ export function LoginDialog() {
   }
 
   return (
-    <Suspense fallback={<div className='animate-pulse'>Loading...</div>}>
+    <Suspense fallback={<div >Loading...</div>}>
       <>
         <Button 
           variant='secondary' 
@@ -163,12 +163,13 @@ export function LoginDialog() {
                           ))}
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56">
+                      <DropdownMenuContent className="w-36">
                         <DropdownMenuGroup>
                           {injectedAdapters.map((adapter) => (
                             <DropdownMenuItem 
                               key={adapter.name} 
                               onClick={() => loginUserWithAdapter(adapter.name)}
+                              className='flex items-center gap-2'
                             >
                               <img 
                                 src={`/login/${adapter.name.toLowerCase()}_icon.svg`} 
