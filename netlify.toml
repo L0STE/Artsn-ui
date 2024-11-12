@@ -3,4 +3,11 @@
   publish = ".next"
 
 [build.environment]
-NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NEXT_USE_NETLIFY_EDGE = "true"
+  NODE_VERSION = "18.20.4"
+  
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[functions]
+  node_bundler = "esbuild"
