@@ -8,7 +8,6 @@ import ReferralCard from "./components/ReferralCard";
 import TabSwitcher from "./components/TabSwitcher";
 import {
   useArtisanProgram,
-  useArtisanProgramAccount,
 } from '@/components/blockchain/protocolAccess';
   
 
