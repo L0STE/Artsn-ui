@@ -82,15 +82,13 @@ export const useWeb3Auth = () => {
 
         setUserWallet(userObject.publicKey);
 
-            console.log('user is registered logging in with userObject', userObject);
-            // await loginExistingUser({ email: userObject.email, publicKey: userObject.publicKey });
             const result = await loginUserMutation({
               variables: {
                 publicKey: userObject.publicKey,
                 password: userObject.publicKey,
               },
               onCompleted: (data) => {
-                console.log('Mutation completed with data:', data);
+                // console.log('Mutation completed with data:', data);
               },
               onError: (error) => {
                 console.error('Mutation error:', {
@@ -108,7 +106,6 @@ export const useWeb3Auth = () => {
               throw error;
             });
 
-            console.log('result', result);
             // toast({
             //   title: 'Welcome back!',
             //   description: 'You have successfully logged in.',
@@ -138,20 +135,14 @@ export const useWeb3Auth = () => {
     }
 
     try {
-      console.log('Attempting login...');
       setLoading(true);
-      console.log('about to connect to web3auth', web3auth);
       if(web3auth && web3auth.connected) {
-        const test = await web3auth.getUserInfo();
-        console.log('test', test);
 
         setLoggedIn(true);
 
         const user = await web3auth!.getUserInfo();
-        console.log('User info:', user);
         
         const accounts = await rpc?.getAccounts();
-        console.log('Accounts:', accounts);
         
         const publicKey = accounts?.[0];
 
@@ -167,16 +158,13 @@ export const useWeb3Auth = () => {
       const web3authProvider = await web3auth!.connectTo(WALLET_ADAPTERS.AUTH, {
         loginProvider: "google",
       });
-      console.log(web3authProvider);
-      console.log('Connected to Web3Auth');
+
       setProvider(web3authProvider);
       setLoggedIn(true);
 
       const user = await web3auth!.getUserInfo();
-      console.log('User info:', user);
       
       const accounts = await rpc?.getAccounts();
-      console.log('Accounts:', accounts);
       
       const publicKey = accounts?.[0];
 
@@ -205,16 +193,13 @@ export const useWeb3Auth = () => {
 
     try {
       setLoading(true);
-      console.log('hook is logging in with adapter:', adapterName);
       const web3authProvider = await web3auth.connectTo(adapterName);
       setProvider(web3authProvider);
       setLoggedIn(true);
 
       const user = await web3auth.getUserInfo();
-      console.log('User info:', user);
       
       const accounts = await rpc?.getAccounts();
-      console.log('Accounts:', accounts);
       
       const publicKey = accounts?.[0];
 
@@ -235,43 +220,6 @@ export const useWeb3Auth = () => {
     }
   }, [web3auth, rpc, initWeb3Auth]);
 
-//   const loginWithAdapter = async (adapterName: string) => {
-//     console.log('Logging in with adapter:', adapterName);
-//     if (!web3auth) {
-//       console.log("web3auth not initialized yet");
-//       return;
-//     }
-//     const web3authProvider = await web3auth.connectTo(adapterName);
-//     setProvider(web3authProvider);
-
-//     if (web3auth.connected && web3auth.provider) {
-//         const rpc = new RPC(web3auth.provider);
-//         const accounts = await rpc.getAccounts();
-//         setUserWallet(accounts[0]);
-//         const {idToken}= await web3auth.authenticateUser();
-//         if (idToken) {
-//             console.log('returned idToken:', idToken, 'from adapter:', adapterName, 'with accounts:', accounts[0]);
-//             const _isRegistered = await checkUserRegistration(accounts[0]);
-//             console.log('isRegistered:', _isRegistered);
-//             // if (!_isRegistered) {
-//             //    router.push('/register');
-//             // }
-//             await loginExistingUser({ publicKey: accounts[0] });
-//             await checkAuth();
-//             handleClose();
-//         }
-//         toast({
-//             title: 'Connected',
-//             description: 'Successfully connected to your wallet',
-//         });
-//     } else {
-//         toast({
-//             title: 'Failed to connect',
-//             description: 'Failed to connect to your wallet',
-//         });
-//     }
-// };
-
   const logout = useCallback(async () => {
     if (!web3auth) {
       console.error("Web3Auth not initialized");
@@ -291,11 +239,9 @@ export const useWeb3Auth = () => {
 
   const getUserInfo = useCallback(async () => {
     try {
-      console.log('Getting user info:');
       const user = await web3auth!.getUserInfo();
       
       const accounts = await rpc?.getAccounts();
-      console.log('Getting user info:', { user, accounts });
       
       return {
         ...user,

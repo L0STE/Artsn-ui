@@ -9,17 +9,17 @@ const SidebarFilter = () => {
           <ul>
             <li className="mb-2">
               <label className="flex items-center">
-                <input type="checkbox" className="mr-2" /> Patek (123)
+                <input type="checkbox" className="mr-2" /> Patek 
               </label>
             </li>
             <li className="mb-2">
               <label className="flex items-center">
-                <input type="checkbox" className="mr-2" /> Rolex (123)
+                <input type="checkbox" className="mr-2" /> Rolex 
               </label>
             </li>
             <li className="mb-2">
               <label className="flex items-center">
-                <input type="checkbox" className="mr-2" /> Cars (123)
+                <input type="checkbox" className="mr-2" /> Cars
               </label>
             </li>
           </ul>
@@ -59,6 +59,13 @@ const SidebarFilter = () => {
             </li>
           </ul>
         </div>
+
+        {/* Overlay */}
+        {/* <div className="absolute inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center rounded-3xl">
+          <div className="bg-white/90 px-6 py-3 rounded-lg shadow-lg">
+            <p className="text-xl font-semibold text-gray-800">Feature Coming Soon</p>
+          </div>
+        </div> */}
       </div>
     );
   };

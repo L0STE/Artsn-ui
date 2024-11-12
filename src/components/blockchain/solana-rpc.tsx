@@ -82,15 +82,9 @@ const RPC = rpcManager.getConnection();
       try {
         const conn = await this.getConnection();
         const accounts = await this.getAccounts();
-        console.log('accounts  ---->:', accounts);
         const balance = await conn.getBalance(new PublicKey(accounts[0]));
-        console.log('balance***:', balance);
         const usdcAta = await getAssociatedTokenAddress(new PublicKey(accounts[0]), new PublicKey(USDC_MINT));
-        console.log('usdcAta:', usdcAta.toString());
         const usdcBalance = await this.getTokenAccountBalance(accounts[0], conn);
-        console.log('usdcBalance****:', usdcBalance);
-        // // const amount = Number(usdcBalance.amount);
-        // console.log('usdcBalance:', usdcBalance);
         const obj = {
           sol: (balance / LAMPORTS_PER_SOL),
           usdc: usdcBalance
@@ -141,7 +135,6 @@ const RPC = rpcManager.getConnection();
   
     async signTransaction(tx: any): Promise<string> {
       try {
-        console.log('signing and sending transaction w/ web3auth');
         const accounts = await this.getAccounts();
         // const connection = await this.getConnection();
         const connection = new Connection("https://soft-cold-energy.solana-devnet.quiknode.pro/ad0dda04b536ff45a76465f9ceee5eea6a048a8f");
@@ -151,12 +144,10 @@ const RPC = rpcManager.getConnection();
         const UMI_KEY: string = process.env.NEXT_PUBLIC_UMI_KEY!;
         const UMI_KEY_JSON = JSON.parse(UMI_KEY);
         const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(UMI_KEY_JSON));
-        console.log('UMI KEYPAIR ->', keypair.publicKey.toString());
         const _signer = createSignerFromKeypair(umi, keypair);
         umi.use(signerIdentity(_signer));
   
         const signedTx = await this.solanaWallet.signAndSendTransaction(tx);
-        console.log('signedTx:', signedTx);
         // Convert the signed transaction to a format compatible with Umi
         // const umiTx = umi.transactions.deserialize(signedTx.serialize());
         // console.log('umiTx:', umiTx);
@@ -164,7 +155,6 @@ const RPC = rpcManager.getConnection();
         //   skipPreflight: true,
         // });
         const signature = signedTx.signature;
-        console.log('SIGNATURE ->', signature);
         // const confirmResult = await umi.rpc.confirmTransaction(signature, {
         // strategy: { type: 'blockhash', ...(await umi.rpc.getLatestBlockhash()) },
         // })
@@ -208,7 +198,6 @@ const RPC = rpcManager.getConnection();
   
     async signVersionedTransaction({ tx }: { tx: VersionedTransaction}): Promise<string> {
       try {
-        console.log('signing and sending transaction w/ web3auth');
         const accounts = await this.getAccounts();
         // const connection = await this.getConnection();
         const connection = rpcManager.getConnection()
@@ -220,7 +209,6 @@ const RPC = rpcManager.getConnection();
         umi.use(signerIdentity(_signer));
   
         const signedTx = await this.solanaWallet.signTransaction(tx);
-        console.log('signedTx:', signedTx);
         // Convert the signed transaction to a format compatible with Umi
         const umiTx = umi.transactions.deserialize(signedTx.serialize());
         
@@ -231,7 +219,6 @@ const RPC = rpcManager.getConnection();
         strategy: { type: 'blockhash', ...(await umi.rpc.getLatestBlockhash()) },
         })
 
-        console.log('Transaction confirmed:', confirmResult);
         const string = b58.encode(Buffer.from(signature));
         return string;
       } catch (error) {

@@ -20,15 +20,15 @@ type Listing = {
 };
 
 const ProductCard = ({ account, listing, image }: { image: string, account: PublicKey, listing: Listing }) => {
-  console.log('account ->', account.toString())
+  // console.log('account ->', account.toString())
   const [loading, setLoading] = useState<boolean>(true);
   const [obj, setObj] = useState<any>(null);
   const umi = createUmi('https://soft-cold-energy.solana-devnet.quiknode.pro/ad0dda04b536ff45a76465f9ceee5eea6a048a8f'); 
   const _pubkey = publicKey(account.toString());
   const getObjInfo = async () => {
     const watch = await fetchCollectionV1(umi, _pubkey);
-    console.log('watch ->', watch)
-    setObj(watch.attributes?.attributeList);
+    // console.log('watch ->', watch)
+    setObj(watch);
     setLoading(false);
   };
 
@@ -53,7 +53,7 @@ const ProductCard = ({ account, listing, image }: { image: string, account: Publ
         <div>
           <Link href="/product">
             <h3 className="text-md text-black font-semibold font-urban">
-              {obj[0].value.toString()} - {obj[1].value.toString()}
+              {obj.name}
             </h3>
           </Link>
           <p className="text-gray-500 flex items-center gap-2">

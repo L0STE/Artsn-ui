@@ -587,7 +587,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links, scrollThreshold = 
     const getBalance = async () => {
       try {
         const balance = await rpc.getBalance();
-        console.log('balance', balance);
+        // console.log('balance', balance);
         setUserBalance(balance);
         return balance;
       } catch (error) {
@@ -669,7 +669,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links, scrollThreshold = 
   };
 
   const UserDropdown = ({ user, userBalance }: { user: User, userBalance: any }) => {
-    console.log('USER DROPDOWN ->', userBalance);
+    // console.log('USER DROPDOWN ->', userBalance);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const router = useRouter();
     const copyToClipboard = (text: any) => {

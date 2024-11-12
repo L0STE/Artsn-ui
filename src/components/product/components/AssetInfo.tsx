@@ -293,7 +293,7 @@ export default function AssetInfo({ asset }: { asset: any }) {
           {`Buy $${amount * Number(asset.onChainData.price)} of this Fraction`}
         </button> */}
         <AlertDialog>
-          <AlertDialogTrigger className="w-full md:w-2/3 bg-black text-white py-3 rounded-2xl">{`Buy $${amount * Number(asset.onChainData.price)} of this Fraction`}</AlertDialogTrigger>
+          <AlertDialogTrigger className="w-full md:w-2/3 bg-black text-white py-3 rounded-2xl">{`Buy ${amount} Fractions`}</AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
@@ -331,17 +331,16 @@ export default function AssetInfo({ asset }: { asset: any }) {
                 <Separator className="my-2 bg-slate-300"/>  
                 <div className="flex flex-col w-full justify-between items-center px-4">
                   <div className="flex flex-row w-full justify-between gap-4 items-center px-4">
-                    <p className="text-lg font-semibold text-secondary">Your Balance</p>
-                    <p className="text-lg font-semibold text-secondary">${userBalance.usdc}</p>
+                    <p className="text-md text-secondary">Subtotal</p>
+                    <p className="text-md text-secondary">${amount * Number(asset.onChainData.price)}</p>
                   </div>
                   <div className="flex flex-row w-full justify-between gap-4 items-center px-4">
-                    <p className="text-lg font-semibold text-secondary">Total</p>
-                    <p className="text-lg font-semibold text-secondary">${amount * Number(asset.onChainData.price)}</p>
+                    <p className="text-md text-secondary">Processing Fee</p>
+                    <p className="text-md text-secondary">${(amount * Number(asset.onChainData.price)) * 0.04}</p>
                   </div>
-                  <Separator className="my-2 bg-slate-300"/>
                   <div className="flex flex-row w-full justify-between gap-4 items-center px-4">
-                    <p className="text-lg font-semibold text-secondary">Remaining Balance</p>
-                    <p className="text-lg font-semibold text-secondary">${userBalance.usdc - (amount * Number(asset.onChainData.price))}</p>
+                    <p className="text-md font-semibold text-secondary">Purchase Total</p>
+                    <p className="text-md font-semibold text-secondary">${((amount * Number(asset.onChainData.price)) * 0.04) + (amount * Number(asset.onChainData.price))}</p>
                   </div>
                 </div>
               </AlertDialogDescription>
@@ -364,7 +363,7 @@ export default function AssetInfo({ asset }: { asset: any }) {
                     onClick={()=> handleBuy()}
                     disabled={userBalance.usdc < (amount * Number(asset.onChainData.price))}
                   >
-                    Pay with crypto
+                    Pay with crypto ( save ${(amount * Number(asset.onChainData.price)) * 0.04} )
                   </Button>
                   <Button className="w-full rounded-xl bg-secondary text-primary hover:bg-primary hover:text-secondary" onClick={()=> buyStripe()}><CreditCard className="mr-2"/>Pay with card</Button>
                 </div>
@@ -381,12 +380,12 @@ export default function AssetInfo({ asset }: { asset: any }) {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-      <p className="text-sm text-gray-500 p-7 border-gray rounded-3xl">
+      {/* <p className="text-sm text-gray-500 p-7 border-gray rounded-3xl">
         {asset.offChainData.about}{" "}
         <a href="#" className="text-blue-600">
           See more
         </a>
-      </p>
+      </p> */}
     </section>
   );
 }

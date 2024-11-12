@@ -40,7 +40,7 @@ export default function PriceHistory() {
   }
 
   return (
-    <section className="bg-white rounded-3xl border-gray pt-6 pr-6 pb-3 pl-3 mb-5">
+    <section className="bg-white rounded-3xl border-gray pt-6 pr-6 pb-3 pl-3 mb-5 ">
       <h2 className="text-xl pl-4 font-bold mb-5 flex items-center gap-2">
         <svg
           width="20"
@@ -67,7 +67,7 @@ export default function PriceHistory() {
         Price History
       </h2>
 
-      <div className="">
+      {/* <div className="">
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={data}>
             <defs>
@@ -91,7 +91,6 @@ export default function PriceHistory() {
               }}
               formatter={(value) => [`$${value}`, "Value"]}
             />
-            {/* Area to create gradient effect */}
             <Area
               type="monotone"
               dataKey="value"
@@ -109,6 +108,12 @@ export default function PriceHistory() {
             />
           </LineChart>
         </ResponsiveContainer>
+      </div> */}
+      {/* Overlay */}
+      <div className="h-36 inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center rounded-3xl">
+        <div className="bg-white/90 px-6 py-3 rounded-lg shadow-lg">
+          <p className="text-xl font-semibold text-gray-800">Feature Coming Soon</p>
+        </div>
       </div>
     </section>
   );

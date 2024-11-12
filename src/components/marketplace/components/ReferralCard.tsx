@@ -15,7 +15,7 @@ const ReferralCard = () => {
         <p className="text-xs text-gray-500 mb-4">
           You and your friend will both receive $10 when your friend invests in their first Artisan offering.
         </p>
-        <button className="bg-black text-white text-xs px-4 py-3 rounded-2xl">
+        <button className="bg-black text-white text-xs px-4 py-3 rounded-2xl" disabled={true}>
           Join the Artisan Referral program
         </button>
       </div>
@@ -23,6 +23,11 @@ const ReferralCard = () => {
       {/* Learn More link */}
       <div className="mt-4 text-gray-500 text-xs">
         <a href="#" className="underline">Learn more about the Referral program</a>
+      </div>
+      <div className="absolute inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center rounded-3xl z-[40]">
+        <div className="bg-white/20 px-6 py-3 rounded-lg shadow-lg">
+          <p className="text-md font-semibold text-gray-800">Feature Coming Soon</p>
+        </div>
       </div>
     </div>
   );

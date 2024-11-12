@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
         fetchPolicy: 'network-only'
       });
-      console.log('ME query data:', data);
+      // console.log('ME query data:', data);
       if (data?.me) {
         setUser(data.me);
       }
@@ -140,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           password: userObject.publicKey,
         },
         onCompleted: (data) => {
-          console.log('Mutation completed with data:', data);
+          // console.log('Mutation completed with data:', data);
         },
         onError: (error) => {
           console.error('Mutation error:', {
@@ -205,36 +205,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
     // Verify your CREATE_USER mutation is correctly exported
-    console.log('CREATE_USER mutation:', CREATE_USER);
 
     try {
       if (!web3auth) {
         throw new Error('web3auth not initialized');
       }
   
-      console.log('1. Starting login process...');
       const connected = await web3Login();
       if (!connected) throw new Error('Failed to connect to web3 provider');
   
-      console.log('2. Getting user info...');
       const userInfo = await getUserInfo();
-      console.log('User info:', userInfo);
 
-      console.log('3. Getting accounts...');
       const accounts = await getAccounts();
       const publicKey = accounts![0];
-      console.log('Public key:', publicKey);
       
-      console.log('4. Checking registration...');
       const isRegistered = await checkUserRegistration(publicKey);
-      console.log('Is registered:', isRegistered);
   
       if (isRegistered) {
-        console.log('5a. Logging in existing user...');
         const userData = await loginExistingUser({ publicKey });
         return userData;
       } else {
-        console.log('5b. Creating new user...');
         const userInput = {
           email: userInfo?.email || 'unknown',
           publicKey,
@@ -248,16 +238,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: 'USER'
         };
 
-        console.log('User input:', userInput);
         
         try {
-          console.log('6. Executing createUser mutation...');
           const createUserResult = await createUser({
             variables: {
               input: userInput
             },
             onCompleted: (data) => {
-              console.log('Mutation completed with data:', data);
+              // console.log('Mutation completed with data:', data);
             },
             onError: (error) => {
               console.error('Mutation error:', {
@@ -275,17 +263,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             throw error;
           });
   
-          console.log('7. Create user result:', createUserResult);
 
           if (!createUserResult?.data) {
             console.error('No data returned from mutation');
             throw new Error('No data returned from createUser mutation');
           }
 
-          console.log('8. User created, logging in...');
           if (createUserResult.data?.createUser) {
             const userData = await loginExistingUser({ publicKey: createUserResult.data?.createUser.publicKey });
-            console.log('9. Login successful:', userData);
             return userData;
           }
         } catch (error: any) {
@@ -332,36 +317,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('web3auth not initialized');
       }
 
-      console.log('1. Starting login process...', adapter);
+      // console.log('1. Starting login process...', adapter);
 
       const connected = await loginWithAdapter(adapter);
       if (!connected) throw new Error('Failed to connect to web3 provider');
 
-      console.log('2. Getting user info...');
+      // console.log('2. Getting user info...');
       const userInfo = await getUserInfo();
-      console.log('User info:', userInfo);
+      // console.log('User info:', userInfo);
 
-      console.log('3. Getting accounts...');
+      // console.log('3. Getting accounts...');
       const accounts = await getAccounts();
       const publicKey = accounts![0];
-      console.log('Public key:', publicKey);
+      // console.log('Public key:', publicKey);
 
-      console.log('4. Checking registration...');
+      // console.log('4. Checking registration...');
       const isRegistered = await checkUserRegistration(publicKey);
-      console.log('Is registered:', isRegistered);
+      // console.log('Is registered:', isRegistered);
 
       if (isRegistered) {
-        console.log('5a. Logging in existing user...');
+        // console.log('5a. Logging in existing user...');
         try {
           const userData = await loginExistingUser({ publicKey: publicKey });
-          console.log('5a. Login successful:', userData);
+          // console.log('5a. Login successful:', userData);
           return userData;
         } catch (error) {
           console.error('Error logging in existing user:', error);
           throw error;
         }
       } else {
-        console.log('5b. Creating new user...');
+        // console.log('5b. Creating new user...');
         const userInput = {
           email: userInfo?.email || 'unknown',
           publicKey,
@@ -375,16 +360,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: 'USER'
         };
 
-        console.log('User input:', userInput);
+        // console.log('User input:', userInput);
 
         try {
-          console.log('6. Executing createUser mutation...');
+          // console.log('6. Executing createUser mutation...');
           const createUserResult = await createUser({
             variables: {
               input: userInput
             },
             onCompleted: (data) => {
-              console.log('Mutation completed with data:', data);
+              // console.log('Mutation completed with data:', data);
             },
             onError: (error) => {
               console.error('Mutation error:', {
@@ -402,18 +387,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             throw error;
           });
 
-          console.log('7. Create user result:', createUserResult);
+          // console.log('7. Create user result:', createUserResult);
 
           if (!createUserResult?.data) {
             console.error('No data returned from mutation');
             throw new Error('No data returned from createUser mutation');
           }
 
-          console.log('8. User created, logging in...');
+          // console.log('8. User created, logging in...');
 
           if (createUserResult.data?.createUser) {
             const userData = await loginExistingUser({ publicKey: createUserResult.data?.createUser.publicKey });
-            console.log('9. Login successful:', userData);
+            // console.log('9. Login successful:', userData);
             return userData;
           }
 

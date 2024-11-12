@@ -92,11 +92,14 @@ const ProductFeature: React.FC<{ params: { id: string } }> = ({ params }) => {
           </div>
           <div className="w-full md:w-1/2">
             <AssetInfo asset={productData} />
+            {/* <Statistics /> */}
+            {/* <InvestmentSummary /> */}
+            <AboutBrand info={productData.offChainData.about}/>
+            <MetadataLinks 
+              mintAddress={productData.onChainData.object.toString()}
+              associatedId={productData.offChainData.associatedId.toString()}
+            />
             <PriceHistory />
-            <Statistics />
-            <InvestmentSummary />
-            <AboutBrand />
-            <MetadataLinks />
           </div>
         </div>
         {/* Related products section can be added here if needed */}

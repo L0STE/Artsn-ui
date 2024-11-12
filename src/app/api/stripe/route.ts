@@ -110,6 +110,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // TODO(): Calculate price based on amount
+    const price = ((body.amount * 1) * 1.04);
+
     // Generate reference ID
     const date = new Date();
     const referenceId = `INV-${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${date.getTime().toString().slice(-6)}`;
@@ -130,7 +133,7 @@ export async function POST(req: NextRequest) {
                 ...body.metadata
               }
             },
-            unit_amount: Math.round(body.amount * 100), // Ensure integer
+            unit_amount: Math.round(price * 100), // Ensure integer
           },
           quantity: 1,
         },

@@ -85,11 +85,16 @@ const related_products = [
 export default function Marketplace() {
   const { listings, watches, profiles, getProgramAccount } = useArtisanProgram();
   const [allListings, setAllListings] = useState<any[]>([]);
+  const [allWatches, setAllWatches] = useState<any[]>([]);
+  const [allDiamonds, setAllDiamonds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    if (listings.data) {
-      console.log('all listings ->', listings.data);
-      console.log('number 1 ->', listings.data[0].account.object)
+    if (listings.data && allListings.length === 0) {
+      // filter out the watches and diamonds based on the listings.data[0].account.objectType , it is either listings.data[0].account.objectType.watch or listings.data[0].account.objectType.diamond
+      const allWatches = listings.data.filter((listing: any) => listing.account.objectType === 'watch');
+      const allDiamonds = listings.data.filter((listing: any) => listing.account.objectType === 'diamond');
+      setAllWatches(allWatches);
+      setAllDiamonds(allDiamonds);
       setAllListings(listings.data);
       setLoading(false)
     }
@@ -98,11 +103,11 @@ export default function Marketplace() {
     <div className="mt-20">
       <Breadcrumb />
       <div className="bg-gray-light min-h-screen px-6 py-5 border border-b-gray">
-        <div className="max-w-screen-xl mx-auto flex mb-4">
+        {/* <div className="max-w-screen-xl mx-auto flex mb-4">
           <div className="w-full">
             <TabSwitcher />
           </div>
-        </div>
+        </div> */}
         <div className="max-w-screen-xl mx-auto flex flex-wrap">
           {/* Sidebar Filter */}
           <div className="w-full md:w-1/4 md:pr-4 mb-4">
@@ -114,7 +119,7 @@ export default function Marketplace() {
             <div className="w-full md:w-3/4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-3">
               {allListings.map((account, index) => (
                 <>
-                  {index === 6 && <ReferralCard key="referral-card" />}{" "}
+                  {index === 2 && <ReferralCard key="referral-card" />}{" "}
                   {/* Insert ReferralCard at the 7th position */}
                   <ProductCard
                     // key={index}
@@ -133,7 +138,7 @@ export default function Marketplace() {
         </div>
         <div className="max-w-screen-xl mx-auto flex my-6">
           <div className="w-1/4 hidden md:block"></div>
-          <div className="w-full md:w-3/4 flex justify-center gap-3">
+          {/* <div className="w-full md:w-3/4 flex justify-center gap-3">
             <button className="text-gray-500 border-gray text-xs px-4 py-2.5 rounded-2xl">
               Previous
             </button>
@@ -154,10 +159,10 @@ export default function Marketplace() {
                 />
               </svg>
             </button>
-          </div>
+          </div> */}
         </div>
 
-        <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row gap-4 my-16">
+        {/* <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row gap-4 my-16">
           <div className="rounded-3xl flex flex-col justify-center">
             <h1 className="min-w-52 leading-snug text-4xl">
               Other
@@ -175,7 +180,7 @@ export default function Marketplace() {
               />
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

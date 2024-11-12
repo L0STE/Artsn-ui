@@ -308,7 +308,7 @@ const Settings = () => {
                     },
                 },
             onCompleted: (data) => {
-                console.log('Mutation completed with data:', data);
+                // console.log('Mutation completed with data:', data);
               },
               onError: (error) => {
                 console.error('Mutation error:', {

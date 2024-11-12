@@ -75,17 +75,17 @@ export default function FooterFeature() {
                         <h2 className='font-bold text-secondary'>Site</h2>
                         <ul className={styles.linkList}>
                             <li>
-                                <a href='/collect' target='_blank' className='link text-secondary'>Start Collecting</a>
+                                <a href='/marketplace' target='_blank' className='link text-secondary'>Start Collecting</a>
                             </li>
                             <li>
                                 <a href='/about' target='_blank' className='link text-secondary'>About Us</a>
                             </li>
-                            <li>
+                            {/* <li>
                                 <a href='tos' target='_blank' className='link text-secondary'>Terms and Conditions</a>
                             </li>
                             <li>
                                 <a href='privacy' target='_blank' className='link text-secondary'>Privacy Policy</a>
-                            </li>
+                            </li> */}
                         </ul>
                     </div>
                     <div className={styles.linkContainerCol}>
