@@ -111,7 +111,7 @@ export function LoginDialog() {
         </Button>
 
         {isOpen && (
-          <div className="fixed h-screen inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
+          <div className="fixed h-screen inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[201]">
             <div 
               className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10" 
               onClick={handleClose} 
