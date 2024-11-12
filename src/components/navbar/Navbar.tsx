@@ -50,7 +50,9 @@ import { PublicKey } from '@solana/web3.js';
 import MobileNavbar from './MobileNavbar';
 import { User } from '@/types/resolver-types';
 import { useSolanaPrice } from '@/hooks/use-solana-price';
-import { get } from 'lodash';
+import dynamic from 'next/dynamic';
+// Dynamically import Joyride with ssr disabled
+const Joyride = dynamic(() => import('react-joyride'), { ssr: false });
 interface NavbarProps {
   searchParams?: ReadonlyURLSearchParams;
   scrollThreshold?: number;
@@ -100,43 +102,34 @@ type NavItemsProps = {
     onClick?: (event: React.MouseEvent) => void;
 };
 
-const links2 = [
-  { label: 'Home', path: '/' },
-  // { label: 'What is Artisan?', path: '#artisan' },
-  { label: 'About Us', path: '/about' },
+const clientId = "BI8MhAUT4vK4cfQZRQ_NEUYOHE3dhD4ouJif9SUgbgBeeZwP6wBlXast2pZsQJlney3nPBDb-PcMl9oF6lV67P0"; // get from https://dashboard.web3auth.io
+let defaultSolanaAdapters: IAdapter<unknown>[] = [];
+
+type BalanceObject = {
+  sol: number;
+  usdc: number;
+};
+
+const steps = [
+  {
+    target: '.about-link',
+    content: 'Learn more about our platform and mission.',
+  },
+  {
+    target: '.marketplace-link',
+    content: 'Explore our marketplace and discover unique assets to invest in.',
+  },
+  {
+    target: '.auth-section',
+    content: 'Login or Create your profile here.',
+  }
 ];
 
-  const NavItem = ({ href, children, onClick, index, delay }: NavItemsProps) => {
-    return (
-      <motion.li
-        className="group"
-        variants={slideIn({ delay: delay + index / 10, direction: 'down' })}
-        initial="hidden"
-        animate="show"
-      >
-        {/* <CLink
-          href={href || `/#${children}`}
-          className="block p-2 duration-500 hover:text-accent"
-          onClick={onClick}
-          withPadding
-        >
-          {children}
-        </CLink> */}
-      </motion.li>
-    );
-  };
-  
-  const clientId = "BI8MhAUT4vK4cfQZRQ_NEUYOHE3dhD4ouJif9SUgbgBeeZwP6wBlXast2pZsQJlney3nPBDb-PcMl9oF6lV67P0"; // get from https://dashboard.web3auth.io
-  let defaultSolanaAdapters: IAdapter<unknown>[] = [];
-
-  type BalanceObject = {
-    sol: number;
-    usdc: number;
-  };
 const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
   const _params = searchParams?.get('register') === 'true';
   const { isDarkMode } = useTheme();
   const [navbarCollapsed, setNavbarCollapsed] = useState(false);
+  const [runTour, setRunTour] = useState(false);
   const [authState, setAuthState] = useState<{
     web3auth: Web3AuthNoModal | null;
     provider: IProvider | null;
@@ -148,7 +141,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
     userObject: null,
     userWallet: null
   });
-  
+  const [isMounted, setIsMounted] = useState(false);
   const { user, loginExistingUser, logout, checkAuth, checkUserRegistration, getUserInfo } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -166,17 +159,19 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
     error,
     lastUpdate
   } = useSolanaPrice();
-    const rpc = new RPC(provider)
-    const getBalance = async () => {
-      try {
-        const balance = await rpc.getBalance();
-        // console.log('balance', balance);
-        setUserBalance(balance);
-        return balance;
-      } catch (error) {
-        console.error('Error fetching balance', error);
-      }
+  const rpc = new RPC(provider)
+  const getBalance = async () => {
+    try {
+      const balance = await rpc.getBalance();
+      // console.log('balance', balance);
+      setUserBalance(balance);
+      return balance;
+    } catch (error) {
+      console.error('Error fetching balance', error);
     }
+  }
+
+  
   // Single effect to handle initialization
   useEffect(() => {
     const initializeAuth = async () => {
@@ -248,6 +243,48 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
         description: 'Failed to logout',
         variant: 'destructive'
       });
+    }
+  };
+
+  useEffect(() => {
+    setIsMounted(true);
+    
+    // Check if tour has been completed before
+    const navbarTour = localStorage.getItem('navbarTour');
+    if (!navbarTour) {
+      localStorage.setItem('navbarTour', JSON.stringify({ 
+        completed: false, 
+        date: new Date().toISOString() 
+      }));
+      setRunTour(true);
+    } else {
+      const { completed, date } = JSON.parse(navbarTour);
+      
+      // Reset tour if it's been more than 7 days
+      if (completed && new Date(date) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) {
+        localStorage.setItem('navbarTour', JSON.stringify({
+          completed: false,
+          date: new Date().toISOString()
+        }));
+        setRunTour(true);
+      }
+    }
+  }, []);
+
+  const handleJoyrideCallback = (data: any) => {
+    const { status, type } = data;
+    const isDesktop = window.innerWidth > 768 || false;
+    if (['finished', 'skipped'].includes(status)) {
+      setRunTour(false);
+      localStorage.setItem('navbarTour', JSON.stringify({
+        completed: true,
+        date: new Date().toISOString()
+      }));
+    }
+    
+    // For mobile: start tour when menu is opened
+    if (!isDesktop && type === 'step:after' && !navbarCollapsed) {
+      setNavbarCollapsed(true);
     }
   };
 
@@ -358,11 +395,29 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
       return <UserDropdown user={authState.userObject} userBalance={userBalance} />;
     }
 
-    return <LoginDialog />;
+    return <LoginDialog className='auth-section'/>;
   };
 
   return (
     <Suspense fallback={<div />}>
+      {isMounted && (
+        <Joyride
+          steps={steps}
+          run={runTour}
+          continuous={true}
+          showSkipButton={true}
+          showProgress={true}
+          styles={{
+            options: {
+              primaryColor: '#0066FF',
+              zIndex: 1000,
+            },
+          }}
+          callback={handleJoyrideCallback}
+          disableOverlayClose={true}
+          disableScrolling={true}
+        />
+      )}
       {/* Mobile Navbar */}
         <motion.header
           variants={fadeIn(0.5)}
@@ -383,10 +438,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
               layout="fill"
               objectFit="cover"
               quality={100}
-              className='-z-200 opacity-25
-              // move it to the right
-              transform translate-x-10
-              '
+              className='-z-200 opacity-25 transform translate-x-10'
             />
           </div>
           <div
@@ -493,13 +545,13 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
           {/* Map Links in separate div */}
           <ul className="flex flex-row items-stretch gap-6 list-style-none lg:gap-5 xl:gap-6 md:flex-row md:items-center">
             <Button variant={'ghost'} asChild>
-              <Link className="text-secondary text-nowrap w-full " href='/about'>
+              <Link className="text-secondary text-nowrap w-full about-link" href='/about'>
                 About Us
               </Link>
             </Button>
             
-            <Button className="bg-bg text-dark-1 border-dark-1 border-2 w-3/4 rounded-xl border-y border-x" asChild>
-              <Link className="text-dark-1 text-nowrap w-full " href='/marketplace'>
+            <Button className="bg-bg text-dark-1 border-dark-1 border-2 w-3/4 rounded-xl border-y border-x " asChild>
+              <Link className="text-dark-1 text-nowrap w-full marketplace-link" href='/marketplace'>
                 Explore the Marketplace <ChevronRightIcon />
               </Link>
             </Button>

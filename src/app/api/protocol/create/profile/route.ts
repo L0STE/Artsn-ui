@@ -7,7 +7,7 @@ import {
     Connection
 } from "@solana/web3.js";
 import * as b58 from 'bs58';
-import * as anchor from "@coral-xyz/anchor";
+import {AnchorProvider} from "@coral-xyz/anchor";
 import { getArtisanProgram } from "@/components/blockchain/artisan-exports";
 import { rpcManager } from "@/lib/rpc/rpc-manager";
 

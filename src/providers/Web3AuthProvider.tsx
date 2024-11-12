@@ -134,13 +134,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginExistingUser = useCallback(async (userObject: { publicKey: string }) => {
     try {
+      console.log('LOGGING IN EXISTING USE***************:', userObject);
       const result = await loginUserMutation({
         variables: {
           publicKey: userObject.publicKey,
           password: userObject.publicKey,
         },
         onCompleted: (data) => {
-          // console.log('Mutation completed with data:', data);
+          console.log('Mutation completed with data:', data);
         },
         onError: (error) => {
           console.error('Mutation error:', {
@@ -157,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Caught in mutation catch block:', error);
         throw error;
       });
-      
+      console.log('LOGIN RESULT:', result);
       const { token, user: userData } = result.data.login;
       if (userData) {
         localStorage.setItem('authToken', token);
@@ -174,10 +175,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Login error:", error);
       setError('Failed to login existing user');
-      toast({
-        title: 'Login Failed',
-        description: 'An error occurred during login. Please try again.',
-      });
+      // toast({
+      //   title: 'Login Failed',
+      //   description: 'An error occurred during login. Please try again.',
+      // });
       localStorage.removeItem('authToken');
       localStorage.removeItem('userPublicKey');
       throw error;
@@ -212,7 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
   
       const connected = await web3Login();
-      if (!connected) throw new Error('Failed to connect to web3 provider');
+      // if (!connected) throw new Error('Failed to connect to web3 provider');
   
       const userInfo = await getUserInfo();
 
@@ -225,7 +226,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userData = await loginExistingUser({ publicKey });
         return userData;
       } else {
+        // const newUser = {
+        //   // Required top-level fields
+        //   email: input.email || 'unknown',
+        //   password: input.password,
+        //   uuid: uuidv4(),
+        //   username: input.username || `user_${input.publicKey.slice(0, 6)}`,
+        //   firstName: input.firstName || 'Unknown',
+        //   lastName: input.lastName || 'Unknown',
+        //   country: input.country || 'Unknown',
+
+        //   // Optional top-level fields with defaults
+        //   publicKey: input.publicKey,
+        //   createdAt: now,
+        //   updatedAt: now,
+        //   lastLogin: now,
+        //   isActive: input.isActive ?? true,
+        //   role: input.role || 'USER',
+        //   verificationToken: '', // Required by schema
+        //   isVerified: input.isVerified ?? false,
+        //   solanaTransactionId: '',
+        //   phoneNumber: '',
+
+        //   // Required nested objects
+        //   socialLinks: {
+        //     twitter: '',
+        //     instagram: '',
+        //     website: ''
+        //   },
+
+        //   baseProfile: {
+        //     id: baseProfileId, // Required by schema
+        //     displayName: input.username || `user_${input.publicKey.slice(-4)}`,
+        //     displayRole: input.role || 'USER',
+        //     photoUrl: 'https://monaco-public.s3.eu-central-1.amazonaws.com/671a01ed57cfa29934ac5606/b824143e-f6c4-4b29-87f7-42519fd6556e/0',
+        //     bio: '',
+        //     createdAt: now,
+        //     updatedAt: now
+        //   },
+
+        //   investorInfo: {
+        //     id: investorInfoId, // Required by schema
+        //     createdAt: now,
+        //     updatedAt: now,
+        //     investmentPreferences: [],
+        //     investmentHistory: [],
+        //     portfolioSize: new Double(0.0),
+        //     riskTolerance: 'MODERATE',
+        //     preferredInvestmentDuration: 'MEDIUM',
+        //     totalSpend: new Double(0.0)
+        //   },
+
+        //   kycInfo: {
+        //     idvId: '',
+        //     kycStatus: 'PENDING',
+        //     kycCompletionDate: now,
+        //     kycDocuments: []
+        //   }
+        // };
         const userInput = {
+          // email: userInfo?.email || 'unknown',
+          // publicKey,
+          // password: publicKey,
+          // username: userInfo?.name || `user_${publicKey.slice(0, 6)}`,
+          // firstName: userInfo?.name?.split(' ')[0] || 'Unknown',
+          // lastName: userInfo?.name?.split(' ')[1] || 'Unknown',
+          // country: 'Unknown',
+          // isActive: true,
+          // isVerified: false,
+          // role: 'USER'
           email: userInfo?.email || 'unknown',
           publicKey,
           password: publicKey,
@@ -235,7 +304,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           country: 'Unknown',
           isActive: true,
           isVerified: false,
-          role: 'USER'
+          role: 'USER',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
+          solanaTransactionId: '',
+          phoneNumber: '',
+          kycInfo: {
+            idvId: '',
+            kycStatus: 'PENDING',
+            kycCompletionDate: new Date().toISOString(),
+            kycDocuments: []
+          },
+          investorInfo: {
+            id: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            investmentPreferences: [],
+            investmentHistory: [],
+            portfolioSize: 0.0,
+            riskTolerance: 'MODERATE',
+            preferredInvestmentDuration: 'MEDIUM',
+            totalSpend: 0.0
+          },
+          baseProfile: {
+            id: '',
+            displayName: userInfo?.name || `user_${publicKey.slice(-4)}`,
+            displayRole: 'USER',
+            photoUrl: 'https://example.com/default-photo.png',
+            bio: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
         };
 
         
@@ -245,7 +345,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               input: userInput
             },
             onCompleted: (data) => {
-              // console.log('Mutation completed with data:', data);
+              console.log('Mutation completed with data:', data);
             },
             onError: (error) => {
               console.error('Mutation error:', {
@@ -281,11 +381,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             stack: error.stack
           });
           
-          toast({
-            title: 'Registration Failed',
-            description: error.message || 'Failed to create new user account',
-            variant: "destructive",
-          });
+          // toast({
+          //   title: 'Registration Failed',
+          //   description: error.message || 'Failed to create new user account',
+          //   variant: "destructive",
+          // });
           
           throw error;
         }
@@ -297,11 +397,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         type: error.constructor.name
       });
       setError(error.message || 'Failed to complete login process');
-      toast({
-        title: 'Login Failed',
-        description: error.message || 'An error occurred during login. Please try again.',
-        variant: "destructive",
-      });
+      // toast({
+      //   title: 'Login Failed',
+      //   description: error.message || 'An error occurred during login. Please try again.',
+      //   variant: "destructive",
+      // });
       return null;
     } finally {
       setLoading(false);
@@ -317,36 +417,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('web3auth not initialized');
       }
 
-      // console.log('1. Starting login process...', adapter);
+      console.log('1. Starting login process...', adapter);
 
       const connected = await loginWithAdapter(adapter);
       if (!connected) throw new Error('Failed to connect to web3 provider');
 
-      // console.log('2. Getting user info...');
+      console.log('2. Getting user info...');
       const userInfo = await getUserInfo();
-      // console.log('User info:', userInfo);
+      console.log('User info:', userInfo);
 
-      // console.log('3. Getting accounts...');
+      console.log('3. Getting accounts...');
       const accounts = await getAccounts();
       const publicKey = accounts![0];
-      // console.log('Public key:', publicKey);
+      console.log('Public key:', publicKey);
 
-      // console.log('4. Checking registration...');
+      console.log('4. Checking registration...');
       const isRegistered = await checkUserRegistration(publicKey);
-      // console.log('Is registered:', isRegistered);
+      console.log('Is registered:', isRegistered);
 
       if (isRegistered) {
-        // console.log('5a. Logging in existing user...');
+        console.log('5a. Logging in existing user...');
         try {
           const userData = await loginExistingUser({ publicKey: publicKey });
-          // console.log('5a. Login successful:', userData);
+          console.log('5a. Login successful:', userData);
           return userData;
         } catch (error) {
           console.error('Error logging in existing user:', error);
           throw error;
         }
       } else {
-        // console.log('5b. Creating new user...');
+        console.log('5b. Creating new user...');
         const userInput = {
           email: userInfo?.email || 'unknown',
           publicKey,
@@ -363,13 +463,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // console.log('User input:', userInput);
 
         try {
-          // console.log('6. Executing createUser mutation...');
+          console.log('6. Executing createUser mutation...');
           const createUserResult = await createUser({
             variables: {
               input: userInput
             },
             onCompleted: (data) => {
-              // console.log('Mutation completed with data:', data);
+              console.log('Mutation completed with data:', data);
             },
             onError: (error) => {
               console.error('Mutation error:', {
@@ -387,18 +487,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             throw error;
           });
 
-          // console.log('7. Create user result:', createUserResult);
+          console.log('7. Create user result:', createUserResult);
 
           if (!createUserResult?.data) {
             console.error('No data returned from mutation');
             throw new Error('No data returned from createUser mutation');
           }
 
-          // console.log('8. User created, logging in...');
+          console.log('8. User created, logging in...');
 
           if (createUserResult.data?.createUser) {
             const userData = await loginExistingUser({ publicKey: createUserResult.data?.createUser.publicKey });
-            // console.log('9. Login successful:', userData);
+            console.log('9. Login successful:', userData);
             return userData;
           }
 
@@ -412,11 +512,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             stack: error.stack
           });
 
-          toast({
-            title: 'Registration Failed',
-            description: error.message || 'Failed to create new user account',
-            variant: "destructive",
-          });
+          // toast({
+          //   title: 'Registration Failed',
+          //   description: error.message || 'Failed to create new user account',
+          //   variant: "destructive",
+          // });
 
           throw error;
         }

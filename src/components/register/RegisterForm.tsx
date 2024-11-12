@@ -37,7 +37,7 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
     const router = useRouter();
     const { toast } = useToast();
     // In your SignupForm
-    const { login, isAuthenticated, user } = useAuth();
+    const { login, isAuthenticated, user, web3auth, loginExistingUser, loading, checkAuth } = useAuth();
 
     // Use login() for Web3Auth connection
     // isAuthenticated will be true when both Web3Auth and MongoDB auth are complete
@@ -46,7 +46,6 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
     const [error, setError] = useState<string | null>(null);
     // const { user, login, logout, loading, checkAuth, connected } = useAuth();
     // const { provider, loggedIn: web3AuthConnected, login: web3AuthLogin, logout: Web3AuthLogout, getUserInfo } = useWeb3Auth();
-    const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
     const [connected, setConnected] = useState<boolean>(false);
     const [provider, setProvider] = useState<IProvider | null>(null);
     const [loggedIn, setLoggedIn] = useState<boolean | null>(false);
@@ -150,8 +149,9 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
                 const data = await response.json();
                 console.log('data ->', data);
                 // If registration is successful, log the user in
-                await login();
-            
+                await loginExistingUser({
+                   publicKey: userObject.publicKey,
+                });
         
                 setLoginData(userObject);
                 setIsRegistered(_isRegistered.data.isUserRegistered);
@@ -164,27 +164,17 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
 
     const handleUpdateUser = async() => {
         try {
-            // console.log('user ->', user);
-            // if (!loginData.publicKey || !user) await checkAuth();
-            // const result = await updateUser({
-            //     variables: {
-            //         _id: user!._id,
-            //         input: {
-            //             acceptTerms: formData.acceptTerms,
-            //         },
-            //     }
-            // });
-
-            // if (result.data && result.data.updateUser) {
-            //     console.log('User updated successfully:', result.data.updateUser);
-            //     const storage = getLocalStorage();
-            //     if (storage) {
-            //         storage.removeItem('signupFormData');
-            //     }
-            //     router.push('/dashboard');
-            // } else {
-            //     console.error('UpdateUser mutation returned null or undefined');
-            // }
+            await checkAuth();
+            console.log('user ->', user);
+            if(user) {
+                const storage = getLocalStorage();
+                if (storage) {
+                    storage.removeItem('signupFormData');
+                }
+                router.push('/dashboard');
+            } else {
+                console.error('UpdateUser mutation returned null or undefined');
+            }
         } catch (error: any) {
             console.error('Error updating user:', error);
             if (error.graphQLErrors) {
@@ -291,7 +281,7 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
     
     return (
         <Suspense fallback={<LoadingSpinner />}>
-
+            {web3auth && !loading && (
                 <div className="fixed h-full inset-0 bg-black bg-opacity-100 flex items-center justify-center z-[100]">
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10" onClick={()=>console.log('click')} />
                     <div className="bg-transparent rounded-lg p-6 w-full max-w-4xl relative z-20">
@@ -364,27 +354,15 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>
-                                                {loginData.authProvider || publicKey && ( <p className="flex felx-row text-green-600 mb-2 justify-center">Connected with {!publicKey ? loginData.authProvider : wallet?.adapter.name }</p> )}
                                         </div>
                                     </div>
                                     <>  
-                                        <div className="mb-4">
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    name="acceptTerms"
-                                                    checked={formData && formData.acceptTerms === new Date().toISOString() ? true : false} 
-                                                    onChange={() => {setFormData((prevData: any)=> ({ ...prevData, acceptTerms: new Date().toISOString() }))}}
-                                                    // disabled={!loginData.publicKey || !publicKey ? true : false}
-                                                    className="mr-2"
-                                                    required
-                                                />
-                                                I have read and accept the terms of use
-                                            </label>
-                                        </div>
                                         <Button disabled={!loginData.publicKey} type="submit" className="bg-secondary text-primary hover:text-secondary px-4 py-2 rounded" onClick={()=> handleNext()}>
                                             Next 
                                         </Button>
+                                        <div className="flex text-sm items-center mb-4">
+                                            By continuing, you agree to our Terms and Conditions.
+                                        </div>
                                     </>
                                 </Card>
                                 <Card className='bg-bg hidden md:flex flex-col relative w-1/2 text-secondary overflow-hidden'>
@@ -416,8 +394,8 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
                                     <button 
                                         onClick={
                                             () => {
-                                                // onClose();
-                                                handleUpdateUser();
+                                                onClose(),
+                                                router.push('/dashboard')
                                             }
                                         } 
                                         className="bg-black text-white px-4 py-2 rounded"
@@ -436,6 +414,7 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
                         )}
                     </div>
                 </div>
+            )}
         </Suspense>
     );
 }

@@ -89,27 +89,27 @@ export default function DashboardFeature() {
   }, [user]);
 
   const steps = [
-    {
-      target: '.portfolio-card-1',
-      content: 'This card shows your current Wallet Metrics.',
-      disableBeacon: true,
-    },
+    // {
+    //   target: '.portfolio-card-1',
+    //   content: 'This card shows your current Wallet Metrics.',
+    //   disableBeacon: true,
+    // },
     {
       target: '.portfolio-card-2',
-      content: 'Here you can see top Gainer Products.',
+      content: 'Here you can see the Top Performing Products.',
     },
     {
       target: '.portfolio-card-3',
-      content: 'Here you can see top Gainer Products.',
+      content: 'Here you can see the Top Selling Products.',
     },
     {
       target: '.portfolio-card-4',
-      content: 'Here you can see all the Artisans listed in a table.',
+      content: 'All of your purchased Fractions are listed here.',
     },
-    {
-      target: '.portfolio-card-5',
-      content: 'Share your referral link and earn $10 on each investment.',
-    },
+    // {
+    //   target: '.portfolio-card-5',
+    //   content: 'Share your referral link and earn $10 on each investment.',
+    // },
   ];
 
   const handleJoyrideCallback = (data: any) => {

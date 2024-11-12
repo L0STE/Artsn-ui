@@ -1,50 +1,3 @@
-// 'use client';
-
-// import { Button } from '@/components/ui/button';
-// import { useAuth } from '@/providers/Web3AuthProvider';
-// import { Mail } from 'lucide-react';
-
-// export function LoginButton() {
-//   const { login, isAuthenticated, loading, user, injectedAdapters, loginUserWithAdapter} = useAuth();
-//   console.log('injectedAdapters:', injectedAdapters
-//     .map((adapter) => adapter.name)
-//     .join(', ')
-// );
-//   if (user) {
-//     return (
-//       <Button disabled className="flex items-center gap-2">
-//         <Mail className="w-4 h-4" />
-//         Connected as {user.email}
-//       </Button>
-//     );
-//   }
-
-//   return (
-//     //
-//     <>
-//        <Button
-//           onClick={login}
-//           disabled={loading}
-//           className="flex items-center gap-2"
-//         >
-//           <Mail className="w-4 h-4" />
-//           {loading ? 'Connecting...' : 'Login with Email'}
-//         </Button>
-
-//         {injectedAdapters.map((adapter) => (
-//           <Button
-//             key={adapter.name}
-//             onClick={() => loginUserWithAdapter(adapter.name)}
-//             disabled={loading}
-//             className="flex items-center gap-2"
-//           >
-//             <Mail className="w-4 h-4" />
-//             {loading ? 'Connecting...' : `Login with ${adapter.name}`}
-//           </Button>
-//         ))}   
-//     </>
-//   );
-// }
 'use client';
 import Image from 'next/image';
 import { useState, Suspense } from 'react';
@@ -68,14 +21,10 @@ import {
 } from '@/components/ui/dropdownMenu';
 import { useRouter } from 'next/navigation';
 
-// Login Icons
-import phantom from '/public/login/phantom_icon.svg';
-import solflare from '/public/login/solflare_icon.svg';
-import backpack from '/public/login/backpack_icon.svg';
-import ledger from '/public/login/ledger_icon.svg';
-import torus from '/public/login/torus_icon.svg';
-
-export function LoginDialog() {
+type LoginDialogProps = {
+  className?: string;
+}
+export function LoginDialog({ className }: LoginDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const { 
@@ -101,7 +50,7 @@ export function LoginDialog() {
 
   return (
     <Suspense fallback={<div >Loading...</div>}>
-      <>
+      <div className={className}>
         <Button 
           variant='secondary' 
           className='rounded-xl z-[1]' 
@@ -219,7 +168,7 @@ export function LoginDialog() {
             </div>
           </div>
         )}
-      </>
+      </div>
     </Suspense>
   );
 }

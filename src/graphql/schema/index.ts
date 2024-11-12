@@ -42,15 +42,15 @@ export const typeDefs = gql`
   }
 
   type InvestorInfo {
-    id: String!
-    createdAt: String!
-    updatedAt: String!
+    id: String
+    createdAt: String
+    updatedAt: String
     investmentPreferences: [String]
     investmentHistory: [InvestmentHistoryItem]
-    portfolioSize: Float!
-    riskTolerance: String!
-    preferredInvestmentDuration: String!
-    totalSpend: Float!
+    portfolioSize: Float
+    riskTolerance: String
+    preferredInvestmentDuration: String
+    totalSpend: Float
   }
 
   type InvestmentHistoryItem {

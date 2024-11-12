@@ -44,13 +44,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify amount matches
-    const expectedAmount = parseInt(amount) * 100; // Stripe amounts are in cents
-    if (session.amount_total !== expectedAmount) {
-      return NextResponse.json(
-        { error: 'Amount mismatch' },
-        { status: 400 }
-      );
-    }
+    // const expectedAmount = parseInt(amount) * 100; // Stripe amounts are in cents
+    // if (session.amount_total !== expectedAmount) {
+    //   return NextResponse.json(
+    //     { error: 'Amount mismatch' },
+    //     { status: 400 }
+    //   );
+    // }
 
     // Update session status in database if not already done by webhook
     await db.collection('stripe_sessions').updateOne(
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       verified: true,
       details: {
         paymentIntent: session.payment_intent,
-        amount: session.amount_total / 100,
+        amount: session.amount_total! / 100,
         currency: session.currency,
         customerEmail: session.customer_details?.email
       }
