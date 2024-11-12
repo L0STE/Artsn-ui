@@ -110,7 +110,7 @@ export default function Marketplace() {
         </div> */}
         <div className="max-w-screen-xl mx-auto flex flex-wrap">
           {/* Sidebar Filter */}
-          <div className="w-full md:w-1/4 md:pr-4 mb-4">
+          <div className="hidden md:flex w-full md:w-1/4 md:pr-4 mb-4">
             <SidebarFilter />
           </div>
 

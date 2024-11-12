@@ -8,7 +8,7 @@ import { Suspense } from "react";
 import { ReactQueryProvider } from "./react-query-provider";
 import { LoadingSpinner } from "@/components/loading/LoadingSpinner";
 import { Toaster } from "@/components/ui/toaster"
-
+import { BugReport } from "@/components/forms/BugReport";
 // const geistSans = localFont({
 //   src: "../../fonts/GeistSans.woff",
 //   variable: "--font-geist-sans",
@@ -83,6 +83,7 @@ export default function RootLayout({
             </ApolloWrapper>
           </ReactQueryProvider>
         </Suspense>
+        <BugReport />
         <Toaster />
       </body>
     </html>

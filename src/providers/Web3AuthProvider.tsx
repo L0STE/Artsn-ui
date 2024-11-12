@@ -501,7 +501,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={contextValue}>
       {children}
-      {process.env.NODE_ENV === 'development' && (
+      {/* {process.env.NODE_ENV === 'development' && (
         <div className="fixed bottom-4 right-4 p-4 bg-black/80 text-white rounded-lg max-w-lg overflow-auto">
           <pre className="text-xs">
             {JSON.stringify(
@@ -517,7 +517,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             )}
           </pre>
         </div>
-      )}
+      )} */}
     </AuthContext.Provider>
   );
 }
