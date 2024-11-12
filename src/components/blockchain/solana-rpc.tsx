@@ -96,16 +96,16 @@ const RPC = rpcManager.getConnection();
       }
     }
   
-    async signMessage(message: string = "Test Signing Message"): Promise<string> {
-      try {
-        const msg = Buffer.from(message, "utf8");
-        const res = await this.solanaWallet.signMessage(msg);
-        return res.toString();
-      } catch (error) {
-        console.error("Error signing message:", error);
-        return "";
-      }
-    }
+    // async signMessage(message: string = "Test Signing Message"): Promise<string> {
+    //   try {
+    //     const msg = Buffer.from(message, "utf8");
+    //     const res = await this.solanaWallet.signMessage(msg);
+    //     return res.toString();
+    //   } catch (error) {
+    //     console.error("Error signing message:", error);
+    //     return "";
+    //   }
+    // }
   
     async sendTransaction(amount: number = 0.01): Promise<string> {
       try {
@@ -149,17 +149,17 @@ const RPC = rpcManager.getConnection();
   
         const signedTx = await this.solanaWallet.signAndSendTransaction(tx);
         // Convert the signed transaction to a format compatible with Umi
-        // const umiTx = umi.transactions.deserialize(signedTx.serialize());
-        // console.log('umiTx:', umiTx);
-        // const signature = await umi.rpc.sendTransaction(umiTx, {
-        //   skipPreflight: true,
-        // });
-        const signature = signedTx.signature;
-        // const confirmResult = await umi.rpc.confirmTransaction(signature, {
-        // strategy: { type: 'blockhash', ...(await umi.rpc.getLatestBlockhash()) },
-        // })
+        const umiTx = umi.transactions.deserialize(tx.serialize());
+        console.log('umiTx:', umiTx);
+        const signature = await umi.rpc.sendTransaction(umiTx, {
+          skipPreflight: true,
+        });
+        // const signature = signedTx.signature;
+        const confirmResult = await umi.rpc.confirmTransaction(signature, {
+        strategy: { type: 'blockhash', ...(await umi.rpc.getLatestBlockhash()) },
+        })
 
-        // console.log('Transaction confirmed:', confirmResult);
+        console.log('Transaction confirmed:', confirmResult);
         
         return signature.toString() || "";
       } catch (error) {

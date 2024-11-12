@@ -69,7 +69,7 @@ export default function StripeSuccess() {
     
     setIsProcessing(true);
     try {
-      if (!user) {
+      if (!user || !provider) {
         await checkAuth();
         if (!user) {
           throw new Error('User not found');
@@ -81,16 +81,20 @@ export default function StripeSuccess() {
       
       console.log('Signing transaction...', tx);
       const rpc = new RPC(provider!);
-      const signature = await rpc.signTransaction(tx);
-      console.log('Transaction signature:', signature);
+      try {
+        const signature = await rpc.signTransaction(tx);
+        console.log('Transaction signature:', signature);
+      } catch (error) {
+        console.error('Error signing transaction:', error);
+        throw error;
+      }
+      // toast({
+      //   title: 'Transaction sent',
+      //   description: 'Transaction has been sent to the blockchain',
+      // });
       
-      toast({
-        title: 'Transaction sent',
-        description: 'Transaction has been sent to the blockchain',
-      });
-      
-      setHasProcessed(true);
-      router.push('/dashboard');
+      // setHasProcessed(true);
+      // router.push('/dashboard');
       
     } catch (error) {
       console.error('Error in buyStripeListing:', error);
