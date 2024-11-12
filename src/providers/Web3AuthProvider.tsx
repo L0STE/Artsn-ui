@@ -1,14 +1,28 @@
 'use client';
-
+import dynamic from 'next/dynamic';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useApolloClient, useMutation, useLazyQuery } from '@apollo/client';
 import { useRouter } from 'next/navigation';
-import { useWeb3Auth } from '@/hooks/use-web3-auth';
+// import { useWeb3Auth } from '@/hooks/use-web3-auth';
 import RPC from '@/components/blockchain/solana-rpc';
 import { useToast } from "@/hooks/use-toast";
 import { ME_QUERY, IS_USER_REGISTERED } from '@/graphql/queries/user';
 import { CREATE_USER, LOGIN_USER } from '@/graphql/mutations/user';
 import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
+import { useWeb3Auth } from '@/hooks/use-web3-auth';
+
+// Create a mock version of useWeb3Auth for initial render
+const mockWeb3Auth = {
+  provider: null,
+  login: async () => null,
+  loginWithAdapter: async () => null,
+  injectedAdapters: [],
+  logout: async () => {},
+  getUserInfo: async () => null,
+  web3auth: null,
+  loading: false
+};
+
 interface User {
   _id: string;
   uuid: string;
@@ -595,7 +609,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     web3auth,
     provider,
   };
-
+  if (typeof window === 'undefined') {
+    return <>{children}</>;
+  }
   if (loading) {<LoadingSpinner />;}
 
   return (

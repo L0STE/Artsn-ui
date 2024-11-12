@@ -22,9 +22,7 @@ import { BugReport } from "@/components/forms/BugReport";
 const AuthProvider = dynamic(
   () => import('@/providers/Web3AuthProvider').then(mod => mod.AuthProvider),
   { 
-    ssr: false,
-    // Optional loading component while the AuthProvider is being loaded
-    loading: () => <div>Loading Auth...</div> 
+    ssr: false
   }
 );
 

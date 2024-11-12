@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { CHAIN_NAMESPACES, IProvider, WALLET_ADAPTERS, WEB3AUTH_NETWORK, UX_MODE, IWeb3AuthCoreOptions, IAdapter } from "@web3auth/base";
 import { getInjectedAdapters } from "@web3auth/default-solana-adapter";
