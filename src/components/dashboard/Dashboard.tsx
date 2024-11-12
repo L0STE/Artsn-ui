@@ -47,7 +47,7 @@ export default function DashboardFeature() {
   const { user: authUser, loading, provider } = useAuth();
   const { currentPrice, priceChange, dayRange } = useSolanaPrice();
   const [showKYCDialog, setShowKYCDialog] = useState(false);
-  const [isVerified, setIsVerified] = useState<String>('Unverified');
+  const [isVerified, setIsVerified] = useState<string>('Unverified');
   
   const { toast } = useToast();
   const rpc = new RPC(provider)

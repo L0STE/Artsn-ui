@@ -352,7 +352,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
                 </div>
                 <span>{(userBalance?.sol).toFixed(4)} SOL</span>
               </div>
-              <div className="text-zinc-500">=${solToUsd(userBalance?.sol!).toFixed(2)}</div>
+              <div className="text-zinc-500">=${solToUsd(userBalance?.sol).toFixed(2)}</div>
             </div>
             <div className="mt-2 flex items-center">
               <div className="flex-1 flex items-center gap-2 text-secondary">
