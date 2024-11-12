@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import localFont from "next/font/local";
 import "./globals.css";
 import ApolloWrapper from '@/providers/ApolloProvider';
-import { AuthProvider } from '@/providers/Web3AuthProvider';
 import { UiLayout } from "@/components/ui/ui-layout";
 import { Suspense } from "react";
 import { ReactQueryProvider } from "./react-query-provider";
@@ -19,6 +19,15 @@ import { BugReport } from "@/components/forms/BugReport";
 //   variable: "--font-geist-mono",
 //   weight: "100 900",
 // });
+
+const AuthProvider = dynamic(
+  () => import('@/providers/Web3AuthProvider').then(mod => mod.AuthProvider),
+  { 
+    ssr: false,
+    // Optional loading component while the AuthProvider is being loaded
+    loading: () => <div>Loading Auth...</div> 
+  }
+);
 
 const links: { label: string; path: string }[] = [
   { label: 'Account', path: '/account' },
