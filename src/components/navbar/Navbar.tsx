@@ -51,6 +51,7 @@ import MobileNavbar from './MobileNavbar';
 import { User } from '@/types/resolver-types';
 import { useSolanaPrice } from '@/hooks/use-solana-price';
 import dynamic from 'next/dynamic';
+import { Separator } from '@/components/ui/separator';
 // Dynamically import Joyride with ssr disabled
 const Joyride = dynamic(() => import('react-joyride'), { ssr: false });
 interface NavbarProps {
@@ -362,6 +363,17 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
                 <span>{userBalance?.usdc} USDC</span>
               </div>
               {/* <div className="text-zinc-500">=$124</div> */}
+            </div>
+            <div className='flex flex-col items-center justify-center mt-2 bg-slate-500/20 p-2 rounded-2xl'>
+              <p>Need Test Funds?</p>
+              <div className='flex flex-row justify-center items-center gap-2 w-full h-fit'>
+                <Link href='https://faucet.circle.com/' target='_blank'>
+                  <Button variant='outline' className='mt-4 w-full'>Get USDC</Button>
+                </Link>
+                <Link href='https://faucet.solana.com/' target='_blank'>
+                  <Button variant='outline' className='mt-4 w-full'>Get SOL</Button>
+                </Link>
+              </div>
             </div>
           </div>
           <DropdownMenuItem className="cursor-pointer text-secondary mt-4" onClick={()=> {setNavbarCollapsed(true), router.push('/dashboard/settings')}}>

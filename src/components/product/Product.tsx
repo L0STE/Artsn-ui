@@ -47,6 +47,7 @@ const ProductFeature: React.FC<{ params: { id: string } }> = ({ params }) => {
       setOnChainData((prev: any) => {
         return {
           ...prev,
+          name: details!.name,
           watchUri: details!.uri
         }
       })

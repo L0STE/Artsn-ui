@@ -256,7 +256,7 @@ export default function AssetInfo({ asset }: { asset: any }) {
         </button>
       </div>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold">{asset.attributes[0].value.toString()}</h1>
+        <h1 className="text-3xl font-semibold">{asset.onChainData.name.toString()}</h1>
       </div>
       <p className="text-gray-600 mb-5">{asset.attributes[1].value.toString()}</p>
       <p className="text-lg mb-3">Remaining fractions</p>
@@ -361,11 +361,12 @@ export default function AssetInfo({ asset }: { asset: any }) {
                   <Button 
                     className="w-full rounded-xl bg-secondary text-primary hover:bg-primary hover:text-secondary" 
                     onClick={()=> handleBuy()}
-                    disabled={userBalance.usdc < (amount * Number(asset.onChainData.price))}
+                    disabled={!user || userBalance.usdc < (amount * Number(asset.onChainData.price))}
                   >
                     Pay with crypto ( save ${(amount * Number(asset.onChainData.price)) * 0.04} )
                   </Button>
-                  <Button className="w-full rounded-xl bg-secondary text-primary hover:bg-primary hover:text-secondary" onClick={()=> buyStripe()}><CreditCard className="mr-2"/>Pay with card</Button>
+                  <Button disabled={!user} className="w-full rounded-xl bg-secondary text-primary hover:bg-primary hover:text-secondary" onClick={()=> buyStripe()}><CreditCard className="mr-2"/>Pay with card</Button>
+                  {!user && <p className="text-sm text-red-500">Please login to continue.</p>}
                 </div>
               )}
               {isComplete && (

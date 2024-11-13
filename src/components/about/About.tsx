@@ -18,19 +18,19 @@ const members = [
         },
     },
     {
-        name: "Leonardo Donatacci",
-        title: "CTO",
-        imageUrl: "/assets/about/leonardo.webp",
-        achievements: [
-            "Solana Specialist",
-            "Senior Protocol & Smart Contract Developer", 
-            "Teacher & Educator at Web3 builder alliance"
-        ],
-        socialLinks: {
-            linkedin: "#", // Leonardo's LinkedIn link is missing
-            instagram: "#", // Leonardo's Instagram link is missing
-            twitter: "https://twitter.com/L0STE_", // Adding Leonardo's Twitter link
-        },
+      name: "Matt Weichel",
+      title: "CTO",
+      imageUrl: "/assets/about/matt.jpeg",
+      achievements: [
+        "Founder of Swiss Lynx Solutions",
+        "TypeScript & Rust Developer",
+        "Former Buildspace Teaching Assistant",
+        "Swiss Lacrosse U20 National Team Coach",
+      ],
+      socialLinks: {
+          linkedIn: "https://www.linkedin.com/in/mattweichel/",
+          twitter: "https://twitter.com/_matt_xyz",
+      },
     },
     {
         name: "Brian Frederiksen",
@@ -48,6 +48,21 @@ const members = [
             instagram: "#", // Brian's Instagram link is missing
             twitter: "#", // Brian's Twitter link is missing
         },
+    },
+    {
+      name: "Leonardo Donatacci",
+      title: "Advisor",
+      imageUrl: "/assets/about/leonardo.webp",
+      achievements: [
+          "Solana Specialist",
+          "Senior Protocol & Smart Contract Developer", 
+          "Teacher & Educator at Web3 builder alliance"
+      ],
+      socialLinks: {
+          linkedin: "#", // Leonardo's LinkedIn link is missing
+          instagram: "#", // Leonardo's Instagram link is missing
+          twitter: "https://twitter.com/L0STE_", // Adding Leonardo's Twitter link
+      },
     },
     {
         name: "Craig Pollock",
@@ -78,21 +93,6 @@ const members = [
         socialLinks: {
             linkedIn: "https://www.linkedin.com/in/domenico-fava-5bb17336/",
             twitter: "#", // Domenico's Twitter link is missing
-        },
-    },
-    {
-        name: "Matt Weichel",
-        title: "Full Stack Developer",
-        imageUrl: "/assets/about/matt.jpeg",
-        achievements: [
-          "Full Stack Developer at Swiss Lynx Solutions",
-          "TypeScript & Rust Developer",
-          "Former Buildspace Teaching Assistant",
-          "Swiss Lacrosse U20 National Team Coach",
-        ],
-        socialLinks: {
-            linkedIn: "https://www.linkedin.com/in/mattweichel/",
-            twitter: "https://twitter.com/_matt_xyz", // Matt's Twitter link is missing
         },
     },
 ];
