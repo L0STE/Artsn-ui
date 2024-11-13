@@ -238,7 +238,7 @@ export default function StripeSuccess() {
           <h2 className="text-xl font-semibold">
             {state.isProcessing ? 'Processing your purchase...' : 'Verifying payment...'}
           </h2>
-          <p className="text-gray-500">Please don't close this window</p>
+          <p className="text-gray-500">{`Please don't close this window`}</p>
         </div>
       </div>
     );
