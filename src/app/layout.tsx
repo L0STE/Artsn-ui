@@ -7,16 +7,7 @@ import { Suspense } from "react";
 import { ReactQueryProvider } from "./react-query-provider";
 import { LoadingSpinner } from "@/components/loading/LoadingSpinner";
 import { Toaster } from "@/components/ui/toaster"
-// const geistSans = localFont({
-//   src: "../../fonts/GeistSans.woff",
-//   variable: "--font-geist-sans",
-//   weight: "100 900",
-// });
-// const geistMono = localFont({
-//   src: "../../fonts/GeistMonoVF.woff",
-//   variable: "--font-geist-mono",
-//   weight: "100 900",
-// });
+
 const BugReport = dynamic(
   () => import('@/components/forms/BugReport').then(mod => mod.BugReport),
   { 

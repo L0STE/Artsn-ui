@@ -1,4 +1,5 @@
 "use client"
+
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
@@ -8,152 +9,162 @@ import { Transaction } from "@solana/web3.js";
 import { useWeb3Auth } from "@/hooks/use-web3-auth";
 import RPC from "@/components/blockchain/solana-rpc";
 
+interface PaymentParams {
+  sessionId: string;
+  assetId: string;
+  amount: string;
+  ref: string;
+  objectRef: string;
+  uri: string;
+}
+
 export default function StripeSuccess() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
   const { user, checkAuth } = useAuth();
-  const { provider } = useWeb3Auth();
-  
+  const { provider, loading: web3Loading } = useWeb3Auth();
 
-  
-  const [isVerifying, setIsVerifying] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [hasProcessed, setHasProcessed] = useState(false);
-  const [verificationAttempted, setVerificationAttempted] = useState(false);
+  // State management
+  const [state, setState] = useState({
+    isVerifying: true,
+    isProcessing: false,
+    hasProcessed: false,
+    verificationAttempted: false,
+    error: null as string | null,
+    paymentParams: null as PaymentParams | null
+  });
+
+  // Extract and validate URL parameters
+  const extractPaymentParams = useCallback((): PaymentParams | null => {
+    if (!searchParams) return null;
+
+    const params = {
+      sessionId: searchParams.get('session_id'),
+      assetId: searchParams.get('asset_id'),
+      amount: searchParams.get('amount'),
+      ref: searchParams.get('ref'),
+      objectRef: searchParams.get('object_ref'),
+      uri: searchParams.get('uri')
+    };
+
+    // Validate all required parameters exist
+    if (!Object.values(params).every(Boolean)) {
+      throw new Error('Missing required payment parameters');
+    }
+
+    return {
+      ...params,
+      uri: decodeURIComponent(params.uri!)
+    } as PaymentParams;
+  }, [searchParams]);
 
   const buyStripeTx = useCallback(async (id: string, reference: string, key: string, amount: number, uri: string) => {
     const token = localStorage.getItem('authToken');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-    console.log('sending transaction ->', id, reference, key, amount);
-    try {
-      const response = await fetch('/api/protocol/buy-stripe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          id,
-          reference,
-          publicKey: key,
-          amount,
-          sessionId: sessionStorage.getItem('sessionId'),
-          uri: encodeURIComponent(uri)
-        })
-      });
+    if (!token) throw new Error('Authentication required');
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create transaction');
-      }
+    const response = await fetch('/api/protocol/buy-stripe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        id,
+        reference,
+        publicKey: key,
+        amount,
+        sessionId: sessionStorage.getItem('sessionId'),
+        uri: encodeURIComponent(uri)
+      })
+    });
 
-      const txData = await response.json();
-      const tx = Transaction.from(Buffer.from(txData.transaction, "base64"));
-  
-      if (!tx) {
-        throw new Error('No transaction returned');
-      }
-  
-      return tx;
-    } catch (error) {
-      console.error('Error sending transaction:', error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create transaction');
     }
+
+    const txData = await response.json();
+    const tx = Transaction.from(Buffer.from(txData.transaction, "base64"));
+    
+    if (!tx) throw new Error('Invalid transaction data received');
+    return tx;
   }, []);
 
-  const buyStripeListing = useCallback(async (id: string, reference: string, amount: string, uri: string) => {
-    if (isProcessing || hasProcessed) return;
+  const buyStripeListing = useCallback(async (params: PaymentParams) => {
+    if (state.isProcessing || state.hasProcessed) return;
     
-    setIsProcessing(true);
+    setState(prev => ({ ...prev, isProcessing: true }));
+    
     try {
+      // Ensure authentication
       if (!user || !provider) {
         await checkAuth();
-        if (!user) {
-          throw new Error('User not found');
-        }
+        if (!user) throw new Error('Authentication required');
       }
 
-      console.log('Creating transaction...');
-      const tx = await buyStripeTx(id, reference, user.publicKey, +amount, uri);
+      // Create and sign transaction
+      const tx = await buyStripeTx(
+        params.assetId,
+        params.objectRef,
+        user.publicKey,
+        +params.amount,
+        params.uri
+      );
       
-      console.log('Signing transaction...', tx);
       const rpc = new RPC(provider!);
-      try {
-        const signature = await rpc.signTransaction(tx);
-        console.log('Transaction signature:', signature);
-      } catch (error) {
-        console.error('Error signing transaction:', error);
-        throw error;
-      }
-      // toast({
-      //   title: 'Transaction sent',
-      //   description: 'Transaction has been sent to the blockchain',
-      // });
+      const signature = await rpc.signTransaction(tx);
       
-      // setHasProcessed(true);
-      // router.push('/dashboard');
+      if (!signature) {
+        throw new Error('Failed to sign transaction');
+      }
+
+      toast({
+        title: 'Transaction Complete',
+        description: 'Your purchase has been processed successfully',
+      });
+      
+      setState(prev => ({ ...prev, hasProcessed: true }));
+      router.push('/dashboard');
       
     } catch (error) {
-      console.error('Error in buyStripeListing:', error);
+      console.error('Transaction failed:', error);
       toast({
         title: 'Transaction Failed',
         description: error instanceof Error ? error.message : 'Failed to process transaction',
         variant: 'destructive'
       });
+      setState(prev => ({ ...prev, error: error instanceof Error ? error.message : 'Transaction failed' }));
     } finally {
       sessionStorage.removeItem('sessionId');
-      setIsProcessing(false);
+      setState(prev => ({ ...prev, isProcessing: false }));
     }
-  }, [user, checkAuth, buyStripeTx, toast, router]);
+  }, [user, provider, checkAuth, buyStripeTx, toast, router]);
 
-  const verifyPayment = useCallback(async () => {
-    // if (hasProcessed || isProcessing || verificationAttempted || !user) return;
+  const verifyPayment = useCallback(async (params: PaymentParams) => {
+    if (state.hasProcessed || state.isProcessing || state.verificationAttempted) return;
 
-    setVerificationAttempted(true);
+    setState(prev => ({ ...prev, verificationAttempted: true }));
     
     try {
-      if (!searchParams) {
-        throw new Error('Search parameters not found');
-      }
-      const sessionId = searchParams.get('session_id');
-      const assetId = searchParams.get('asset_id');
-      const amount = searchParams.get('amount');
-      const ref = searchParams.get('ref');
-      const objRef = searchParams.get('object_ref');
-      const uri = searchParams.get('uri');
-      // change uri from encodedUri to a string
-      const decodedUri = decodeURIComponent(uri!);
-      if (!sessionId || !assetId || !amount || !ref || !objRef) {
-        console.log('Missing required parameters');
-        throw new Error('Missing required parameters');
-      }
-
       const token = localStorage.getItem('authToken');
-      if (!token) {
-        console.log('No authentication token found');
-        throw new Error('No authentication token found');
-      }
+      if (!token) throw new Error('Authentication required');
 
-      console.log('Verifying payment...');
       const response = await fetch('/api/stripe/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          sessionId,
-          assetId,
-          amount,
-          ref
+        body: JSON.stringify({
+          sessionId: params.sessionId,
+          assetId: params.assetId,
+          amount: params.amount,
+          ref: params.ref
         })
       });
 
       const data = await response.json();
-      console.log('Payment verification response:', data);
       
       if (!response.ok) {
         throw new Error(data.error || 'Payment verification failed');
@@ -161,45 +172,96 @@ export default function StripeSuccess() {
 
       if (data.verified) {
         toast({
-          title: 'Payment Successful',
+          title: 'Payment Verified',
           description: 'Processing your purchase...',
         });
-
-        console.log('Initiating blockchain transaction...');
-        await buyStripeListing(assetId, objRef, amount, decodedUri);
+        await buyStripeListing(params);
       }
 
     } catch (error) {
-      console.error('Payment verification error:', error);
+      console.error('Verification failed:', error);
       toast({
         title: 'Verification Failed',
         description: error instanceof Error ? error.message : 'Please contact support',
         variant: 'destructive'
       });
+      setState(prev => ({ ...prev, error: error instanceof Error ? error.message : 'Verification failed' }));
     } finally {
-      setIsVerifying(false);
+      setState(prev => ({ ...prev, isVerifying: false }));
     }
-  }, [searchParams, user, hasProcessed, isProcessing, verificationAttempted, buyStripeListing, toast]);
+  }, [state.hasProcessed, state.isProcessing, state.verificationAttempted, buyStripeListing, toast]);
 
+  // Initialize payment parameters and start verification process
   useEffect(() => {
-    if (user && !verificationAttempted) {
-        console.log('User found, verifying payment...', user);
-      verifyPayment();
-    }
-  }, [user, verificationAttempted, verifyPayment]);
+    const initializePayment = async () => {
+      try {
+        const params = extractPaymentParams();
+        if (!params) {
+          throw new Error('Invalid payment parameters');
+        }
+        setState(prev => ({ ...prev, paymentParams: params }));
+      } catch (error) {
+        console.error('Failed to initialize payment:', error);
+        setState(prev => ({
+          ...prev,
+          error: error instanceof Error ? error.message : 'Invalid payment parameters',
+          isVerifying: false
+        }));
+      }
+    };
 
-  if (isVerifying) {
+    initializePayment();
+  }, [extractPaymentParams]);
+
+  // Handle payment verification once user and parameters are available
+  useEffect(() => {
+    const processPayment = async () => {
+      if (
+        user && 
+        state.paymentParams && 
+        !state.verificationAttempted && 
+        !web3Loading && 
+        provider
+      ) {
+        await verifyPayment(state.paymentParams);
+      }
+    };
+
+    processPayment();
+  }, [user, state.paymentParams, state.verificationAttempted, web3Loading, provider, verifyPayment]);
+
+  // Loading state
+  if (state.isVerifying || state.isProcessing) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-4">
-            {isProcessing ? 'Processing transaction...' : 'Verifying your payment...'}
+        <div className="text-center space-y-4">
+          <h2 className="text-xl font-semibold">
+            {state.isProcessing ? 'Processing your purchase...' : 'Verifying payment...'}
           </h2>
-          {/* Add your loading spinner here */}
+          <p className="text-gray-500">Please don't close this window</p>
         </div>
       </div>
     );
   }
 
+  // Error state
+  if (state.error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <h2 className="text-xl font-semibold text-red-600">Transaction Failed</h2>
+          <p className="text-gray-600">{state.error}</p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Return to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Success state (will redirect to dashboard)
   return null;
 }

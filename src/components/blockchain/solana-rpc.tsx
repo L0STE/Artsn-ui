@@ -133,69 +133,175 @@ const RPC = rpcManager.getConnection();
       }
     }
   
+    // async signTransaction(tx: any): Promise<string> {
+    //   try {
+    //     const accounts = await this.getAccounts();
+    //     // const connection = await this.getConnection();
+    //     const connection = new Connection("https://soft-cold-energy.solana-devnet.quiknode.pro/ad0dda04b536ff45a76465f9ceee5eea6a048a8f");
+    //     const { blockhash } = await connection.getLatestBlockhash("finalized");
+  
+    //     const umi = createUmi('https://soft-cold-energy.solana-devnet.quiknode.pro/ad0dda04b536ff45a76465f9ceee5eea6a048a8f');
+    //     const UMI_KEY: string = process.env.NEXT_PUBLIC_UMI_KEY!;
+    //     const UMI_KEY_JSON = JSON.parse(UMI_KEY);
+    //     const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(UMI_KEY_JSON));
+    //     const _signer = createSignerFromKeypair(umi, keypair);
+    //     umi.use(signerIdentity(_signer));
+  
+    //     const signedTx = await this.solanaWallet.signAndSendTransaction(tx);
+    //     // Convert the signed transaction to a format compatible with Umi
+    //     const umiTx = umi.transactions.deserialize(tx.serialize());
+    //     console.log('umiTx:', umiTx);
+    //     const signature = await umi.rpc.sendTransaction(umiTx, {
+    //       skipPreflight: true,
+    //     });
+    //     // const signature = signedTx.signature;
+    //     const confirmResult = await umi.rpc.confirmTransaction(signature, {
+    //     strategy: { type: 'blockhash', ...(await umi.rpc.getLatestBlockhash()) },
+    //     })
+
+    //     console.log('Transaction confirmed:', confirmResult);
+        
+    //     return signature.toString() || "";
+    //   } catch (error) {
+    //     console.error("Error signing transaction:", error);
+    //     return "";
+    //   }
+    // }
+  
+    // async sendVersionedTransaction(): Promise<string> {
+    //   try {
+    //     const accounts = await this.getAccounts();
+    //     const connection = await this.getConnection();
+    //     const { blockhash } = await connection.getLatestBlockhash("finalized");
+  
+    //     const instruction = SystemProgram.transfer({
+    //       fromPubkey: new PublicKey(accounts[0]),
+    //       toPubkey: new PublicKey(accounts[0]),
+    //       lamports: 0.01 * LAMPORTS_PER_SOL,
+    //     });
+  
+    //     const messageV0 = new TransactionMessage({
+    //       payerKey: new PublicKey(accounts[0]),
+    //       recentBlockhash: blockhash,
+    //       instructions: [instruction],
+    //     }).compileToV0Message();
+  
+    //     const transaction = new VersionedTransaction(messageV0);
+    //     const { signature } = await this.solanaWallet.signAndSendTransaction(transaction);
+        
+    //     return signature;
+    //   } catch (error) {
+    //     console.error("Error sending versioned transaction:", error);
+    //     return "";
+    //   }
+    // }
     async signTransaction(tx: any): Promise<string> {
+      const steps: { step: string; status: 'started' | 'completed' | 'failed'; error?: any }[] = [];
+      
       try {
+        // Step 1: Get accounts
+        steps.push({ step: 'getAccounts', status: 'started' });
         const accounts = await this.getAccounts();
-        // const connection = await this.getConnection();
+        if (!accounts || accounts.length === 0) {
+          throw new Error('No accounts found');
+        }
+        steps.push({ step: 'getAccounts', status: 'completed' });
+        console.log('Accounts retrieved:', accounts[0]);
+    
+        // Step 2: Get connection
+        steps.push({ step: 'getConnection', status: 'started' });
         const connection = new Connection("https://soft-cold-energy.solana-devnet.quiknode.pro/ad0dda04b536ff45a76465f9ceee5eea6a048a8f");
         const { blockhash } = await connection.getLatestBlockhash("finalized");
-  
+        if (!blockhash) {
+          throw new Error('Failed to get blockhash');
+        }
+        steps.push({ step: 'getConnection', status: 'completed' });
+        console.log('Blockhash retrieved:', blockhash);
+    
+        // Step 3: Initialize UMI
+        steps.push({ step: 'initializeUmi', status: 'started' });
         const umi = createUmi('https://soft-cold-energy.solana-devnet.quiknode.pro/ad0dda04b536ff45a76465f9ceee5eea6a048a8f');
         const UMI_KEY: string = process.env.NEXT_PUBLIC_UMI_KEY!;
+        if (!UMI_KEY) {
+          throw new Error('UMI_KEY not found in environment variables');
+        }
         const UMI_KEY_JSON = JSON.parse(UMI_KEY);
         const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(UMI_KEY_JSON));
         const _signer = createSignerFromKeypair(umi, keypair);
         umi.use(signerIdentity(_signer));
-  
+        steps.push({ step: 'initializeUmi', status: 'completed' });
+        console.log('UMI initialized with keypair:', keypair.publicKey.toString());
+    
+        // Step 4: Sign and send transaction
+        steps.push({ step: 'signAndSendTransaction', status: 'started' });
+        if (!tx) {
+          throw new Error('Transaction object is null or undefined');
+        }
         const signedTx = await this.solanaWallet.signAndSendTransaction(tx);
-        // Convert the signed transaction to a format compatible with Umi
+        if (!signedTx) {
+          throw new Error('Failed to sign transaction');
+        }
+        steps.push({ step: 'signAndSendTransaction', status: 'completed' });
+        console.log('Transaction signed:', signedTx);
+    
+        // Step 5: Convert and send via UMI
+        steps.push({ step: 'umiConversion', status: 'started' });
         const umiTx = umi.transactions.deserialize(tx.serialize());
-        console.log('umiTx:', umiTx);
+        console.log('Transaction converted to UMI format');
+        
         const signature = await umi.rpc.sendTransaction(umiTx, {
           skipPreflight: true,
         });
-        // const signature = signedTx.signature;
+        if (!signature) {
+          throw new Error('No signature received from transaction');
+        }
+        steps.push({ step: 'umiConversion', status: 'completed' });
+        console.log('UMI signature received:', signature.toString());
+    
+        // Step 6: Confirm transaction
+        steps.push({ step: 'confirmTransaction', status: 'started' });
         const confirmResult = await umi.rpc.confirmTransaction(signature, {
-        strategy: { type: 'blockhash', ...(await umi.rpc.getLatestBlockhash()) },
-        })
-
-        console.log('Transaction confirmed:', confirmResult);
-        
-        return signature.toString() || "";
-      } catch (error) {
-        console.error("Error signing transaction:", error);
-        return "";
-      }
-    }
-  
-    async sendVersionedTransaction(): Promise<string> {
-      try {
-        const accounts = await this.getAccounts();
-        const connection = await this.getConnection();
-        const { blockhash } = await connection.getLatestBlockhash("finalized");
-  
-        const instruction = SystemProgram.transfer({
-          fromPubkey: new PublicKey(accounts[0]),
-          toPubkey: new PublicKey(accounts[0]),
-          lamports: 0.01 * LAMPORTS_PER_SOL,
+          strategy: { type: 'blockhash', ...(await umi.rpc.getLatestBlockhash()) },
         });
-  
-        const messageV0 = new TransactionMessage({
-          payerKey: new PublicKey(accounts[0]),
-          recentBlockhash: blockhash,
-          instructions: [instruction],
-        }).compileToV0Message();
-  
-        const transaction = new VersionedTransaction(messageV0);
-        const { signature } = await this.solanaWallet.signAndSendTransaction(transaction);
+        steps.push({ step: 'confirmTransaction', status: 'completed' });
+        console.log('Transaction confirmed:', confirmResult);
+    
+        // Return the signature
+        if (typeof signature.toString() !== 'string' || signature.toString().length === 0) {
+          throw new Error('Invalid signature format received');
+        }
         
-        return signature;
-      } catch (error) {
-        console.error("Error sending versioned transaction:", error);
-        return "";
+        return signature.toString();
+      } catch (error: any) {
+        // Mark the current step as failed
+        if (steps.length > 0) {
+          const lastStep = steps[steps.length - 1];
+          lastStep.status = 'failed';
+          lastStep.error = error;
+        }
+    
+        // Log detailed error information
+        console.error('Transaction signing failed:', {
+          error: error.message,
+          stack: error.stack,
+          steps: steps,
+        });
+    
+        // Log complete transaction state
+        console.error('Complete transaction state:', {
+          steps,
+          errorDetails: {
+            message: error.message,
+            name: error.name,
+            stack: error.stack,
+          }
+        });
+    
+        // Rethrow with more context
+        throw new Error(`Transaction signing failed at step ${steps[steps.length - 1]?.step}: ${error.message}`);
       }
     }
-  
+    
     async signVersionedTransaction({ tx }: { tx: VersionedTransaction}): Promise<string> {
       try {
         const accounts = await this.getAccounts();
