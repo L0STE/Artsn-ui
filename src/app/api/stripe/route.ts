@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
 
     // TODO(): Calculate price based on amount
     const price = ((body.amount * 1) * 1.04);
-
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
     // Generate reference ID
     const date = new Date();
     const referenceId = `INV-${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${date.getTime().toString().slice(-6)}`;
@@ -146,8 +146,8 @@ export async function POST(req: NextRequest) {
         created_at: date.toISOString(),
         ...body.metadata
       },
-      success_url: `${host}/stripe/success?session_id={CHECKOUT_SESSION_ID}&asset_id=${body.id}&amount=${body.amount}&ref=${referenceId}&object_ref=${objectReference}&uri=${encodedUri}`,
-      cancel_url: `${host}/product/${body.id}?cancelled=true`,
+      success_url: `${baseUrl}/stripe/success?session_id={CHECKOUT_SESSION_ID}&asset_id=${body.id}&amount=${body.amount}&ref=${referenceId}&object_ref=${objectReference}&uri=${encodedUri}`,
+      cancel_url: `${baseUrl}/product/${body.id}?cancelled=true`,
       expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
     }, {
       idempotencyKey,
