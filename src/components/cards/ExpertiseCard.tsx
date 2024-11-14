@@ -188,3 +188,4 @@ const ExpertiseCard = forwardRef((
 });
 
 export default ExpertiseCard;
+ExpertiseCard.displayName = 'ExpertiseCard';
