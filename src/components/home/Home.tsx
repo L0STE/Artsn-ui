@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
@@ -22,24 +22,19 @@ export default function Home() {
         'Diamonds',
         'Whisky'
     ]
-
-    // useEffect(() => {
-    //     function preventScroll(e : any) {
-
-    //         if (!canScrollVertically) {
-    //             window.scrollTo(0, window.scrollY);
-    //         }
-    //     }
-
-    //     if (!canScrollVertically) {
-    //         window.addEventListener('scroll', preventScroll);
-    //     }
-
-    //     return () => {
-    //         window.removeEventListener('scroll', preventScroll);
-    //     };
-    // }, [canScrollVertically]);
-
+    const expertiseRef = useRef<HTMLDivElement>(null);
+    
+    const scrollToExpertise = () => {
+        expertiseRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+    useEffect(() => {
+        if (window.location.hash === '#howitworks') {
+        const element = document.getElementById('howitworks');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+        }
+    }, []);
 
     return (
         <Suspense fallback={<LoadingSpinner />}>
@@ -52,7 +47,7 @@ export default function Home() {
                     className='absolute hidden lg:flex md:flex bg-top w-full h-full bg-[url(/assets/home/home-backdrop.svg)] bg-no-repeat bg-contain bg-center z-0'
                 />
                 <p 
-                    className={`'font-syne absolute bottom-[20px] md:bottom-[140px] lg:bottom-[190px] text-secondary z-[30] flex text-7xl md:text-[220px]`}
+                    className={`'font-syne absolute bottom-[20px] md:bottom-[140px] lg:bottom-[120px] text-secondary z-[30] flex text-7xl md:text-[220px]`}
                     style={{ 
                         fontFamily: 'Syne',
                         // fontSize: '220px',
@@ -99,7 +94,7 @@ export default function Home() {
                         alt='freak watch'
                     />
                 </motion.picture>
-                <motion.hgroup className='flex flex-row sm:w-11/12 justify-between items-center mx-auto md:w-1/2 lg:w-1/3 z-20'>
+                {/* <motion.hgroup className='flex flex-row sm:w-11/12 justify-between items-center mx-auto md:w-1/2 lg:w-1/3 z-20'>
                     {categories.map((category, index) => (
                         <Button
                             key={index}
@@ -112,7 +107,7 @@ export default function Home() {
                             {category}
                         </Button>
                     ))}
-                </motion.hgroup>
+                </motion.hgroup> */}
 
                 
             </Wrapper>
@@ -151,7 +146,7 @@ export default function Home() {
             </Wrapper> */}
             
             {/* <CollectionsCard id="collectionsCard" className='flex flex-col w-full overflow-x-auto' />  */}
-            <ExpertiseCard id="expertiseCard" className='flex flex-col w-full overflow-x-auto mt-12'/>
+            <ExpertiseCard ref={expertiseRef} id="howitworks" className='flex flex-col w-full overflow-x-auto mt-12'/>
 
             <CtaCard1 className='mx-6 md:w-8/12 md:self-center md:mb-12'/>
             {/* <CtaCard2 className='mx-6 md:w-8/12 md:self-center md:mb-12'/> */}

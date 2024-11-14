@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, use, useEffect, useState } from 'react';
+import { Suspense, use, useEffect, useRef, useState } from 'react';
 import { useTheme } from '@/hooks/use-theme';
 // import { WalletButton } from '../solana/solana-provider';
 import Link from 'next/link';
@@ -147,6 +147,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
   const router = useRouter();
   const { toast } = useToast();
   const [userBalance, setUserBalance] = useState<BalanceObject>();
+  const expertiseRef = useRef<HTMLDivElement>(null);
   const { user: authUser, loading, provider } = useAuth();
   const {
     currentPrice,
@@ -171,8 +172,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
       console.error('Error fetching balance', error);
     }
   }
-
-  
+    
   // Single effect to handle initialization
   useEffect(() => {
     const initializeAuth = async () => {
@@ -561,6 +561,14 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
                 About Us
               </Link>
             </Button>
+            {/* <Button
+              variant={'ghost'} 
+              asChild
+            >
+              <Link className="text-secondary text-nowrap w-full about-link" href='#howitworks'>
+                How it Works
+              </Link>
+            </Button> */}
             
             <Button className="bg-bg text-dark-1 border-dark-1 border-2 w-3/4 rounded-xl border-y border-x " asChild>
               <Link className="text-dark-1 text-nowrap w-full marketplace-link" href='/marketplace'>

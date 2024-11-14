@@ -70,7 +70,7 @@ const TopPerformerCard = (
         </CardHeader> */}
         <CardContent className='py-4 flex flex-col items-center h-3/4 justify-center gap-4'>
             <Image
-                src={'https://beta.artsn.fi/_next/image?url=https%3A%2F%2Fartisan-solana.s3.eu-central-1.amazonaws.com%2FCn2vpMBGVN2VZdezDSjumuXEmxykzDZwtn5UCkq2wxrW-0.jpg&w=384&q=75'}
+                src={'/products/patek-cubitus.jpg'}
                 width={200}
                 height={200}
                 alt='top performer icon'

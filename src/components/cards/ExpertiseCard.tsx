@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import styles from '@/styles/cards/ExpertiseCard.module.css'
 import { Button }from '@/components/ui/button'
 import Image from 'next/image';
@@ -20,6 +20,7 @@ import TagMonaco from '../three/TagMonaco';
 interface DefaultProps {
   id?: string;
   className?: string;
+  ref?: any;
 }
 
 const cards = [
@@ -45,14 +46,15 @@ const cards = [
   }
 ]
 
-const ExpertiseCard = (
-  props: DefaultProps
+const ExpertiseCard = forwardRef((
+  props: DefaultProps,
+  ref: any
 ) => {
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const [progressAmount, setProgressAmount] = useState(0);
 
   return (
-    <div className={`${props.className}`}>
+    <div ref={ref} className={`${props.className}`}>
       <Badge className="w-fit self-center border-zinc-200">
         <span className='text-secondary text-2xl'>How it Works</span>
       </Badge>
@@ -183,6 +185,6 @@ const ExpertiseCard = (
       </div>    
     </div>
   );
-};
+});
 
 export default ExpertiseCard;
