@@ -81,16 +81,25 @@ export const typeDefs = gql`
   }
 
   input CreateUserInput {
-    email: String!
-    publicKey: String!
-    password: String!
-    username: String!
-    firstName: String!
-    lastName: String!
-    country: String!
+    uuid: String!
+    email: String
+    password: String
+    username: String
+    firstName: String
+    lastName: String
+    createdAt: String
+    updatedAt: String
+    lastLogin: String
     isActive: Boolean
-    isVerified: Boolean
     role: String!
+    country: String
+    isVerified: Boolean
+    publicKey: String
+    solanaTransactionId: String
+    phoneNumber: String
+    baseProfile: UpdateBaseProfileInput
+    investorInfo: UpdateInvestorInfoInput
+    kycInfo: UpdateKYCInfoInput
   }
 
   input RegisterInput {

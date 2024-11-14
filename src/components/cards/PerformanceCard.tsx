@@ -26,9 +26,9 @@ const PerformanceCard = () => {
 
   return (
     <TransparentCard className='text-secondary text-2xl w-full items-center justify-center flex flex-col text-center gap-4'>
-        <Badge>
+        {/* <Badge>
             <span className='text-secondary text-2xl'>The Artisan</span>
-        </Badge>
+        </Badge> */}
         <TransparentCard className="mx-2 flex flex-col w-7/12 items-center justify-center self-center text-secondary text-2xl"> 
             <p className='text-2xl text-center my-2 md:text-4xl md:my-4'>
                 <span className='text-slate-400 font-bold'>

@@ -57,8 +57,6 @@ export async function POST(_req: Request) {
         displayRole: 'Investor',
         photoUrl: req.profilePictureUrl || '',
         bio: '',
-        createdAt: now,
-        updatedAt: now,
         totalSpend: new Double(0)
       },
       

@@ -64,7 +64,7 @@ const ExpertiseCard = (
           watchSlidesProgress // Keep track of which thumbnail is active
           className="thumbs-swiper"
         >
-          <SwiperSlide className="border-gray rounded-2xl p-2 w-1/4"></SwiperSlide>
+          {/* <SwiperSlide className="border-gray rounded-2xl p-2 w-1/4"></SwiperSlide> */}
           <SwiperSlide className="border-gray rounded-2xl p-2 ">
             <Card className='h-[500px]'>
               <CardContent className="flex flex-col aspect-square items-center justify-center p-6 ">
