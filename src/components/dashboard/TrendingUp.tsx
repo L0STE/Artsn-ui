@@ -52,7 +52,7 @@ const TrendingUp = () => {
           alt={trendingListing.assetDetails || "Trending Item"}
           width={200}
           height={200}
-          className="rounded-xl w-full border border-zinc-300 dark:border-zinc-700 my-8 max-h-44 object-cover"
+          className="rounded-xl w-full max-h-1/3 object-contain"
         />
 
         <div className="grid grid-cols-2 gap-10">
