@@ -130,8 +130,6 @@ export const LOGIN_USER = gql`
           displayRole
           photoUrl
           bio
-          createdAt
-          updatedAt
         }
         investorInfo {
           id
@@ -140,8 +138,6 @@ export const LOGIN_USER = gql`
           riskTolerance
           preferredInvestmentDuration
           totalSpend
-          createdAt
-          updatedAt
         }
         kycInfo {
           idvId
