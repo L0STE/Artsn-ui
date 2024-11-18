@@ -133,6 +133,13 @@ export const typeDefs = gql`
     baseProfile: UpdateBaseProfileInput
     investorInfo: UpdateInvestorInfoInput
     kycInfo: UpdateKYCInfoInput
+    socialLinks: UpdateSocialLinksInput
+  }
+
+  input UpdateSocialLinksInput {
+    twitter: String
+    instagram: String
+    website: String
   }
 
   input UpdateBaseProfileInput {
@@ -148,6 +155,7 @@ export const typeDefs = gql`
     portfolioSize: Float
     riskTolerance: String
     preferredInvestmentDuration: String
+    totalSpend: Float
   }
 
   input InvestmentHistoryItemInput {

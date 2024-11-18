@@ -290,7 +290,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
   };
 
   const UserDropdown = ({ user, userBalance }: { user: User, userBalance: any }) => {
-    // console.log('USER DROPDOWN ->', userBalance);
+    console.log('USER DROPDOWN ->', user);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const router = useRouter();
     const copyToClipboard = (text: any) => {
@@ -399,9 +399,9 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
 
   // Render login or user dropdown based on auth state
   const renderAuthComponent = () => {
-    // if (loading) {
-    //   return <div className="animate-pulse">Loading...</div>;
-    // }
+    if (loading) {
+      return <div className="animate-pulse">Loading...</div>;
+    }
 
     if (authState.userObject && authState.userWallet && !_params && userBalance ) {
       return <UserDropdown user={authState.userObject} userBalance={userBalance} />;

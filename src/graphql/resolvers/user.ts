@@ -221,112 +221,113 @@ export const userResolvers: IResolvers<any, Context> = {
           throw new GraphQLError('User not found');
         }
 
-        // Process investorInfo with proper Double conversion
-        let processedInvestorInfo = null;
-        if (input.investorInfo || currentUser.investorInfo) {
-          const inputInfo = input.investorInfo || {};
-          processedInvestorInfo = {
-            ...currentUser.investorInfo,
-            ...inputInfo,
-            id: currentUser.investorInfo.id,
-            createdAt: currentUser.investorInfo.createdAt,
-            updatedAt: new Date().toISOString(),
-            investmentPreferences: inputInfo.investmentPreferences || 
-              currentUser.investorInfo.investmentPreferences || [],
-            investmentHistory: inputInfo.investmentHistory || 
-              currentUser.investorInfo.investmentHistory || [],
-            portfolioSize: new Double(
-              Number(inputInfo.portfolioSize ?? currentUser.investorInfo.portfolioSize ?? 0)
-            ),
-            riskTolerance: inputInfo.riskTolerance || 
-              currentUser.investorInfo.riskTolerance || 'MODERATE',
-            preferredInvestmentDuration: inputInfo.preferredInvestmentDuration || 
-              currentUser.investorInfo.preferredInvestmentDuration || 'MEDIUM',
-            totalSpend: new Double(
-              Number(inputInfo.totalSpend ?? currentUser.investorInfo.totalSpend ?? 0)
-            )
-          };
-        }
+        const now = new Date().toISOString();
 
-        // Process baseProfile
-        let processedBaseProfile = null;
-        if (input.baseProfile || currentUser.baseProfile) {
-          const inputProfile = input.baseProfile || {};
-          processedBaseProfile = {
-            ...currentUser.baseProfile,
-            ...inputProfile,
-            id: currentUser.baseProfile.id,
-            displayName: inputProfile.displayName || currentUser.baseProfile.displayName,
-            displayRole: inputProfile.displayRole || currentUser.baseProfile.displayRole,
-            photoUrl: inputProfile.photoUrl || currentUser.baseProfile.photoUrl || '',
-            bio: inputProfile.bio || currentUser.baseProfile.bio || '',
-            createdAt: currentUser.baseProfile.createdAt,
-            updatedAt: new Date().toISOString()
-          };
-        }
-
-        // Prepare update object
+        // Prepare update object with all required fields
         const updateData = {
-          ...input,
-          updatedAt: new Date().toISOString(),
-          baseProfile: processedBaseProfile,
-          investorInfo: processedInvestorInfo,
+          // Required fields from schema
+          email: input.email || currentUser.email,
+          password: currentUser.password,
           uuid: currentUser.uuid,
-          verificationToken: currentUser.verificationToken,
-          socialLinks: currentUser.socialLinks || {
-            twitter: '',
-            instagram: '',
-            website: ''
+          username: currentUser.username,
+          firstName: input.firstName || currentUser.firstName,
+          lastName: input.lastName || currentUser.lastName,
+          country: input.country || currentUser.country,
+          
+          // Optional fields
+          createdAt: currentUser.createdAt,
+          updatedAt: now,
+          lastLogin: currentUser.lastLogin || now,
+          isActive: currentUser.isActive ?? true,
+          role: currentUser.role || 'USER',
+          verificationToken: currentUser.verificationToken || '',
+          isVerified: currentUser.isVerified ?? false,
+          publicKey: currentUser.publicKey,
+          solanaTransactionId: currentUser.solanaTransactionId || '',
+          phoneNumber: currentUser.phoneNumber || '',
+
+          // Nested objects
+          socialLinks: {
+            twitter: input.socialLinks?.twitter || currentUser.socialLinks?.twitter || '',
+            instagram: input.socialLinks?.instagram || currentUser.socialLinks?.instagram || '',
+            website: input.socialLinks?.website || currentUser.socialLinks?.website || ''
           },
+
+          baseProfile: {
+            id: currentUser.baseProfile?.id || crypto.randomUUID(),
+            displayName: input.baseProfile?.displayName || currentUser.baseProfile?.displayName || currentUser.username,
+            displayRole: input.baseProfile?.displayRole || currentUser.baseProfile?.displayRole || 'USER',
+            photoUrl: input.baseProfile?.photoUrl || currentUser.baseProfile?.photoUrl || '',
+            bio: input.baseProfile?.bio || currentUser.baseProfile?.bio || '',
+            createdAt: currentUser.baseProfile?.createdAt || now,
+            updatedAt: now
+          },
+
+          investorInfo: {
+            id: currentUser.investorInfo?.id || crypto.randomUUID(),
+            createdAt: currentUser.investorInfo?.createdAt || now,
+            updatedAt: now,
+            investmentPreferences: input.investorInfo?.investmentPreferences || currentUser.investorInfo?.investmentPreferences || [],
+            investmentHistory: input.investorInfo?.investmentHistory || currentUser.investorInfo?.investmentHistory || [],
+            portfolioSize: new Double(Number(input.investorInfo?.portfolioSize || currentUser.investorInfo?.portfolioSize || 0)),
+            riskTolerance: input.investorInfo?.riskTolerance || currentUser.investorInfo?.riskTolerance || 'MODERATE',
+            preferredInvestmentDuration: input.investorInfo?.preferredInvestmentDuration || currentUser.investorInfo?.preferredInvestmentDuration || 'MEDIUM',
+            totalSpend: new Double(Number(input.investorInfo?.totalSpend || currentUser.investorInfo?.totalSpend || 0))
+          },
+
           kycInfo: {
-            idvId: input.kycInfo?.idvId || '',
-            kycStatus: 'PENDING',
-            kycCompletionDate: currentUser.baseProfile.createdAt,
-            kycDocuments: []
+            idvId: input.kycInfo?.idvId || currentUser.kycInfo?.idvId || '',
+            kycStatus: input.kycInfo?.kycStatus || currentUser.kycInfo?.kycStatus || 'PENDING',
+            kycCompletionDate: currentUser.kycInfo?.kycCompletionDate || now,
+            kycDocuments: currentUser.kycInfo?.kycDocuments || []
           }
         };
 
-        console.log('Final update data:', JSON.stringify(updateData, null, 2));
+        // Perform the update and handle the result properly
+        const result = await collection.findOneAndUpdate(
+          { _id: new ObjectId(user._id) },
+          { $set: updateData },
+          { 
+            returnDocument: 'after'
+          }
+        );
 
-        // Perform the update with more detailed error handling
-        let result;
-        try {
-          result = await collection.findOneAndUpdate(
-            { _id: new ObjectId(user._id) },
-            { $set: updateData },
-            { 
-              returnDocument: 'after'
-            }
-          );
-        } catch (updateError: any) {
-          console.error('Direct update error:', updateError);
-          throw new GraphQLError(`Update operation failed: ${updateError.message}`);
-        }
+        // Log the result structure for debugging
+        console.log('Update result:', JSON.stringify(result, null, 2));
 
-        // If update succeeded but didn't return the document, fetch it manually
-        if (!result?.value) {
-          const updatedUser = await collection.findOne({ 
-            _id: new ObjectId(user._id) 
-          });
-          
-          if (!updatedUser) {
+        // Handle different result formats
+        const updatedUser = result?.value || result?.lastErrorObject?.updatedExisting && await collection.findOne({ _id: new ObjectId(user._id) });
+        
+        if (!updatedUser) {
+          // If we still can't get the updated user, try one more time to fetch it
+          const finalAttempt = await collection.findOne({ _id: new ObjectId(user._id) });
+          if (!finalAttempt) {
             throw new GraphQLError('Failed to retrieve updated user');
           }
-          
-          return updatedUser;
+          return finalAttempt;
         }
 
-        return result.value;
+        return updatedUser;
+
       } catch (error: any) {
-        console.error('Update error details:', {
+        console.error('MongoDB Error:', {
           message: error.message,
           code: error.code,
-          validationErrors: error.errInfo?.details?.schemaRulesNotSatisfied,
+          name: error.name,
           stack: error.stack
         });
 
+        if (error.code === 121) {
+          const validationErrors = error.errInfo?.details?.schemaRulesNotSatisfied;
+          console.error('Validation Error Details:', {
+            validationErrors,
+            operatorName: error.errInfo?.details?.operatorName,
+            failingDocumentId: error.errInfo?.failingDocumentId
+          });
+        }
+
         throw new GraphQLError(
-          error.message || 'Failed to update user',
+          'Failed to update user: ' + error.message,
           {
             extensions: {
               code: error.code || 'UPDATE_ERROR',

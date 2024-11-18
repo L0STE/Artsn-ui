@@ -14,6 +14,9 @@ import * as z from "zod";
 import { useMutation } from '@apollo/client';
 import { useAuth } from '@/providers/Web3AuthProvider';
 import { Textarea } from '../ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { FormControl } from '../ui/form';
+import { countries } from '@/lib/countries';
 
 // Animation variants remain the same
 const containerVariants = {
@@ -294,7 +297,7 @@ const Settings = () => {
 
     const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
-        // setIsLoading(true);
+        setIsLoading(true);
 
         try {
 
@@ -308,7 +311,11 @@ const Settings = () => {
                     },
                 },
             onCompleted: (data) => {
-                // console.log('Mutation completed with data:', data);
+                console.log('Mutation completed with data:', data);
+                toast({
+                  title: "Profile updated",
+                  description: "Your profile has been updated successfully",
+                });
               },
               onError: (error) => {
                 console.error('Mutation error:', {
@@ -351,6 +358,7 @@ const Settings = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('User data:', user);
       setFormData({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
@@ -421,12 +429,21 @@ const Settings = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="country">Country</Label>
-                      <Input 
-                        id="country"
-                        name="country"
-                        value={formData.country}
-                        onChange={handleChange}
-                      />
+                      <Select
+                        onValueChange={()=>handleChange}
+                        defaultValue={formData.country}
+                      >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                        <SelectContent>
+                          {countries.map((country, index) => (
+                            <SelectItem key={index} value={country.value}>
+                            {country.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
