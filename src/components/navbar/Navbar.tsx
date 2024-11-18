@@ -481,7 +481,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
             </Link>
           </div>
 
-          {navbarCollapsed && renderAuthComponent()}
+          {/* {navbarCollapsed && renderAuthComponent()} */}
           
           {/* { !loading && !navbarCollapsed &&( userObject && userWallet && !_params ? <UserDropdown user={userObject!}/> : <LoginDialog />) } */}
           <NavButton
@@ -569,7 +569,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
             </Button>
               {/* { loading && <div className='animate-pulse'>Loading...</div> } */}
               {/* <LoginDialog _isOpen={true} /> */}
-              {renderAuthComponent()}
+              {/* {renderAuthComponent()} */}
         </ul>
         </motion.header>
       {/* <motion.header
