@@ -109,42 +109,45 @@ export const UPDATE_USER = gql`
 export const LOGIN_USER = gql`
   mutation LoginUser($publicKey: String!, $password: String!) {
     login(publicKey: $publicKey, password: $password) {
-      _id
-      uuid
-      email
-      publicKey
-      username
-      firstName
-      lastName
-      country
-      role
-      isActive
-      isVerified
-      createdAt
-      updatedAt
-      baseProfile {
-        id
-        displayName
-        displayRole
-        photoUrl
-        bio
+      token
+      user {
+        _id
+        uuid
+        email
+        publicKey
+        username
+        firstName
+        lastName
+        country
+        role
+        isActive
+        isVerified
         createdAt
         updatedAt
-      }
-      investorInfo {
-        id
-        investmentPreferences
-        portfolioSize
-        riskTolerance
-        preferredInvestmentDuration
-        totalSpend
-        createdAt
-        updatedAt
-      }
-      kycInfo {
-        idvId
-        kycStatus
-        kycCompletionDate
+        baseProfile {
+          id
+          displayName
+          displayRole
+          photoUrl
+          bio
+          createdAt
+          updatedAt
+        }
+        investorInfo {
+          id
+          investmentPreferences
+          portfolioSize
+          riskTolerance
+          preferredInvestmentDuration
+          totalSpend
+          createdAt
+          updatedAt
+        }
+        kycInfo {
+          idvId
+          kycStatus
+          kycCompletionDate
+        }
       }
     }
   }
