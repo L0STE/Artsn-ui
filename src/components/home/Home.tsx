@@ -36,6 +36,14 @@ export default function Home() {
         }
     }, []);
 
+    // create a useEffect that `setSelected` from 0-3 every 2 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setSelected((prev) => (prev + 1) % 4);
+        }, 2000);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <Suspense fallback={<LoadingSpinner />}>
         <div className='bg-bg w-screen pt-[90px] lg:pt-12 gap-12 lg:gap-0 flex flex-col justify-center' style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
@@ -92,6 +100,7 @@ export default function Home() {
                         }
                         style={{ opacity: '.8' }}
                         alt='freak watch'
+                        priority
                     />
                 </motion.picture>
                 {/* <motion.hgroup className='flex flex-row sm:w-11/12 justify-between items-center mx-auto md:w-1/2 lg:w-1/3 z-20'>
