@@ -108,6 +108,7 @@ export async function POST( request: Request ) {
             .buyFractionalizedListing(uri)
             .accountsPartial({
                 buyer: buyer_publicKey,
+                buyerProfile: buyer_profile,
                 payer: feePayer.publicKey,
                 mint: USDC_MINT,
                 object: watch,

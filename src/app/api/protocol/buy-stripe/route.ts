@@ -9,6 +9,8 @@ import {
   Transaction,
   Connection,
   Ed25519Program,
+  TransactionMessage,
+  VersionedTransaction,
 } from '@solana/web3.js';
 
 import {
@@ -16,6 +18,7 @@ import {
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
+  getOrCreateAssociatedTokenAccount,
 } from '@solana/spl-token';
 import * as b58 from 'bs58';
 
@@ -52,7 +55,7 @@ export async function POST(request: Request) {
   const provider = new anchor.AnchorProvider(connection, wallet, {});
   const programId = new PublicKey(PROGRAM_ID);
   const program = getArtisanProgram(provider);
-
+  console.log('Program:', programId.toBase58());
   try {
     const req = await request.json();
     const buyer_publicKey = new PublicKey(req.publicKey);
@@ -89,25 +92,32 @@ export async function POST(request: Request) {
     );
 
     console.log('listingCurrencyAta ->', listingCurrencyAta.toString());
-
-    const buyerCurrencyAta = getAssociatedTokenAddressSync(
+    const feeKey = process.env.PRIVATE_KEY!;
+    const feePayer = Keypair.fromSecretKey(b58.decode(feeKey));
+    // const buyerCurrencyAta = getAssociatedTokenAddressSync(
+    //   USDC_DEV,
+    //   buyer_publicKey
+    // );
+    const buyerCurrencyAta = await getOrCreateAssociatedTokenAccount(
+      connection,
+      feePayer,
       USDC_DEV,
-      buyer_publicKey
-    );
-
+      buyer_publicKey,
+      true,
+      'finalized',
+    )
     console.log('buyerCurrencyAta ->', buyerCurrencyAta.toString());
 
     const sigKey = process.env.SIGNING_AUTHORITY!;
     const sigPayer = Keypair.fromSecretKey(b58.decode(sigKey));
-    const feeKey = process.env.PRIVATE_KEY!;
-    const feePayer = Keypair.fromSecretKey(b58.decode(feeKey));
+    
     console.log('feePayer ->', feePayer.publicKey.toString());
 
     const message = intToBytes(amount);
     const stringBytes = stringToBytes(sessionId); // Convert string to bytes
     const combinedBytes = concatenateUint8Arrays(message, stringBytes); // Concatenate the byte arrays
 
-    console.log('combinedBytes ->', combinedBytes);
+    // console.log('combinedBytes ->', combinedBytes);
   
     const ed25519Ix = Ed25519Program.createInstructionWithPrivateKey({
       privateKey: sigPayer.secretKey,
@@ -115,6 +125,7 @@ export async function POST(request: Request) {
     });
     console.log('preparing to buy', amount, 'shares of', listing.toString(), 'going to', buyer_publicKey.toString());
     const buyer_profile = PublicKey.findProgramAddressSync([Buffer.from('profile'), buyer_publicKey.toBuffer()], program.programId)[0];
+    console.log('buyer_profile ->', buyer_profile.toString());
     const fraction = Keypair.generate();
     const buyShareIx = await program.methods
     //@ts-expect-error - missing arguments
@@ -130,23 +141,42 @@ export async function POST(request: Request) {
       .signers([feePayer, fraction])
       .instruction();
 
+    const ixs = [];
+    for (let i = 0; i < 1; i++) {
+      ixs.push(ed25519Ix);
+      ixs.push(buyShareIx);
+    };
     const { blockhash } = await connection.getLatestBlockhash('finalized');
-    const transaction = new Transaction({
+    // const transaction = new Transaction({
+    //   recentBlockhash: blockhash,
+    //   feePayer: feePayer.publicKey,
+    // });
+    // for (let i = 0; i < amount; i++) {
+    //   console.log('buying share', i);
+    //   transaction.add(ed25519Ix).add(buyShareIx);
+    // }
+    // transaction.partialSign(feePayer);
+    // transaction.partialSign(fraction);
+
+    // const serializedTransaction = transaction.serialize({
+    //   requireAllSignatures: false,
+    // });
+    // const base64 = serializedTransaction.toString('base64');
+    console.log('latest blockhash ->', blockhash);
+    const messageV0 = new TransactionMessage({
+      payerKey: feePayer.publicKey,
       recentBlockhash: blockhash,
-      feePayer: feePayer.publicKey,
-    });
-    for (let i = 0; i < amount; i++) {
-      console.log('buying share', i);
-      transaction.add(ed25519Ix).add(buyShareIx);
-    }
-    transaction.partialSign(feePayer);
-    transaction.partialSign(fraction);
+    //   buyShareIx x amount of times
+      instructions: ixs,
+    }).compileToV0Message();
+    
+    const txn = new VersionedTransaction(messageV0);
+    // console.log('txn', txn)
+    txn.sign([feePayer, fraction])
 
-    const serializedTransaction = transaction.serialize({
-      requireAllSignatures: false,
-    });
-    const base64 = serializedTransaction.toString('base64');
+    const base64 = Buffer.from(txn.serialize()).toString('base64'); 
 
+    console.log('returning txn ->', base64);
     return new Response(JSON.stringify({ transaction: base64 }), {
       headers: {
         'content-type': 'application/json',

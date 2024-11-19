@@ -237,6 +237,7 @@ const RPC = rpcManager.getConnection();
         if (!tx) {
           throw new Error('Transaction object is null or undefined');
         }
+        console.log('signing tx with wallet:', this.solanaWallet);
         const signedTx = await this.solanaWallet.signAndSendTransaction(tx);
         if (!signedTx) {
           throw new Error('Failed to sign transaction');
@@ -256,20 +257,20 @@ const RPC = rpcManager.getConnection();
           throw new Error('No signature received from transaction');
         }
         steps.push({ step: 'umiConversion', status: 'completed' });
-        console.log('UMI signature received:', signature.toString());
+        // console.log('UMI signature received:', signature.toString());
     
-        // Step 6: Confirm transaction
-        steps.push({ step: 'confirmTransaction', status: 'started' });
-        const confirmResult = await umi.rpc.confirmTransaction(signature, {
-          strategy: { type: 'blockhash', ...(await umi.rpc.getLatestBlockhash()) },
-        });
-        steps.push({ step: 'confirmTransaction', status: 'completed' });
-        console.log('Transaction confirmed:', confirmResult);
+        // // Step 6: Confirm transaction
+        // steps.push({ step: 'confirmTransaction', status: 'started' });
+        // const confirmResult = await umi.rpc.confirmTransaction(signature, {
+        //   strategy: { type: 'blockhash', ...(await umi.rpc.getLatestBlockhash()) },
+        // });
+        // steps.push({ step: 'confirmTransaction', status: 'completed' });
+        // console.log('Transaction confirmed:', confirmResult);
     
-        // Return the signature
-        if (typeof signature.toString() !== 'string' || signature.toString().length === 0) {
-          throw new Error('Invalid signature format received');
-        }
+        // // Return the signature
+        // if (typeof signature.toString() !== 'string' || signature.toString().length === 0) {
+        //   throw new Error('Invalid signature format received');
+        // }
         
         return signature.toString();
       } catch (error: any) {

@@ -382,7 +382,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
           </DropdownMenuItem>
           <DropdownMenuItem className="cursor-pointer text-secondary" onClick={()=> {setNavbarCollapsed(true), router.push('/dashboard')}}>
               <ListOrdered className="mr-2 h-4 w-4" />
-              <span className="text-sm font-semibold">My orders</span>
+              <span className="text-sm font-semibold">Dashboard</span>
           </DropdownMenuItem>
           {/* <DropdownMenuItem className="cursor-pointer text-secondary">
             <EggFried className="mr-2 h-4 w-4" />

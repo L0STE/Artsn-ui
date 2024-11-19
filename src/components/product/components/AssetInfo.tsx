@@ -59,8 +59,8 @@ export default function AssetInfo({ asset }: { asset: any }) {
     return accounts;
   }
 
-  const signTransaction = async (tx: Transaction) => {
-    const signature = await rpc.signTransaction({ tx });
+  const signTransaction = async (tx: VersionedTransaction ) => {
+    const signature = await rpc!.signVersionedTransaction({ tx });
     return signature;
   }
 
@@ -152,65 +152,73 @@ export default function AssetInfo({ asset }: { asset: any }) {
     }
   }
 
-  async function buyStripeTx(id: number, reference: string, key: string, amount: number) {
-    try {
-      const response = await fetch('/api/protocol/buy-stripe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          id: asset.offChainData.associatedId,
-          reference: reference,
-          publicKey: key,
-          amount: amount,
-          sessionId: sessionStorage.getItem('sessionId')
-        })
-      })
-      const txData = await response.json();
-      const tx = Transaction.from(Buffer.from(txData.transaction, "base64"));
+  // async function buyStripeTx(id: number, reference: string, key: string, amount: number) {
+  //   try {
+  //     const response = await fetch('/api/protocol/buy-stripe', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json'
+  //       },
+  //       body: JSON.stringify({
+  //         id: asset.offChainData.associatedId,
+  //         reference: reference,
+  //         publicKey: key,
+  //         amount: amount,
+  //         sessionId: sessionStorage.getItem('sessionId')
+  //       })
+  //     })
+  //     const txData = await response.json();
+  //     const tx = VersionedTransaction.deserialize(Buffer.from(txData.transaction, "base64"));
   
-      if (!tx) {
-        console.log('no transaction');
-        return;
-      }
+  //     if (!tx) {
+  //       console.log('no transaction');
+  //       return;
+  //     }
   
-      return tx;
-    } catch (error) {
-      console.error('Error sending transaction', error);
-    }
-  };
+  //     return tx;
+  //   } catch (error) {
+  //     console.error('Error sending transaction', error);
+  //   }
+  // };
 
-  async function buyStripeListing(amount: string) {
-    try {
-        if (!user) {
-            console.error('User not found');
-            return;
-        }
-        const tx = await buyStripeTx(asset.onChainData.id, asset.offChainData.reference, user!.publicKey, +amount);
-        const signature = await signTransaction(tx!);
-        console.log('signature ->', signature);
-        toast({
-            title: 'Transaction sent',
-            description: 'Transaction has been sent to the blockchain',
-        });
+  // async function buyStripeListing(amount: string) {
+  //   try {
+  //       if (!user) {
+  //           console.error('User not found');
+  //           return;
+  //       }
+  //       const tx = await buyStripeTx(asset.onChainData.id, asset.offChainData.reference, user!.publicKey, +amount);
+  //       if (tx) {
+  //         const signature = await rpc!.signVersionedTransaction({ tx });
+  //         console.log('signature ->', signature);
+  //         toast({
+  //           title: 'Transaction sent',
+  //           description: 'Transaction has been sent to the blockchain',
+  //         });
+  //       } else {
+  //         console.error('Transaction is undefined');
+  //       }
+  //       toast({
+  //           title: 'Transaction sent',
+  //           description: 'Transaction has been sent to the blockchain',
+  //       });
         
-    } catch (error) {
-        console.error('Error sending transaction', error);
-    } finally {
-        sessionStorage.removeItem('sessionId') 
-    }
-  }
+  //   } catch (error) {
+  //       console.error('Error sending transaction', error);
+  //   } finally {
+  //       sessionStorage.removeItem('sessionId') 
+  //   }
+  // }
 
   useEffect(() => {
     const amount = new URLSearchParams(window.location.search).get('amount');
-    if (
-        (user && user.publicKey) 
-        && amount
-        && sessionStorage.getItem('sessionId')
-    ) {
-        buyStripeListing(amount);
-    }
+    // if (
+    //     (user && user.publicKey) 
+    //     && amount
+    //     && sessionStorage.getItem('sessionId')
+    // ) {
+    //     buyStripeListing(amount);
+    // }
 
     if(user && user.publicKey && provider){
       getBalance();

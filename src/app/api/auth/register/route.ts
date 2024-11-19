@@ -105,8 +105,6 @@ export async function POST(_req: Request) {
         body: JSON.stringify({
           publicKey: req.publicKey,
           username: insertedId.toString(),
-          profileType: 'Investor',
-          isPublic: true
         })
       });
 

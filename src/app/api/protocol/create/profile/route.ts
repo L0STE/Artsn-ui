@@ -27,26 +27,20 @@ export async function POST(request: Request) {
     // @ts-expect-error - wallet is dummy variable, signing is not needed
     const provider = new AnchorProvider(connection,  wallet, {commitment: "confirmed"});
     const program = getArtisanProgram(provider);
-
+    console.log('Program:', program.programId.toBase58());
     try {
         const req: ProfileCreationRequest = await request.json();
-        const { publicKey, username, profileType, isPublic } = req;
+        const { publicKey, username } = req;
 
-        console.log('Request details:', { publicKey, username, profileType, isPublic });
+        console.log('Request details:', { publicKey, username });
 
         const userPublicKey = new PublicKey(publicKey);
 
         const profileArgs = {
             username,
-            profileType: profileType === 'Creator' ? 1 : 0,
-            public: isPublic
         };
 
-        const [userProfile] = PublicKey.findProgramAddressSync(
-            [Buffer.from('profile'), userPublicKey.toBuffer()],
-            program.programId
-        );
-
+        const userProfile = PublicKey.findProgramAddressSync([Buffer.from('profile'), userPublicKey.toBuffer()], program.programId)[0]; //EuDuQdCuzXs1sQfj3gy8YSzW6wQ9Ey8yYQNLKyZ2NBxc
         const feePayer = getFeePayer();
 
         const profileInitIx = await createProfileInitInstruction(

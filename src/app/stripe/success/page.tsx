@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/providers/Web3AuthProvider';
-import { Transaction } from "@solana/web3.js";
+import { Transaction, VersionedTransaction } from "@solana/web3.js";
 import { useWeb3Auth } from "@/hooks/use-web3-auth";
 import RPC from "@/components/blockchain/solana-rpc";
 
@@ -78,14 +78,15 @@ export default function StripeSuccess() {
         uri: encodeURIComponent(uri)
       })
     });
-
+    console.log('response ->', response);
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to create transaction');
     }
 
-    const txData = await response.json();
-    const tx = Transaction.from(Buffer.from(txData.transaction, "base64"));
+    const res = await response.json();
+    console.log('txData ->', res);
+    const tx = VersionedTransaction.deserialize(Buffer.from(res.transaction, "base64"));
     
     if (!tx) throw new Error('Invalid transaction data received');
     return tx;
@@ -111,9 +112,13 @@ export default function StripeSuccess() {
         +params.amount,
         params.uri
       );
-      
+      console.log('returned txn -> ', tx);
       const rpc = new RPC(provider!);
-      const signature = await rpc.signTransaction(tx);
+      if ( !tx ) {
+        throw new Error('No tx to sign');
+      }
+      const signature = await rpc!.signVersionedTransaction({ tx });
+      // const signature = await rpc.signTransaction(tx);
       
       if (!signature) {
         throw new Error('Failed to sign transaction');
