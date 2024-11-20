@@ -389,15 +389,15 @@ const Marketplace = () => {
       <Breadcrumb />
       <div className="bg-gray-light min-h-screen px-6 py-5 border border-b-gray">
         <div className="max-w-screen-xl mx-auto flex flex-wrap">
-          <div className="hidden md:flex w-full md:w-1/4 md:pr-4 mb-4">
+          {/* <div className="hidden md:flex w-full md:w-1/4 md:pr-4 mb-4">
           <SidebarFilter 
             filters={filters}
             onFilterChange={handleFilterChange}
             availableFilters={availableFilters}
           />
-          </div>
+          </div> */}
 
-          <div className="w-full md:w-3/4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-3">
+          <div className="w-full md:w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-3">
             {filteredProducts.map((product, index) => (
               <React.Fragment key={product.publicKey.toString()}>
                 {index === 2 && <ReferralCard />}
