@@ -85,27 +85,29 @@ const ProductFeature: React.FC<{ params: { id: string } }> = ({ params }) => {
   }
 
   return (
-    <div className="main mt-24">
-      <div className="bg-gray-light min-h-screen px-6 py-5">
-        <div className="max-w-screen-xl mx-auto flex flex-wrap">
-          <div className="relative w-full md:px-16 md:w-1/2">
-            <ProductSwiper  images={productData.offChainData.images}/>
+    <Suspense fallback={<LoadingSpinner />}>
+      <div className="main mt-24">
+        <div className="bg-gray-light min-h-screen px-6 py-5">
+          <div className="max-w-screen-xl mx-auto flex flex-wrap">
+            <div className="relative w-full md:px-16 md:w-1/2">
+              <ProductSwiper  images={productData.offChainData.images}/>
+            </div>
+            <div className="w-full md:w-1/2">
+              <AssetInfo asset={productData ? productData : ''} />
+              {/* <Statistics /> */}
+              {/* <InvestmentSummary /> */}
+              <AboutBrand info={productData.offChainData ? productData.offChainData.about : ''}/>
+              <MetadataLinks 
+                mintAddress={productData.onChainData ? productData.onChainData.object.toString() : ''}
+                associatedId={productData.onChainData ? productData.offChainData.associatedId.toString() : ''}
+              />
+              <PriceHistory />
+            </div>
           </div>
-          <div className="w-full md:w-1/2">
-            <AssetInfo asset={productData} />
-            {/* <Statistics /> */}
-            {/* <InvestmentSummary /> */}
-            <AboutBrand info={productData.offChainData.about}/>
-            <MetadataLinks 
-              mintAddress={productData.onChainData.object.toString()}
-              associatedId={productData.offChainData.associatedId.toString()}
-            />
-            <PriceHistory />
-          </div>
+          {/* Related products section can be added here if needed */}
         </div>
-        {/* Related products section can be added here if needed */}
       </div>
-    </div>
+    </Suspense>
   );
 };
 
