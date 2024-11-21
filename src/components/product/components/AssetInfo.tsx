@@ -234,7 +234,7 @@ export default function AssetInfo({ asset }: { asset: any }) {
           </button>
           {asset.onChainData.objectType.watch && (
             <button className="text-xs md:text-base border-gray text-black p-2.5 rounded-2xl shadow-sm">
-              <span>{asset.attributes[4].value.toString()}</span>
+              <span>{asset.attributes ? asset.attributes[4].value.toString() : ''}</span>
             </button>
           )}
         </div>
@@ -264,9 +264,9 @@ export default function AssetInfo({ asset }: { asset: any }) {
         </button>
       </div>
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold">{asset.onChainData.name.toString()}</h1>
+        <h1 className="text-3xl font-semibold">{asset.onChainData.name.toString() ?? ''}</h1>
       </div>
-      <p className="text-gray-600 mb-5">{asset.attributes[1].value.toString()}</p>
+      <p className="text-gray-600 mb-5">{asset.attributes[1].value.toString() ?? ''}</p>
       <p className="text-lg mb-3">Remaining fractions</p>
       <p className="text-3xl font-bold mb-2">
         {/* {asset.share - asset.shareSold} / {asset.share} */}
@@ -323,13 +323,13 @@ export default function AssetInfo({ asset }: { asset: any }) {
                   <div className="flex flex-row gap-2 items-center">
                     <Image
                       src={asset.offChainData.images[0]}
-                      alt={asset.attributes[0].value.toString()}
+                      alt={asset.attributes[0].value.toString() ?? ''}
                       width={100}
                       height={100}
                       className="rounded-3xl mt-5 border-gray border border-solid"
                     />
                     <div className="flex flex-col gap-2">
-                      <p className="text-lg font-semibold text-secondary">{asset.attributes[0].value.toString()} - {asset.attributes[1].value.toString()}</p>
+                      <p className="text-lg font-semibold text-secondary">{asset.attributes[0].value.toString() ?? ''} - {asset.attributes[1].value.toString() ?? ''}</p>
                       <p className="text-sm text-secondary" >x{" "}{amount}{" "}Fractions</p>
                     </div>
                   </div>
@@ -354,7 +354,7 @@ export default function AssetInfo({ asset }: { asset: any }) {
               </AlertDialogDescription>
               ) : (
                 <AlertDialogDescription>
-                  You just bought x {amount} Fractions of {asset.attributes[0].value.toString()} - {asset.attributes[1].value.toString()}. Welcome to the Artisan family!
+                  You just bought x {amount} Fractions of {asset.attributes[0].value.toString() ?? ''} - {asset.attributes[1].value.toString() ?? ''}. Welcome to the Artisan family!
                 </AlertDialogDescription>
               )}
             </AlertDialogHeader>
