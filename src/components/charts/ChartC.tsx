@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { TrendingUp } from "lucide-react"
 import { CartesianGrid, Line, LineChart, XAxis, Area, AreaChart, YAxis, ReferenceDot, ReferenceLine } from "recharts"
 import Image from "next/image";
@@ -19,6 +19,8 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart"
+import { Formatter } from 'recharts/types/component/DefaultLegendContent';
+
 const chartData = [
   // Starting 2018 baseline (100%)
   { date: "2018-01", watches: 100, cars: 100, stocks: 100 },
@@ -60,41 +62,97 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+// Memoize formatter functions
+const dateFormatter = (value: string) => {
+  const date = new Date(value);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    year: "2-digit"
+  });
+};
+
+const tooltipLabelFormatter = (value: string) => {
+  const date = new Date(value);
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric"
+  });
+};
+
 interface DefaultProps {
   className?: string;
 }
 
-const ChartC = (
-  props: DefaultProps
-) => {
-  const [timeRange, setTimeRange] = useState("5Y")  // Change default to 5 years
-  const tooltipFormatter = (value: number, name: any, entry: any) => {
+const ChartC = (props: DefaultProps) => {
+  const [timeRange, setTimeRange] = useState("5Y");
+
+  // Memoize filtered data
+  const filteredData = useMemo(() => {
+    return chartData.filter((item) => {
+      const date = new Date(item.date);
+      const now = new Date();
+      let yearsToSubtract = 5;
+      
+      switch(timeRange) {
+        case "1Y":
+          yearsToSubtract = 1;
+          break;
+        case "3Y":
+          yearsToSubtract = 3;
+          break;
+        case "ALL":
+          return true;
+        default:
+          yearsToSubtract = 5;
+      }
+      
+      const cutoffDate = new Date();
+      cutoffDate.setFullYear(cutoffDate.getFullYear() - yearsToSubtract);
+      return date >= cutoffDate;
+    });
+  }, [timeRange]);
+
+  // Memoize tooltip formatter
+  const tooltipFormatter = useCallback((value: any, name: any) => {
     const baselineValue = 100;
-    const percentageChange = (Number(value) - baselineValue) / baselineValue * 100;
-    return [`${percentageChange.toFixed(1)}%`, name];
-  };
-  const filteredData = chartData.filter((item) => {
-    const date = new Date(item.date)
-    const now = new Date()
-    let yearsToSubtract = 5  // Default to 5 years view
+    const percentageChange = ((Number(value) - baselineValue) / baselineValue) * 100;
     
-    switch(timeRange) {
-      case "1Y":
-        yearsToSubtract = 1
-        break
-      case "3Y":
-        yearsToSubtract = 3
-        break
-      case "ALL":
-        return true  // Show all data points
-      default:  // "5Y"
-        yearsToSubtract = 5
+    switch(name) {
+      case "Watches":
+        return [`${percentageChange.toFixed(1)}%`, "Watches Performance"];
+      case "Cars":
+        return [`${percentageChange.toFixed(1)}%`, "Classic Cars"];
+      case "stocks":
+        return [`${percentageChange.toFixed(1)}%`, "S&P 500"];
+      default:
+        return [`${percentageChange.toFixed(1)}%`, name];
     }
-    
-    const cutoffDate = new Date()
-    cutoffDate.setFullYear(cutoffDate.getFullYear() - yearsToSubtract)
-    return date >= cutoffDate
-  })
+  }, []);
+
+  // Memoize ChartTooltipContent
+  const tooltipContent = useMemo(() => (
+    <ChartTooltipContent
+      labelFormatter={tooltipLabelFormatter}
+      formatter={tooltipFormatter}
+      indicator="dot"
+      style={{
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        border: "1px solid #E5E7EB",
+        borderRadius: "6px",
+        padding: "8px 12px",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+      }}
+    />
+  ), [tooltipFormatter]);
+
+  // Memoize ChartLegendContent
+  const legendContent = useMemo(() => (
+    <ChartLegendContent>
+      <div style={{ color: "#D4AF37" }}>Watches</div>
+      <div style={{ color: "#3B3B3D" }}>Cars</div>
+      <div style={{ color: "#936B45" }}>S&P 500</div>
+    </ChartLegendContent>
+  ), []);
   return (
     <Card
       className={`${props.className}`}
@@ -197,17 +255,9 @@ const ChartC = (
               dataKey="date"
               tickLine={false}
               axisLine={true}
-              // axisLineColor="#E5E7EB"
               tickMargin={12}
               minTickGap={50}
-              tickFormatter={(value) => {
-                const date = new Date(value)
-                // Show both month and year for better context
-                return date.toLocaleDateString("en-US", {
-                  month: "short",
-                  year: "2-digit"
-                })
-              }}
+              tickFormatter={dateFormatter}
               style={{
                 fontSize: "12px",
                 fontFamily: "Inter, sans-serif",
@@ -310,13 +360,14 @@ const ChartC = (
               fill="url(#fillWatches)"
               stroke="#D4AF37"
               strokeWidth={2}
+              isAnimationActive={false}
               activeDot={{
                 r: 6,
                 stroke: "#D4AF37",
                 strokeWidth: 2,
                 fill: "white"
               }}
-              name="Watches"  // Important: This name is used in the formatter
+              name="Watches"
             />
             <Area
               dataKey="cars"
@@ -324,13 +375,14 @@ const ChartC = (
               fill="url(#fillCars)"
               stroke="#3B3B3D"
               strokeWidth={2}
+              isAnimationActive={false}
               activeDot={{
                 r: 6,
                 stroke: "#3B3B3D",
                 strokeWidth: 2,
                 fill: "white"
               }}
-              name="Cars"  // Important: This name is used in the formatter
+              name="Cars"
             />
             <Area
               dataKey="stocks"
@@ -338,13 +390,14 @@ const ChartC = (
               fill="url(#fillStocks)"
               stroke="#936B45"
               strokeWidth={2}
+              isAnimationActive={false}
               activeDot={{
                 r: 6,
                 stroke: "#936B45",
                 strokeWidth: 2,
                 fill: "white"
               }}
-              name="S&P 500"  // Important: This name is used in the formatter
+              name="S&P 500"
             />
             <ChartLegend 
               content={
