@@ -481,8 +481,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
             </Link>
           </div>
 
-          {navbarCollapsed && renderAuthComponent()}
-          
+          {renderAuthComponent()}
           {/* { !loading && !navbarCollapsed &&( userObject && userWallet && !_params ? <UserDropdown user={userObject!}/> : <LoginDialog />) } */}
           <NavButton
             onClick={() => {
@@ -491,12 +490,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
             navbarCollapsed={navbarCollapsed}
             className="text-primary"
           />
-          
-          
-          
-          {/* {navbarCollapsed && (
-            <LoginDialog />
-          )} */}
+
           {navbarCollapsed && (
             <MobileNavbar
               links={links}
