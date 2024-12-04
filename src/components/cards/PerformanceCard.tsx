@@ -32,21 +32,20 @@ const PerformanceCard = () => {
         <TransparentCard className="mx-2 flex flex-col w-7/12 items-center justify-center self-center text-secondary text-2xl"> 
             <p className='text-2xl text-center my-2 md:text-4xl md:my-4'>
                 <span className='text-slate-400 font-bold'>
-                    In the past decade
-                </span> 
-                , certain Luxury Assets outperformed the S&P 500 .
+                    Over the past decade 
+                </span> <br />
+                Luxury Assets outperformed the S&P 500 .
             </p>
         </TransparentCard>
-        {/* <div className='text-secondary text-2xl w-full md:w-3/4 lg:w-3/4'>
-            <span className='font-bold'>In the past decade</span>, certain Luxury Assets outperformed the S&P 500 .
-        </div> */}
-        <div className='flex flex-col w-full gap-12 md:gap-0 md:w-8/12 self-center items-center md:flex-row'>
+        
+        {/* <div className='flex flex-col w-full gap-12 md:gap-0 md:w-8/12 self-center items-center md:flex-row'>
             
             <Card1 className='sm:w-11/12 md:w-1/2 h-96 mx-auto self-center justify-between flex flex-col'/> 
 
             <TopPerformerCard className='w-11/12 md:w-1/4 h-96 self-center min-h-max justify-center items-center flex flex-col mx-2'/>
             <TopPerformer2Card className='w-11/12 md:w-1/4 h-96 self-center min-h-max justify-center items-center flex flex-col mx-2'/>
-        </div>
+        </div> */}
+        
         <ChartC className='w-11/12 md:w-8/12 self-center h-120 overflow-hidden'/>
     </TransparentCard>  
   );

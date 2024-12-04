@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 const OfferCard = () => {
   return (
-    <Card className="w-11/12 h-96 md:w-8/12 self-center bg-gradient-to-br from-gray-800 to-gray-900 text-white overflow-hidden">
+    <Card className="w-11/12 h-96 md:w-11/12 self-center bg-gradient-to-br from-gray-800 to-gray-900 text-white overflow-hidden">
       <CardContent className="p-0 relative h-full ">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-700 via-gray-800 to-gray-900 opacity-50"></div>
         <div className="absolute top-0 left-0 right-0 p-6 bg-gradient-to-b from-black to-transparent w-full h-full z-[2] opacity-60" />
@@ -27,11 +27,6 @@ const OfferCard = () => {
           </p>
         </div>
       </CardContent>
-      <CardFooter className="bg-black bg-opacity-50 p-4">
-        <Button variant="outline" className="bg-white text-black hover:bg-gray-200">
-          Get Started
-        </Button>
-      </CardFooter>
     </Card>
   );
 };

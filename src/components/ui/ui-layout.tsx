@@ -5,6 +5,9 @@ import { ReactNode, Suspense, useEffect, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import Navbar from '@/components/navbar/Navbar';
 import Footer from '@/components/footer/Footer';
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+
 // import { AccountChecker } from '../account/account-ui';
 // import {
 //   ClusterChecker,
@@ -21,6 +24,21 @@ export function UiLayout({
 }) {
   
   const searchParams = useSearchParams() || undefined;
+  const pathname = usePathname()
+  
+  useEffect(() => {
+    NProgress.configure({ showSpinner: false })
+    NProgress.start()
+    const timer = setTimeout(() => {
+      NProgress.done()
+    }, 200)
+
+    return () => {
+      clearTimeout(timer)
+      NProgress.remove()
+    }
+  }, [pathname, searchParams])
+
   return (
     <div className="h-full flex flex-col bg-bg items-center w-full overflow-none">
       <Navbar searchParams={searchParams} links={links} scrollThreshold={1} blurAmount={400} />
