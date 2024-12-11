@@ -7,6 +7,7 @@ import { useWeb3Auth } from "@/hooks/use-web3-auth";
 import RPC from "@/components/blockchain/solana-rpc";
 import { useHandleShare } from "@/hooks/use-handle-share";
 import { useRouter } from "next/navigation";
+import { LoginDialog } from '@/components/login/LoginDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,10 +29,12 @@ import { Progress } from "@/components/ui/progress";
 import { loadStripe } from "@stripe/stripe-js";
 import { v4 as uuid } from "uuid";
 import { useAuth } from "@/providers/Web3AuthProvider";
+import { LoginPortal } from "@/components/login/LoginPortal";
 export default function AssetInfo({ asset }: { asset: any }) {
   console.log('asset to render->', asset);
   const { provider, login: web3Login, logout: web3Logout, getUserInfo, web3auth } = useWeb3Auth();
- 
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const { toast } = useToast();
   const [amount, setAmount] = useState(1); // Initial amount set to 5
   const [isBuying, setIsBuying] = useState(false);
@@ -152,74 +155,7 @@ export default function AssetInfo({ asset }: { asset: any }) {
     }
   }
 
-  // async function buyStripeTx(id: number, reference: string, key: string, amount: number) {
-  //   try {
-  //     const response = await fetch('/api/protocol/buy-stripe', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json'
-  //       },
-  //       body: JSON.stringify({
-  //         id: asset.offChainData.associatedId,
-  //         reference: reference,
-  //         publicKey: key,
-  //         amount: amount,
-  //         sessionId: sessionStorage.getItem('sessionId')
-  //       })
-  //     })
-  //     const txData = await response.json();
-  //     const tx = VersionedTransaction.deserialize(Buffer.from(txData.transaction, "base64"));
-  
-  //     if (!tx) {
-  //       console.log('no transaction');
-  //       return;
-  //     }
-  
-  //     return tx;
-  //   } catch (error) {
-  //     console.error('Error sending transaction', error);
-  //   }
-  // };
-
-  // async function buyStripeListing(amount: string) {
-  //   try {
-  //       if (!user) {
-  //           console.error('User not found');
-  //           return;
-  //       }
-  //       const tx = await buyStripeTx(asset.onChainData.id, asset.offChainData.reference, user!.publicKey, +amount);
-  //       if (tx) {
-  //         const signature = await rpc!.signVersionedTransaction({ tx });
-  //         console.log('signature ->', signature);
-  //         toast({
-  //           title: 'Transaction sent',
-  //           description: 'Transaction has been sent to the blockchain',
-  //         });
-  //       } else {
-  //         console.error('Transaction is undefined');
-  //       }
-  //       toast({
-  //           title: 'Transaction sent',
-  //           description: 'Transaction has been sent to the blockchain',
-  //       });
-        
-  //   } catch (error) {
-  //       console.error('Error sending transaction', error);
-  //   } finally {
-  //       sessionStorage.removeItem('sessionId') 
-  //   }
-  // }
-
   useEffect(() => {
-    const amount = new URLSearchParams(window.location.search).get('amount');
-    // if (
-    //     (user && user.publicKey) 
-    //     && amount
-    //     && sessionStorage.getItem('sessionId')
-    // ) {
-    //     buyStripeListing(amount);
-    // }
-
     if(user && user.publicKey && provider){
       getBalance();
     }
@@ -300,7 +236,7 @@ export default function AssetInfo({ asset }: { asset: any }) {
         {/* <button className="w-full md:w-2/3 bg-black text-white py-3 rounded-2xl" onClick={()=> handleBuy()}>
           {`Buy $${amount * Number(asset.onChainData.price)} of this Fraction`}
         </button> */}
-        <AlertDialog>
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
           <AlertDialogTrigger className="w-full md:w-2/3 bg-black text-white py-3 rounded-2xl">{`Buy ${amount} Fractions`}</AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -374,7 +310,21 @@ export default function AssetInfo({ asset }: { asset: any }) {
                     Pay with crypto ( save ${(amount * Number(asset.onChainData.price)) * 0.04} )
                   </Button>
                   <Button disabled={!user} className="w-full rounded-xl bg-secondary text-primary hover:bg-primary hover:text-secondary" onClick={()=> buyStripe()}><CreditCard className="mr-2"/>Pay with card</Button>
-                  {!user && <p className="text-sm text-red-500">Please login to continue.</p>}
+                  {!user && (
+                    <div className="flex flex-col gap-2 items-center w-full bg-red-500/20 rounded-2xl py-2">
+                      <p className="text-sm text-red-500">Please login to continue.</p>
+                      <Button
+                        variant="secondary"
+                        className="rounded-xl"
+                        onClick={() => {
+                          setIsAlertOpen(false); // Close the AlertDialog
+                          setIsLoginOpen(true); // Open the login dialog
+                        }}
+                      >
+                        Login
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
               {isComplete && (
@@ -395,6 +345,11 @@ export default function AssetInfo({ asset }: { asset: any }) {
           See more
         </a>
       </p> */}
+      {isLoginOpen && (
+        <LoginDialog 
+          onClose={() => setIsLoginOpen(false)}
+        />
+      )}
     </section>
   );
 }

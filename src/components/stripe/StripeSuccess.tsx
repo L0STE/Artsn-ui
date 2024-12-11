@@ -327,7 +327,7 @@ export default function StripeSuccess() {
             </h2>
             {processingState.stage !== 'complete' && processingState.stage !== 'error' && (
               <p className="text-muted-foreground">
-                Please don't close this window
+                {"Please don't close this window"}
               </p>
             )}
             {processingState.error && (

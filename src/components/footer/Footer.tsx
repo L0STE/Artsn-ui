@@ -97,7 +97,7 @@ export default function FooterFeature() {
                             <li>
                                 <a href='https://twitter.com/ArtsnFi' className='link text-secondary' target='_blank'>Twitter/X</a>
                             </li>
-                            <li>
+                            {/* <li>
                                 <a 
                                     onClick={() => {
                                         handleCopy('renato@artsn.fi');
@@ -106,16 +106,16 @@ export default function FooterFeature() {
                                 >
                                     Email
                                 </a>
-                            </li>
-                            <li>
+                            </li> */}
+                            {/* <li>
                                 <a href='https://t.me/rcapizz' target='_blank' className='link text-secondary'>Telegram</a>
-                            </li>
+                            </li> */}
                             <li>
                                 <a href='https://discord.gg/DZHY6B7Q46' target='_blank' className='link text-secondary'>Discord</a>
                             </li>
-                            <li>
+                            {/* <li>
                                 <a href='https://www.instagram.com/theartisan_nft/' target='_blank' className='link text-secondary'>Instagram</a>
-                            </li>
+                            </li> */}
                         </ul>
                     </div>
                 </CardFooter>

@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 
 type LoginDialogProps = {
   className?: string;
+  onClose?: () => void;
 }
 export function LoginDialog({ className }: LoginDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
