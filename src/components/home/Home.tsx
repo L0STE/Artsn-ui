@@ -128,7 +128,7 @@ export default function Home() {
                     style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '24px' }}
                 >  
                     <PerformanceCard />
-                    <ExpertiseCard ref={expertiseRef} id="howitworks" className='flex flex-col w-full overflow-x-auto mt-12'/>
+                    <ExpertiseCard ref={expertiseRef} id="howitworks" className='flex flex-col w-11/12 overflow-x-auto mt-12'/>
                 </div>
                 
                 {/* <div className='flex flex-col gap-4 w-full items-top justify-center align-top md:gap-0 md:flex-row lg:flex-row'>

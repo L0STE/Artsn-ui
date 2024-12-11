@@ -1,14 +1,40 @@
-import MemberCard from "./MemberCard";
+"use client"
+
+import React from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Linkedin, Twitter, Instagram } from "lucide-react";
+import MemberCardContainer from "./MemberCardContainer";
 
 
-const members = [
+
+const About: React.FC = () => {
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+  const members = [
     {
         name: "Renato Capizzi",
         title: "CEO & Founder",
         imageUrl: "/assets/about/renato.webp",
         achievements: [
             "The brain behind the idea",
-            "8+ years of management experience.",
+            "8+ years of management experience",
+            "Web3 Consultant for Monaco Foundry",
+            "Founder of multiple successful Web3 projects",
             "Cryptocurrency trader",
         ],
         socialLinks: {
@@ -23,7 +49,8 @@ const members = [
       imageUrl: "/assets/about/matt.jpeg",
       achievements: [
         "Founder of Swiss Lynx Solutions",
-        "TypeScript & Rust Developer",
+        "Full-Stack & Solana Program Developer",
+        "Over 10 years experience in Leadership & Management",
         "Former Buildspace Teaching Assistant",
         "Swiss Lacrosse U20 National Team Coach",
       ],
@@ -56,7 +83,9 @@ const members = [
       achievements: [
           "Solana Specialist",
           "Senior Protocol & Smart Contract Developer", 
-          "Teacher & Educator at Web3 builder alliance"
+          "Teacher & Educator at Web3 builder alliance",
+          "Community Developer at Metaplex",
+          "SuperTeam Germany Contributor",
       ],
       socialLinks: {
           linkedin: "#", // Leonardo's LinkedIn link is missing
@@ -97,28 +126,27 @@ const members = [
     },
 ];
 
-export default function About() {
   return (
-    <div className="bg-gray-light py-16 w-full mt-20">
-      <div className="max-w-3xl mx-auto text-center">
+    <div className="bg-gray-50/50 py-16 w-full mt-20">
+      <div className="max-w-7xl mx-auto text-center">
         <h3 className="text-4xl font-bold mb-2">
           Making Luxury Asset Investing Accessible to All
         </h3>
-        <p className="text-lg font-normal mb-10">
-        Experience the world of luxury watches, fine art, classic cars and more through fractional ownership. 
-        These historically appreciating assets are now within reach, offering everyone the opportunity to build wealth through curated luxury investments.
+        <p className="text-lg font-normal mb-10 max-w-3xl mx-auto">
+          Experience the world of luxury watches, fine art, classic cars and more through fractional ownership. 
+          These historically appreciating assets are now within reach, offering everyone the opportunity to build wealth through curated luxury investments.
         </p>
         <div className="w-full flex justify-center">
-          <button className="px-4 py-2 bg-white border text-sm rounded-2xl hover:bg-gray-800">
+          <Button variant="outline" className="rounded-2xl">
             Meet the Team
-          </button>
+          </Button>
         </div>
-        <div className="w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 my-12">
-          {members.map((member, index) => (
-            <MemberCard key={index} member={member} />
-          ))}
+        <div className="mt-12">
+          <MemberCardContainer members={members} />
         </div>
       </div>
     </div>
   );
 }
+
+export default About;

@@ -30,7 +30,7 @@ const CtaCard3 = (props: DefaultProps) => {
 
   return (
     <Card className={`${props.className} w-full flex flex-col h-72 rounded-none bg-bg justify-center align-center border-none shadow-none px-12`} style={{ borderTop: 'solid 1px gray', borderBottom: 'solid 1px gray'}}>
-      <CardContent className='w-full flex flex-col md:flex-row items-center justify-between px-12'>
+      <CardContent className='w-full lg:w-11/12 flex flex-col md:flex-row items-center justify-between px-12 self-center'>
           <div className="flex flex-col w-full md:w-2/5 text-wrap">
             <h2 className="text-5xl lg:text-6xl font-cormorant mb-4 flex flex-row md:flex-col gap-2 self-center md:self-start md:gap-0">
               <span className="italic" style={{ fontWeight: '100' }}>Stay</span>updated
