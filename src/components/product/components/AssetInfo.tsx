@@ -7,7 +7,6 @@ import { useWeb3Auth } from "@/hooks/use-web3-auth";
 import RPC from "@/components/blockchain/solana-rpc";
 import { useHandleShare } from "@/hooks/use-handle-share";
 import { useRouter } from "next/navigation";
-import { LoginDialog } from '@/components/login/LoginDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +28,7 @@ import { Progress } from "@/components/ui/progress";
 import { loadStripe } from "@stripe/stripe-js";
 import { v4 as uuid } from "uuid";
 import { useAuth } from "@/providers/Web3AuthProvider";
-import { LoginPortal } from "@/components/login/LoginPortal";
+import { LoginSecondary } from "@/components/login/LoginSecondary";
 export default function AssetInfo({ asset }: { asset: any }) {
   console.log('asset to render->', asset);
   const { provider, login: web3Login, logout: web3Logout, getUserInfo, web3auth } = useWeb3Auth();
@@ -205,7 +204,6 @@ export default function AssetInfo({ asset }: { asset: any }) {
       <p className="text-gray-600 mb-5">{asset.attributes[1].value.toString() ?? ''}</p>
       <p className="text-lg mb-3">Remaining fractions</p>
       <p className="text-3xl font-bold mb-2">
-        {/* {asset.share - asset.shareSold} / {asset.share} */}
         {Number(asset.onChainData.share) - Number(asset.onChainData.shareSold)} / {asset.onChainData.share}
       </p>
       <p className="text-sm mb-2">{Number(asset.onChainData.price)}$ / fractions</p>
@@ -215,7 +213,7 @@ export default function AssetInfo({ asset }: { asset: any }) {
       <button
         style={{ height: "50px", width: "78px" }}
         className="bg-gray-300 flex justify-center items-center rounded-2xl"
-        onClick={decrement} // Decrement the amount
+        onClick={decrement} 
       >
         -
       </button>
@@ -223,19 +221,16 @@ export default function AssetInfo({ asset }: { asset: any }) {
         style={{ height: "50px", width: "78px" }}
         className="bg-white flex justify-center items-center rounded-2xl font-bold border-gray box-border"
       >
-        {amount} {/* Display the current amount */}
+        {amount}
       </button>
       <button
         style={{ height: "50px", width: "78px" }}
         className="bg-gray-700 flex justify-center items-center rounded-2xl text-white"
-        onClick={increment} // Increment the amount
+        onClick={increment} 
       >
         +
       </button>
       </div>
-        {/* <button className="w-full md:w-2/3 bg-black text-white py-3 rounded-2xl" onClick={()=> handleBuy()}>
-          {`Buy $${amount * Number(asset.onChainData.price)} of this Fraction`}
-        </button> */}
         <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
           <AlertDialogTrigger className="w-full md:w-2/3 bg-black text-white py-3 rounded-2xl">{`Buy ${amount} Fractions`}</AlertDialogTrigger>
           <AlertDialogContent>
@@ -312,17 +307,7 @@ export default function AssetInfo({ asset }: { asset: any }) {
                   <Button disabled={!user} className="w-full rounded-xl bg-secondary text-primary hover:bg-primary hover:text-secondary" onClick={()=> buyStripe()}><CreditCard className="mr-2"/>Pay with card</Button>
                   {!user && (
                     <div className="flex flex-col gap-2 items-center w-full bg-red-500/20 rounded-2xl py-2">
-                      <p className="text-sm text-red-500">Please login to continue.</p>
-                      <Button
-                        variant="secondary"
-                        className="rounded-xl"
-                        onClick={() => {
-                          setIsAlertOpen(false); // Close the AlertDialog
-                          setIsLoginOpen(true); // Open the login dialog
-                        }}
-                      >
-                        Login
-                      </Button>
+                      <LoginSecondary className="w-full"/>
                     </div>
                   )}
                 </div>
@@ -346,7 +331,7 @@ export default function AssetInfo({ asset }: { asset: any }) {
         </a>
       </p> */}
       {isLoginOpen && (
-        <LoginDialog 
+        <LoginSecondary
           onClose={() => setIsLoginOpen(false)}
         />
       )}
