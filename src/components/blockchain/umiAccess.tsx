@@ -26,10 +26,8 @@ export const fetchAssets = async (owner: string): Promise<AssetV1[]> => {
       console.log('assetsByOwner', assetsByOwner);
   
       const filteredAccounts = assetsByOwner.filter((asset) => {
-        if (asset.oracles && asset.oracles[0] && asset.oracles[0].baseAddress === "7ruvHP3zbhszp2MaE9Z3DbzDZ5vbczxWN4KXEBWmg8tG") {
+        if (asset.updateAuthority.toString() === "GC1ebi99yrcurrTJMEhCp4oCmMg8CNrhAsKFJ3arQeg1") {
           console.log('asset match ->', asset);
-          console.log('oracle base ->', asset.oracles[0].baseAddress);
-          console.log("7ruvHP3zbhszp2MaE9Z3DbzDZ5vbczxWN4KXEBWmg8tG" === asset.oracles[0].baseAddress);
           return true;
         }
         return false;

@@ -215,8 +215,8 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
   }
 
   const handleLogin = useCallback(async (adapterName: string) => {
-    await loginWithAdapter(adapterName)
-  }, [loginWithAdapter])
+      await loginWithAdapter(adapterName)
+    }, [loginWithAdapter])
 
   // Load saved form data
   useEffect(() => {

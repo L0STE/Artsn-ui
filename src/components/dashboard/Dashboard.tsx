@@ -44,15 +44,18 @@ export default function DashboardFeature() {
   const [tokensLoading, setTokensLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [joyrideStatus, setJoyrideStatus] = useState('idle');
-  const { user: authUser, loading, provider } = useAuth();
+  const { user: authUser, loading, provider, checkAuth } = useAuth();
   const { currentPrice, priceChange, dayRange } = useSolanaPrice();
   const [showKYCDialog, setShowKYCDialog] = useState(false);
   const [isVerified, setIsVerified] = useState<string>('Unverified');
   
   const { toast } = useToast();
-  const rpc = new RPC(provider)
+  const rpc = provider ? new RPC(provider) : null;
   const getBalance = async () => {
     try {
+      if (!rpc) {
+        throw new Error('RPC provider is not available');
+      }
       const balance = await rpc.getBalance();
       console.log('balance', balance);
       setUserBalance(balance);
@@ -63,7 +66,12 @@ export default function DashboardFeature() {
   }
 
   const user = useMemo(() => {
-    if (!authUser) return null;
+    if (!authUser) {
+      console.log('no auth user');
+      checkAuth();
+      return null;
+    }
+    console.log('auth user', authUser);
     return {
       firstName: authUser.firstName || '',
       lastName: authUser.lastName || '',

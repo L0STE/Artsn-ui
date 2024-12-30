@@ -1,649 +1,318 @@
-'use client';
-import dynamic from 'next/dynamic';
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useApolloClient, useMutation, useLazyQuery } from '@apollo/client';
-import { useRouter } from 'next/navigation';
-// import { useWeb3Auth } from '@/hooks/use-web3-auth';
-import RPC from '@/components/blockchain/solana-rpc';
-import { useToast } from "@/hooks/use-toast";
-import { ME_QUERY, IS_USER_REGISTERED } from '@/graphql/queries/user';
-import { CREATE_USER, LOGIN_USER } from '@/graphql/mutations/user';
-import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
-import { useWeb3Auth } from '@/hooks/use-web3-auth';
+'use client'
 
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import { Web3AuthNoModal } from "@web3auth/no-modal"
+import { CHAIN_NAMESPACES, IProvider, WEB3AUTH_NETWORK_TYPE } from "@web3auth/base"
+import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider"
+import { AuthAdapter } from "@web3auth/auth-adapter"
+import { useApolloClient, useMutation, useLazyQuery } from '@apollo/client'
+import { useRouter } from 'next/navigation'
+import { useToast } from "@/hooks/use-toast"
+import RPC from "@/components/blockchain/solana-rpc"
+import { ME_QUERY, IS_USER_REGISTERED } from '@/graphql/queries/user'
+import { CREATE_USER, LOGIN_USER } from '@/graphql/mutations/user'
+import { User } from '@/types/resolver-types'
 
-// For Web3Auth specific operations
-// Create a mock version of useWeb3Auth for initial render
-const mockWeb3Auth = {
-  provider: null,
-  login: async () => null,
-  loginWithAdapter: async () => null,
-  injectedAdapters: [],
-  logout: async () => {},
-  getUserInfo: async () => null,
-  web3auth: null,
-  loading: false
-};
+// Configuration constants
+const WEB3_AUTH_NETWORK = process.env.NEXT_PUBLIC_WEB3AUTH_NETWORK as WEB3AUTH_NETWORK_TYPE
+const CLIENT_ID = process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID
+const RPC_TARGET = process.env.NEXT_PUBLIC_RPC_TARGET || 'https://api.devnet.solana.com'
 
-interface User {
-  _id: string;
-  uuid: string;
-  email: string;
-  username: string;
-  publicKey: string;
-  firstName?: string;
-  lastName?: string;
-  country?: string;
-  investorInfo?: any;
-  baseProfile?: any;
-  createdAt: string;
-  updatedAt: string;
-  lastLogin?: string;
-  isActive: boolean;
-  isVerified: boolean;
-  role: string;
-  verificationToken?: string;
-  solanaTransactionId?: string;
-  phoneNumber?: string;
-  kycInfo?: any;
+interface AuthState {
+  user: User | null
+  loading: boolean
+  error: Error | null
+  isInitialized: boolean
+  isAuthenticated: boolean
 }
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  error: any;
-  injectedAdapters?: any[];
-  login: () => Promise<any>;
-  loginUserWithAdapter: (adapter: any) => Promise<any>;
-  logout: () => Promise<void>;
-  getUserInfo: () => Promise<any>;
-  checkAuth: () => Promise<void>;
-  loginExistingUser: (userObject: { publicKey: string }) => Promise<void>;
-  checkUserRegistration: (publicKey: string) => Promise<boolean>;
-  isAuthenticated: boolean;
-  web3auth: any;
-  provider: any;
+interface AuthContextType extends AuthState {
+  provider: IProvider | null
+  login: () => Promise<User | null>
+  logout: () => Promise<void>
+  checkAuth: () => Promise<void>
+  checkUserRegistration: (publicKey: string) => Promise<boolean>
+  getUserInfo: () => Promise<any>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const initialState: AuthState = {
+  user: null,
+  loading: true,
+  error: null,
+  isInitialized: false,
+  isAuthenticated: false
+}
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
-  const client = useApolloClient();
-  const router = useRouter();
-  const { toast } = useToast();
-  const [createUser] = useMutation(CREATE_USER);
-  // const { publicKey, disconnect } = useWallet();
+const AuthContext = createContext<AuthContextType | null>(null)
+
+function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<AuthState>(initialState)
+  const [provider, setProvider] = useState<IProvider | null>(null)
+  const web3auth = useRef<Web3AuthNoModal | null>(null)
+  const initializationPromise = useRef<Promise<void> | null>(null)
+
+  const client = useApolloClient()
+  const router = useRouter()
+  const { toast } = useToast()
   
-  // Web3Auth integration
-  const {
-    provider,
-    login: web3Login,
-    loginWithAdapter,
-    // injectedAdapters,
-    logout: web3Logout,
-    getUserInfo,
-    web3auth,
-    loading: web3Loading,
-  } = useWeb3Auth();
-  const rpc = new RPC(provider!);
-  const getAccounts = async () => rpc?.getAccounts();
-  const [loginUserMutation] = useMutation(LOGIN_USER);
-  const [checkRegistrationQuery] = useLazyQuery(IS_USER_REGISTERED);
-
-  const initialAuth = typeof window !== 'undefined' ? 
-    localStorage.getItem('authToken') : null;
-
-  useEffect(() => {
-    const initAuth = async () => {
-      if (web3auth?.connected) {
-        try {
-          const userInfo = await getUserInfo();
-          const accounts = await getAccounts();
-          if (accounts && accounts[0]) {
-            // Re-establish authentication
-            await loginExistingUser({ publicKey: accounts[0] });
-          }
-        } catch (error) {
-          console.error('Error restoring auth state:', error);
-        }
-      }
-    };
-
-    initAuth();
-  }, [web3auth?.connected]);
-
+  const [loginUserMutation] = useMutation(LOGIN_USER)
+  const [checkRegistrationQuery] = useLazyQuery(IS_USER_REGISTERED)
+  const [createUser] = useMutation(CREATE_USER)
 
   const checkAuth = useCallback(async () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken')
+    
     if (!token) {
-      setUser(null);
-      // if (publicKey) disconnect();
-      setLoading(false);
-      return;
+      setState(prev => ({ ...prev, user: null, isAuthenticated: false, loading: false }))
+      return
     }
 
     try {
       const { data } = await client.query({
         query: ME_QUERY,
-        context: {
-          headers: {
-            authorization: `Bearer ${token}`
-          }
-        },
+        context: { headers: { authorization: `Bearer ${token}` }},
         fetchPolicy: 'network-only'
-      });
-      // console.log('ME query data:', data);
+      })
+      console.log('Auth check data:', data)
       if (data?.me) {
-        setUser(data.me);
+        setState(prev => ({ 
+          ...prev, 
+          user: data.me,
+          isAuthenticated: true,
+          loading: false 
+        }))
+        return data.me
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
-      localStorage.removeItem('token');
-      setUser(null);
-    } finally {
-      setLoading(false);
+      console.error('Auth check failed:', error)
+      localStorage.removeItem('authToken')
+      setState(prev => ({ 
+        ...prev, 
+        user: null, 
+        isAuthenticated: false,
+        loading: false 
+      }))
     }
-  }, [client]);
+  }, [client])
 
-  const loginExistingUser = useCallback(async (userObject: { publicKey: string }) => {
-    try {
-      console.log('LOGGING IN EXISTING USE***************:', userObject);
-      const result = await loginUserMutation({
-        variables: {
-          publicKey: userObject.publicKey,
-          password: userObject.publicKey,
-        },
-        onCompleted: (data) => {
-          console.log('Mutation completed with data:', data);
-        },
-        onError: (error) => {
-          console.error('Mutation error:', {
-            message: error.message,
-            graphQLErrors: error.graphQLErrors?.map(err => ({
-              message: err.message,
-              path: err.path,
-              extensions: err.extensions
-            })),
-            networkError: error.networkError
-          });
+  const initialize = useCallback(async () => {
+    if (initializationPromise.current) return initializationPromise.current
+    if (web3auth.current?.connected) return
+
+    initializationPromise.current = (async () => {
+      try {
+        const chainConfig = {
+          chainNamespace: CHAIN_NAMESPACES.SOLANA,
+          chainId: "0x3",
+          rpcTarget: RPC_TARGET,
+          displayName: "Solana Devnet",
+          blockExplorer: "https://explorer.solana.com",
+          ticker: "SOL",
+          tickerName: "Solana Token"
         }
-      }).catch(error => {
-        console.error('Caught in mutation catch block:', error);
-        throw error;
-      });
-      console.log('LOGIN RESULT:', result);
-      const { token, user: userData } = result.data.login;
-      if (userData) {
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('userPublicKey', userData.publicKey);
-      }
-      setUser(userData);
-      
-      toast({
-        title: 'Login Successful',
-        description: `Welcome back, ${userData.username}!`,
-      });
-      
-      return userData;
-    } catch (error) {
-      console.error("Login error:", error);
-      setError('Failed to login existing user');
-      // toast({
-      //   title: 'Login Failed',
-      //   description: 'An error occurred during login. Please try again.',
-      // });
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userPublicKey');
-      throw error;
-    }
-  }, [loginUserMutation, toast]);
 
-  const checkUserRegistration = useCallback(async (publicKey: string): Promise<boolean> => {
+        const web3authInstance = new Web3AuthNoModal({
+          clientId: CLIENT_ID!,
+          web3AuthNetwork: WEB3_AUTH_NETWORK,
+          chainConfig
+        })
+
+        const privateKeyProvider = new SolanaPrivateKeyProvider({ config: { chainConfig } })
+        const adapter = new AuthAdapter({
+          privateKeyProvider,
+          adapterSettings: { network: WEB3_AUTH_NETWORK }
+        })
+
+        web3authInstance.configureAdapter(adapter)
+        await web3authInstance.init()
+        
+        web3auth.current = web3authInstance
+        
+        if (web3authInstance.connected) {
+          setProvider(web3authInstance.provider)
+          await checkAuth()
+        }
+      } catch (error) {
+        console.error("Failed to initialize Web3Auth:", error)
+        setState(prev => ({ ...prev, error: error as Error }))
+      } finally {
+        setState(prev => ({ ...prev, isInitialized: true, loading: false }))
+        initializationPromise.current = null
+      }
+    })()
+
+    return initializationPromise.current
+  }, [checkAuth])
+
+  const getUserInfo = useCallback(async () => {
+    if (!web3auth.current?.provider) {
+      throw new Error('Provider not initialized')
+    }
+    const rpc = new RPC(web3auth.current.provider)
+    const accounts = await rpc.getAccounts()
+    const userInfo = await web3auth.current.getUserInfo()
+    
+    return {
+      ...userInfo,
+      publicKey: accounts[0]
+    }
+  }, [])
+
+  const checkUserRegistration = useCallback(async (publicKey: string) => {
     try {
       const { data } = await checkRegistrationQuery({
         variables: { publicKey },
-        fetchPolicy: 'network-only',
-      });
-      return data.isUserRegistered;
+        fetchPolicy: 'network-only'
+      })
+      return !!data?.isUserRegistered
     } catch (error) {
-      console.error('Error checking user registration:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to check user registration. Please try again.',
-      });
-      return false;
+      console.error('Failed to check registration:', error)
+      return false
     }
-  }, [checkRegistrationQuery, toast]);
+  }, [checkRegistrationQuery])
 
   const login = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    // Verify your CREATE_USER mutation is correctly exported
+    if (!web3auth.current) {
+      throw new Error('Web3Auth not initialized')
+    }
+
+    setState(prev => ({ ...prev, loading: true }))
 
     try {
-      if (!web3auth) {
-        throw new Error('web3auth not initialized');
-      }
-  
-      const connected = await web3Login();
-      // if (!connected) throw new Error('Failed to connect to web3 provider');
-  
-      const userInfo = await getUserInfo();
+      await web3auth.current.connectTo('openlogin')
+      setProvider(web3auth.current.provider)
 
-      const accounts = await getAccounts();
-      const publicKey = accounts![0];
-      
-      const isRegistered = await checkUserRegistration(publicKey);
-  
-      if (isRegistered) {
-        const userData = await loginExistingUser({ publicKey });
-        return userData;
-      } else {
-        // const newUser = {
-        //   // Required top-level fields
-        //   email: input.email || 'unknown',
-        //   password: input.password,
-        //   uuid: uuidv4(),
-        //   username: input.username || `user_${input.publicKey.slice(0, 6)}`,
-        //   firstName: input.firstName || 'Unknown',
-        //   lastName: input.lastName || 'Unknown',
-        //   country: input.country || 'Unknown',
-
-        //   // Optional top-level fields with defaults
-        //   publicKey: input.publicKey,
-        //   createdAt: now,
-        //   updatedAt: now,
-        //   lastLogin: now,
-        //   isActive: input.isActive ?? true,
-        //   role: input.role || 'USER',
-        //   verificationToken: '', // Required by schema
-        //   isVerified: input.isVerified ?? false,
-        //   solanaTransactionId: '',
-        //   phoneNumber: '',
-
-        //   // Required nested objects
-        //   socialLinks: {
-        //     twitter: '',
-        //     instagram: '',
-        //     website: ''
-        //   },
-
-        //   baseProfile: {
-        //     id: baseProfileId, // Required by schema
-        //     displayName: input.username || `user_${input.publicKey.slice(-4)}`,
-        //     displayRole: input.role || 'USER',
-        //     photoUrl: 'https://monaco-public.s3.eu-central-1.amazonaws.com/671a01ed57cfa29934ac5606/b824143e-f6c4-4b29-87f7-42519fd6556e/0',
-        //     bio: '',
-        //     createdAt: now,
-        //     updatedAt: now
-        //   },
-
-        //   investorInfo: {
-        //     id: investorInfoId, // Required by schema
-        //     createdAt: now,
-        //     updatedAt: now,
-        //     investmentPreferences: [],
-        //     investmentHistory: [],
-        //     portfolioSize: new Double(0.0),
-        //     riskTolerance: 'MODERATE',
-        //     preferredInvestmentDuration: 'MEDIUM',
-        //     totalSpend: new Double(0.0)
-        //   },
-
-        //   kycInfo: {
-        //     idvId: '',
-        //     kycStatus: 'PENDING',
-        //     kycCompletionDate: now,
-        //     kycDocuments: []
-        //   }
-        // };
-        const userInput = {
-          // email: userInfo?.email || 'unknown',
-          // publicKey,
-          // password: publicKey,
-          // username: userInfo?.name || `user_${publicKey.slice(0, 6)}`,
-          // firstName: userInfo?.name?.split(' ')[0] || 'Unknown',
-          // lastName: userInfo?.name?.split(' ')[1] || 'Unknown',
-          // country: 'Unknown',
-          // isActive: true,
-          // isVerified: false,
-          // role: 'USER'
-          email: userInfo?.email || 'unknown',
-          publicKey,
-          password: publicKey,
-          username: userInfo?.name || `user_${publicKey.slice(0, 6)}`,
-          firstName: userInfo?.name?.split(' ')[0] || 'Unknown',
-          lastName: userInfo?.name?.split(' ')[1] || 'Unknown',
-          country: 'Unknown',
-          isActive: true,
-          isVerified: false,
-          role: 'USER',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          lastLogin: new Date().toISOString(),
-          solanaTransactionId: '',
-          phoneNumber: '',
-          kycInfo: {
-            idvId: '',
-            kycStatus: 'PENDING',
-            kycCompletionDate: new Date().toISOString(),
-            kycDocuments: []
-          },
-          investorInfo: {
-            id: '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            investmentPreferences: [],
-            investmentHistory: [],
-            portfolioSize: 0.0,
-            riskTolerance: 'MODERATE',
-            preferredInvestmentDuration: 'MEDIUM',
-            totalSpend: 0.0
-          },
-          baseProfile: {
-            id: '',
-            displayName: userInfo?.name || `user_${publicKey.slice(-4)}`,
-            displayRole: 'USER',
-            photoUrl: 'https://example.com/default-photo.png',
-            bio: '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }
-        };
-
-        
-        try {
-          const createUserResult = await createUser({
-            variables: {
-              input: userInput
-            },
-            onCompleted: (data) => {
-              console.log('Mutation completed with data:', data);
-            },
-            onError: (error) => {
-              console.error('Mutation error:', {
-                message: error.message,
-                graphQLErrors: error.graphQLErrors?.map(err => ({
-                  message: err.message,
-                  path: err.path,
-                  extensions: err.extensions
-                })),
-                networkError: error.networkError
-              });
-            }
-          }).catch(error => {
-            console.error('Caught in mutation catch block:', error);
-            throw error;
-          });
-  
-
-          if (!createUserResult?.data) {
-            console.error('No data returned from mutation');
-            throw new Error('No data returned from createUser mutation');
-          }
-
-          if (createUserResult.data?.createUser) {
-            const userData = await loginExistingUser({ publicKey: createUserResult.data?.createUser.publicKey });
-            return userData;
-          }
-        } catch (error: any) {
-          console.error("User creation error:", {
-            message: error.message,
-            graphQLErrors: error.graphQLErrors,
-            networkError: error.networkError,
-            stack: error.stack
-          });
-          
-          // toast({
-          //   title: 'Registration Failed',
-          //   description: error.message || 'Failed to create new user account',
-          //   variant: "destructive",
-          // });
-          
-          throw error;
-        }
-      }
-    } catch (error: any) {
-      console.error("Login process error:", {
-        message: error.message,
-        stack: error.stack,
-        type: error.constructor.name
-      });
-      setError(error.message || 'Failed to complete login process');
-      // toast({
-      //   title: 'Login Failed',
-      //   description: error.message || 'An error occurred during login. Please try again.',
-      //   variant: "destructive",
-      // });
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [web3Login, getUserInfo, getAccounts, checkUserRegistration, loginExistingUser, createUser, toast, web3auth]);
-
-  const loginUserWithAdapter = useCallback(async (adapter: any) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      if (!web3auth) {
-        throw new Error('web3auth not initialized');
-      }
-
-      console.log('1. Starting login process...', adapter);
-
-      const connected = await loginWithAdapter(adapter);
-      if (!connected) throw new Error('Failed to connect to web3 provider');
-
-      console.log('2. Getting user info...');
-      const userInfo = await getUserInfo();
-      console.log('User info:', userInfo);
-
-      console.log('3. Getting accounts...');
-      const accounts = await getAccounts();
-      const publicKey = accounts![0];
-      console.log('Public key:', publicKey);
-
-      console.log('4. Checking registration...');
-      const isRegistered = await checkUserRegistration(publicKey);
-      console.log('Is registered:', isRegistered);
+      const userInfo = await getUserInfo()
+      const isRegistered = await checkUserRegistration(userInfo.publicKey)
 
       if (isRegistered) {
-        console.log('5a. Logging in existing user...');
-        try {
-          const userData = await loginExistingUser({ publicKey: publicKey });
-          console.log('5a. Login successful:', userData);
-          return userData;
-        } catch (error) {
-          console.error('Error logging in existing user:', error);
-          throw error;
+        const { data } = await loginUserMutation({
+          variables: { 
+            publicKey: userInfo.publicKey, 
+            password: userInfo.publicKey 
+          }
+        })
+
+        if (data?.login) {
+          const { token, user } = data.login
+          localStorage.setItem('authToken', token)
+          setState(prev => ({ 
+            ...prev, 
+            user,
+            isAuthenticated: true,
+            loading: false 
+          }))
+          return user
         }
       } else {
-        console.log('5b. Creating new user...');
-        const userInput = {
-          email: userInfo?.email || 'unknown',
-          publicKey,
-          password: publicKey,
-          username: userInfo?.name || `user_${publicKey.slice(0, 6)}`,
-          firstName: userInfo?.name?.split(' ')[0] || 'Unknown',
-          lastName: userInfo?.name?.split(' ')[1] || 'Unknown',
-          country: 'Unknown',
-          isActive: true,
-          isVerified: false,
-          role: 'USER'
-        };
-
-        // console.log('User input:', userInput);
-
-        try {
-          console.log('6. Executing createUser mutation...');
-          const createUserResult = await createUser({
-            variables: {
-              input: userInput
-            },
-            onCompleted: (data) => {
-              console.log('Mutation completed with data:', data);
-            },
-            onError: (error) => {
-              console.error('Mutation error:', {
-                message: error.message,
-                graphQLErrors: error.graphQLErrors?.map(err => ({
-                  message: err.message,
-                  path: err.path,
-                  extensions: err.extensions
-                })),
-                networkError: error.networkError
-              });
+        const { data: createData } = await createUser({
+          variables: {
+            input: {
+              email: userInfo.email || 'unknown',
+              publicKey: userInfo.publicKey,
+              password: userInfo.publicKey,
+              username: userInfo.name || `user_${userInfo.publicKey.slice(0, 6)}`,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              role: 'USER'
             }
-          }).catch(error => {
-            console.error('Caught in mutation catch block:', error);
-            throw error;
-          });
-
-          console.log('7. Create user result:', createUserResult);
-
-          if (!createUserResult?.data) {
-            console.error('No data returned from mutation');
-            throw new Error('No data returned from createUser mutation');
           }
+        })
 
-          console.log('8. User created, logging in...');
+        if (createData?.createUser) {
+          const loginResult = await loginUserMutation({
+            variables: { 
+              publicKey: userInfo.publicKey, 
+              password: userInfo.publicKey 
+            }
+          })
 
-          if (createUserResult.data?.createUser) {
-            const userData = await loginExistingUser({ publicKey: createUserResult.data?.createUser.publicKey });
-            console.log('9. Login successful:', userData);
-            return userData;
+          if (loginResult.data?.login) {
+            const { token, user } = loginResult.data.login
+            localStorage.setItem('authToken', token)
+            setState(prev => ({ 
+              ...prev, 
+              user,
+              isAuthenticated: true,
+              loading: false 
+            }))
+            return user
           }
-
         }
-
-        catch (error: any) {
-          console.error("User creation error:", {
-            message: error.message,
-            graphQLErrors: error.graphQLErrors,
-            networkError: error.networkError,
-            stack: error.stack
-          });
-
-          // toast({
-          //   title: 'Registration Failed',
-          //   description: error.message || 'Failed to create new user account',
-          //   variant: "destructive",
-          // });
-
-          throw error;
-        }
-
       }
+
+      throw new Error('Login failed')
+    } catch (error) {
+      console.error('Login failed:', error)
+      setState(prev => ({ 
+        ...prev, 
+        error: error as Error,
+        loading: false 
+      }))
+      toast({
+        title: 'Login Failed',
+        description: (error as Error).message,
+        variant: 'destructive'
+      })
+      return null
     }
-      
-      catch (error: any) {
-        console.error("Login process error:", {
-          message: error.message,
-          stack: error.stack,
-          type: error.constructor.name
-        });
-        setError(error.message || 'Failed to complete login process');
-        toast({
-          title: 'Login Failed',
-          description: error.message || 'An error occurred during login. Please try again.',
-          variant: "destructive",
-        });
-        return null;
-      } finally {
-        setLoading(false);
-      }
-
-  }, [loginWithAdapter, getUserInfo, getAccounts, checkUserRegistration, loginExistingUser, createUser, toast, web3auth]);
-                  
+  }, [checkUserRegistration, loginUserMutation, createUser, getUserInfo, toast])
 
   const logout = useCallback(async () => {
     try {
-      await web3Logout();
+      if (web3auth.current) {
+        await web3auth.current.logout()
+      }
       
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userPublicKey');
-      await client.resetStore();
-      setUser(null);
-      router.push('/');
+      localStorage.removeItem('authToken')
+      await client.resetStore()
       
-      toast({
-        title: 'Logged Out',
-        description: 'Successfully logged out of your account.',
-      });
+      setState({ ...initialState, loading: false, isInitialized: true })
+      setProvider(null)
+      router.push('/')
     } catch (error) {
-      console.error('Logout error:', error);
-      setError('Failed to complete logout process');
+      console.error('Logout error:', error)
       toast({
         title: 'Logout Failed',
-        description: 'An error occurred during logout. Please try again.',
-      });
+        description: 'An error occurred during logout',
+        variant: 'destructive'
+      })
     }
-  }, [client, router, web3Logout, toast]);
+  }, [client, router, toast])
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    initialize()
+  }, [initialize])
 
-  // Monitor web3auth connection status
   useEffect(() => {
-    if (web3auth?.connected && !user) {
-      checkAuth();
+    if (web3auth.current?.connected && !state.user) {
+      checkAuth()
     }
-  }, [web3auth?.connected, checkAuth, user]);
+  }, [web3auth?.current?.connected, checkAuth, state.user])
 
-  const contextValue: AuthContextType = {
-    user,
-    loading: loading || web3Loading,
-    // injectedAdapters,
-    error,
+  const value = {
+    ...state,
+    provider,
     login,
-    loginUserWithAdapter,
     logout,
     checkAuth,
-    getUserInfo,
-    loginExistingUser,
     checkUserRegistration,
-    isAuthenticated: !!user,
-    web3auth,
-    provider,
-  };
-  if (typeof window === 'undefined') {
-    return <>{children}</>;
+    getUserInfo
   }
-  if (loading) {<LoadingSpinner />;}
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
-      {/* {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 right-4 p-4 bg-black/80 text-white rounded-lg max-w-lg overflow-auto">
-          <pre className="text-xs">
-            {JSON.stringify(
-              {
-                isAuthenticated: !!user,
-                loading,
-                error,
-                web3Connected: !!provider,
-                publicKey: user?.publicKey,
-              },
-              null,
-              2
-            )}
-          </pre>
-        </div>
-      )} */}
     </AuthContext.Provider>
-  );
+  )
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
+  return context
 }
+
+export { AuthProvider, useAuth }

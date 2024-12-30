@@ -7,6 +7,7 @@ import Navbar from '@/components/navbar/Navbar';
 import Footer from '@/components/footer/Footer';
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
+import { NavbarWrapper } from '../navbar/NavbarWrapper';
 
 // import { AccountChecker } from '../account/account-ui';
 // import {
@@ -41,8 +42,11 @@ export function UiLayout({
 
   return (
     <div className="h-full flex flex-col bg-bg items-center w-full overflow-none">
-      <Navbar searchParams={searchParams} links={links} scrollThreshold={1} blurAmount={400} />
-    
+      {/* <Navbar searchParams={searchParams} links={links} scrollThreshold={1} blurAmount={400} /> */}
+      <NavbarWrapper 
+          links={links} 
+          searchParams={searchParams as any} 
+        />
       <div className="flex-grow mx-4 lg:mx-auto w-full">
         <Suspense
           fallback={

@@ -133,10 +133,10 @@ export const useWeb3Auth = () => {
         const balance = await rpc.getBalance()
         setBalance(balance)
 
-        toast({
-          title: 'Welcome back!',
-          description: 'You have successfully logged in.',
-        })
+        // toast({
+        //   title: 'Welcome back!',
+        //   description: 'You have successfully logged in.',
+        // })
       }
     } catch (error) {
       console.error('Login mutation error:', error)

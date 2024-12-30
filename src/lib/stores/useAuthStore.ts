@@ -43,6 +43,7 @@ interface AuthState {
   setAuth: (auth: AuthPayload | null) => void
   logout: () => void
   resetAuth: () => void
+  clearAuth: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -120,7 +121,8 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: false,
         loggedIn: false,
         error: null
-      })
+      }),
+      clearAuth: () => set({ currentUser: null, authToken: null })
     }),
     {
       name: 'auth-storage',

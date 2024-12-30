@@ -14,6 +14,7 @@ const BugReport = dynamic(
     ssr: false
   }
 );
+
 const AuthProvider = dynamic(
   () => import('@/providers/Web3AuthProvider').then(mod => mod.AuthProvider),
   { 

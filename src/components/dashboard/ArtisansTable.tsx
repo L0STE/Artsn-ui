@@ -180,23 +180,23 @@ const SkeletonCard = () => {
   return (
     <Card className="rounded-3xl w-full bg-bg text-secondary border-zinc-300 dark:border-zinc-700">
       <CardContent className="p-6">
-        <div className="w-full bg-bg text-secondary">
+      <div className="w-full bg-bg text-secondary">
           <div className="flex items-center gap-2 mb-4">
-            <Skeleton className="h-8 w-32" />
-            <Skeleton className="h-4 w-8" />
+            <h2 className="text-2xl font-semibold animate-pulse">Loading Items...</h2>
+            
           </div>
           <Table>
             <TableHeader>
               <TableRow>
-                {['Name', 'Value', 'Price', 'Market Cap', 'Total Offer'].map((header) => (
-                  <TableHead key={header}>
-                    <Skeleton className="h-4 w-20" />
-                  </TableHead>
-                ))}
+                <TableHead>Name</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Market Cap</TableHead>
+                <TableHead>Total Remaining</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {[...Array(5)].map((_, index) => (
+              {[...Array(1)].map((_, index) => (
                 <TableRow key={index}>
                   <TableCell className="flex items-center space-x-2">
                     <Skeleton className="h-10 w-10 rounded-full" />

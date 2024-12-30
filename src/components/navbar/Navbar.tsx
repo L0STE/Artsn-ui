@@ -1,629 +1,110 @@
 'use client'
-import { Suspense, use, useEffect, useRef, useState } from 'react';
-import { useTheme } from '@/hooks/use-theme';
-// import { WalletButton } from '../solana/solana-provider';
-import Link from 'next/link';
-import { ReadonlyURLSearchParams, useRouter } from 'next/navigation'
-import { IconCurrencyDollar, IconCurrencySolana } from '@tabler/icons-react';
-import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
-import { Web3AuthNoModal } from "@web3auth/no-modal";
-import Image from 'next/image';
-// import { IS_USER_REGISTERED } from '@/graphql/queries';
-import { useLazyQuery, useMutation } from '@apollo/client';
-import { AuthAdapter } from "@web3auth/auth-adapter";
-import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider";
-import { getDefaultExternalAdapters } from "@web3auth/default-solana-adapter";
-import { CHAIN_NAMESPACES, IProvider, UX_MODE, WALLET_ADAPTERS, WEB3AUTH_NETWORK, IWeb3AuthCoreOptions, IAdapter } from "@web3auth/base";
-import RPC from "@/components/blockchain/solana-rpc";
-import { Input } from '@/components/ui/input';
-import { usePathname } from 'next/navigation';
-import { fadeIn, slideIn } from '@/styles/animations';
-import { motion, useMotionValue, useTransform, useScroll } from 'framer-motion';
-import DarkModeButton from '@/components/ui/buttons/DarkModeButton';
-import { Button } from '@/components/ui/button';
-import NavButton from '@/components/ui/buttons/NavButton';
-import { GearIcon, ChevronRightIcon } from '@radix-ui/react-icons';
-// import LoginFeature from './login-feature';
-import { LoginDialog } from '@/components/login/LoginDialog';
-import { ChevronDown, Copy, Menu, X } from 'lucide-react'; // Changed to lucide-react icons
-import { LogOut, Settings2, ListOrdered, EggFried } from 'lucide-react';
-// import ConfirmEmailDialog from './confirm-email-feature';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdownMenu";
-import { useAuth } from '@/providers/Web3AuthProvider';
-// import { publicKey } from '@metaplex-foundation/umi';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { SearchIcon } from 'lucide-react';
-import { PublicKey } from '@solana/web3.js';
-import MobileNavbar from './MobileNavbar';
-import { User } from '@/types/resolver-types';
-import { useSolanaPrice } from '@/hooks/use-solana-price';
-import dynamic from 'next/dynamic';
-import { Separator } from '@/components/ui/separator';
-// Dynamically import Joyride with ssr disabled
-const Joyride = dynamic(() => import('react-joyride'), { ssr: false });
+
+import { memo, Suspense, useCallback, useState } from 'react'
+import { useTheme } from '@/hooks/use-theme'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { LoginDialog } from '@/components/login/LoginDialog'
+import { Button } from '@/components/ui/button'
+import { ChevronRightIcon } from '@radix-ui/react-icons'
+import NavButton from '@/components/ui/buttons/NavButton'
+import MobileNavbar from './MobileNavbar'
+import dynamic from 'next/dynamic'
+
+// Types
 interface NavbarProps {
-  searchParams?: ReadonlyURLSearchParams;
-  scrollThreshold?: number;
-  blurAmount?: number;
-}
-/**
- * Hides the navbar while scrolling down
- * @param {Object} config
- * @param {String} [config.id=navbar] - id of navbar
- * @param {Number} [config.offset=100] - offset of navbar in px
- */
-const hideNavWhileScrolling = ({
-    id = 'navbar',
-    offset = 100,
-    when = true,
-}: {
-    id?: string;
-    offset?: number;
-    when: boolean;
-}) => {
-    const nav = document.getElementById(id);
-    if (!nav) return;
-
-    let prevScrollPos = window.pageYOffset;
-
-    window.onscroll = () => {
-        if (when) {
-        const curScrollPos = window.pageYOffset;
-        if (prevScrollPos < curScrollPos) nav.style.top = `-${offset}px`;
-        else nav.style.top = '0';
-        prevScrollPos = curScrollPos;
-        }
-    };
-};
-
-interface NavbarProps {
-  links: { label: string; path: string }[];
-  scrollThreshold?: number;
-  blurAmount?: number;
+  links: { label: string; path: string }[]
+  searchParams?: { get: (key: string) => string | null }
 }
 
-type NavItemsProps = {
-    href?: string;
-    children: React.ReactNode;
-    index: number;
-    delay: number;
-    onClick?: (event: React.MouseEvent) => void;
-};
-
-const clientId = "BI8MhAUT4vK4cfQZRQ_NEUYOHE3dhD4ouJif9SUgbgBeeZwP6wBlXast2pZsQJlney3nPBDb-PcMl9oF6lV67P0"; // get from https://dashboard.web3auth.io
-let defaultSolanaAdapters: IAdapter<unknown>[] = [];
-
-type BalanceObject = {
-  sol: number;
-  usdc: number;
-};
-
-const steps = [
-  {
-    target: '.about-link',
-    content: 'Learn more about our platform and mission.',
-  },
-  {
-    target: '.marketplace-link',
-    content: 'Explore our marketplace and discover unique assets to invest in.',
-  },
-  {
-    target: '.auth-section',
-    content: 'Login or Create your profile here.',
-  }
-];
-
-const Navbar: React.FC<NavbarProps> = ({ searchParams, links }) => {
-  const _params = searchParams?.get('register') === 'true';
-  const { isDarkMode } = useTheme();
-  const [navbarCollapsed, setNavbarCollapsed] = useState(false);
-  const [runTour, setRunTour] = useState(false);
-  const [authState, setAuthState] = useState<{
-    web3auth: Web3AuthNoModal | null;
-    provider: IProvider | null;
-    userObject: User | null;
-    userWallet: string | null;
-  }>({
-    web3auth: null,
-    provider: null,
-    userObject: null,
-    userWallet: null
-  });
-  const [isMounted, setIsMounted] = useState(false);
-  const { user, loginExistingUser, logout, checkAuth, checkUserRegistration, getUserInfo } = useAuth();
-  const router = useRouter();
-  const { toast } = useToast();
-  const [userBalance, setUserBalance] = useState<BalanceObject>();
-  const expertiseRef = useRef<HTMLDivElement>(null);
-  const { user: authUser, loading, provider } = useAuth();
-  const {
-    currentPrice,
-    priceChange,
-    dayRange,
-    solToUsd,
-    usdToSol,
-    formatUsd,
-    formatSol,
-    isLoading,
-    error,
-    lastUpdate
-  } = useSolanaPrice();
-  const rpc = new RPC(provider)
-  const getBalance = async () => {
-    try {
-      const balance = await rpc.getBalance();
-      // console.log('balance', balance);
-      setUserBalance(balance);
-      return balance;
-    } catch (error) {
-      console.error('Error fetching balance', error);
-    }
-  }
-    
-  // Single effect to handle initialization
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const web3auth = await initializeWeb3Auth(); // Extract initialization logic to separate function
-        
-        if (web3auth.connected) {
-          const userInfo = await getUserInfo(); // Extract user info logic to separate function
-          if (userInfo) {
-            const isRegistered = await checkUserRegistration(userInfo.publicKey);
-            
-            if (isRegistered) {
-              await loginExistingUser({ publicKey: userInfo.publicKey });
-              toast({
-                title: 'Welcome back!',
-                description: 'You have successfully logged in.',
-              });
-            } else {
-              router.push('/register');
-            }
-            
-            setAuthState(prev => ({
-              ...prev,
-              web3auth,
-              provider: web3auth.provider,
-              userObject: userInfo,
-              userWallet: userInfo.publicKey
-            }));
-          }
-        }
-      } catch (error) {
-        console.error('Initialization error:', error);
-        // toast({
-        //   title: 'Error',
-        //   description: 'Failed to initialize authentication',
-        //   variant: 'destructive'
-        // });
-      }
-    };
-
-    initializeAuth();
-  }, []);
-
-  // Effect to sync user state
-  useEffect(() => {
-    if (user && !authState.userWallet && provider) {
-      getBalance();
-      setAuthState(prev => ({
-        ...prev,
-        userObject: user,
-        userWallet: user.publicKey
-      }));
-    }
-  }, [user]);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      setAuthState(prev => ({
-        ...prev,
-        userObject: null,
-        userWallet: null
-      }));
-      router.push('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to logout',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  useEffect(() => {
-    setIsMounted(true);
-    
-    // Check if tour has been completed before
-    const navbarTour = localStorage.getItem('navbarTour');
-    if (!navbarTour) {
-      localStorage.setItem('navbarTour', JSON.stringify({ 
-        completed: false, 
-        date: new Date().toISOString() 
-      }));
-      setRunTour(true);
-    } else {
-      const { completed, date } = JSON.parse(navbarTour);
-      
-      // Reset tour if it's been more than 7 days
-      if (completed && new Date(date) < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) {
-        localStorage.setItem('navbarTour', JSON.stringify({
-          completed: false,
-          date: new Date().toISOString()
-        }));
-        setRunTour(true);
-      }
-    }
-  }, []);
-
-  const handleJoyrideCallback = (data: any) => {
-    const { status, type } = data;
-    const isDesktop = window.innerWidth > 768 || false;
-    if (['finished', 'skipped'].includes(status)) {
-      setRunTour(false);
-      localStorage.setItem('navbarTour', JSON.stringify({
-        completed: true,
-        date: new Date().toISOString()
-      }));
-    }
-    
-    // For mobile: start tour when menu is opened
-    if (!isDesktop && type === 'step:after' && !navbarCollapsed) {
-      setNavbarCollapsed(true);
-    }
-  };
-
-  const UserDropdown = ({ user, userBalance }: { user: User, userBalance: any }) => {
-    console.log('USER DROPDOWN ->', user);
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const router = useRouter();
-    const copyToClipboard = (text: any) => {
-      navigator.clipboard.writeText(text);
-      toast({
-        title: 'Copied to clipboard',
-        description: text,
-      });
-    };
+// Main Navbar Component
+export const Navbar = memo(({ links, searchParams }: NavbarProps) => {
+  const _params = searchParams?.get('register') === 'true'
+  const { isDarkMode } = useTheme()
+  const [navbarCollapsed, setNavbarCollapsed] = useState(false)
+  const router = useRouter()
   
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger>
-          <div
-            className="flex items-center gap-2 cursor-pointer"
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-          >
-            <Avatar>
-              <AvatarImage src={user?.baseProfile.photoUrl || ''} alt="Profile picture" />
-              <AvatarFallback>
-                <div className="w-16 h-16 rounded-3xl dark:bg-white bg-black"></div>
-              </AvatarFallback>
-            </Avatar>
-            <ChevronDown className="text-secondary" />
-          </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-screen md:w-72 p-4 bg-white dark:bg-white rounded-3xl border border-zinc-300 dark:border-zinc-700"
-        >
-          <div className="flex items-center space-x-4 mb-4">
-            <Avatar className="w-16 h-16">
-              <AvatarImage src={user?.baseProfile.photoUrl} alt="Profile picture" />
-              <AvatarFallback>
-                <div className="w-16 h-16 rounded-3xl dark:bg-white bg-black"></div>
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="text-3xl text-secondary font-semibold">{user?.baseProfile.displayName || `User_${user?.publicKey.slice(-4)}`}</h2>
-              <div className="text-gray-500 flex items-center">
-                <span className="truncate mr-1">
-                  {user?.publicKey?.slice(0, 4)}...{user?.publicKey.slice(-4)}
-                </span>
-                <Copy
-                  className="cursor-pointer ml-2"
-                  onClick={() => copyToClipboard(user?.publicKey.toString())}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="mb-4 p-4 bg-transparent border border-zinc-300 dark:border-zinc-600 rounded-3xl">
-            <div className="flex justify-between items-center">
-              <div className="text-secondary">Buying power</div>
-              <div className="text-xl text-secondary font-bold">${userBalance && userBalance.sol ? (solToUsd(userBalance.sol) + userBalance.usdc).toFixed(2) : ''}</div>
-            </div>
-            <div className="mt-2 flex items-center">
-              <div className="flex-1 flex items-center gap-2 text-secondary">
-                <div className="w-4 h-4 rounded-full bg-bg border border-solid border-[#D4D4D8]">
-                  <IconCurrencySolana className="w-4 h-4" />
-                </div>
-                <span>{(userBalance?.sol).toFixed(4)} SOL</span>
-              </div>
-              <div className="text-zinc-500">=${solToUsd(userBalance?.sol).toFixed(2)}</div>
-            </div>
-            <div className="mt-2 flex items-center">
-              <div className="flex-1 flex items-center gap-2 text-secondary">
-                <div className="w-4 h-4 rounded-full bg-bg border border-solid border-[#D4D4D8]">
-                  <IconCurrencyDollar className="w-full h-full" />
-                </div>
-                <span>{userBalance?.usdc} USDC</span>
-              </div>
-              {/* <div className="text-zinc-500">=$124</div> */}
-            </div>
-            <div className='flex flex-col items-center justify-center mt-2 bg-slate-500/20 p-2 rounded-2xl'>
-              <p>Need Test Funds?</p>
-              <div className='flex flex-row justify-center items-center gap-2 w-full h-fit'>
-                <Link href='https://faucet.circle.com/' target='_blank'>
-                  <Button variant='outline' className='mt-4 w-full'>Get USDC</Button>
-                </Link>
-                <Link href='https://faucet.solana.com/' target='_blank'>
-                  <Button variant='outline' className='mt-4 w-full'>Get SOL</Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-          <DropdownMenuItem className="cursor-pointer text-secondary mt-4" onClick={()=> {setNavbarCollapsed(true), router.push('/dashboard/settings')}}>
-            <Settings2 className="mr-2 h-4 w-4" />
-            <span className="text-sm font-semibold">Edit profile</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer text-secondary" onClick={()=> {setNavbarCollapsed(true), router.push('/dashboard')}}>
-              <ListOrdered className="mr-2 h-4 w-4" />
-              <span className="text-sm font-semibold">Dashboard</span>
-          </DropdownMenuItem>
-          {/* <DropdownMenuItem className="cursor-pointer text-secondary">
-            <EggFried className="mr-2 h-4 w-4" />
-            <span className="text-sm font-semibold">Refer your friends</span>
-          </DropdownMenuItem> */}
-          <DropdownMenuItem className="cursor-pointer text-secondary" onClick={()=>{setNavbarCollapsed(true), handleLogout()}}>
-            <LogOut className="mr-2 h-4 w-4" />
-            <span className="text-sm font-semibold">Logout</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
+  // Get logo path based on theme
+  const logoPath = isDarkMode 
+    ? '/logos/artisan-small-logo-black.svg'
+    : '/logos/artisan-small-logo-black.svg'
 
-  // Render login or user dropdown based on auth state
-  const renderAuthComponent = () => {
-    if (loading) {
-      return <div className="animate-pulse">Loading...</div>;
-    }
-
-    if (authState.userObject && authState.userWallet && !_params && userBalance ) {
-      return <UserDropdown user={authState.userObject} userBalance={userBalance} />;
-    }
-
-    return <LoginDialog className='auth-section'/>;
-  };
+  const renderAuthComponent = useCallback(() => {
+    return <LoginDialog className="auth-section" />
+  }, [])
 
   return (
     <Suspense fallback={<div />}>
-      {isMounted && (
-        <Joyride
-          steps={steps}
-          run={runTour}
-          continuous={true}
-          showSkipButton={true}
-          showProgress={true}
-          styles={{
-            options: {
-              primaryColor: '#0066FF',
-              zIndex: 1000,
-            },
-          }}
-          callback={handleJoyrideCallback}
-          disableOverlayClose={true}
-          disableScrolling={true}
-        />
-      )}
-      {/* Mobile Navbar */}
-        <motion.header
-          variants={fadeIn(0.5)}
-          initial="hidden"
-          animate="show"
-          id="navbar"
-          className="fixed inset-x-0 top-0 right-0 z-50 flex items-end align-center justify-between px-8 py-4 duration-500 md:px-6 xl:px-12 backdrop-blur-lg md:hidden lg:hidden"
-        >
-          {/* div for backdrop when !navbarCollapsed */}
-          <div
-            className={`bg-gradient-to-r from-bg to-accent fixed -z-50 inset-0 bg-opacity-50 duration-500 h-screen ${
-              !navbarCollapsed ? 'hidden' : ''
-            }`}
-          >
-            <Image
-              src={'/logos/logo-blur.svg'}
-              alt="Logo"
-              layout="fill"
-              objectFit="cover"
-              quality={100}
-              className='-z-200 opacity-25 transform translate-x-10'
-            />
-          </div>
-          <div
-            className={`bg-white fixed -z-100 inset-0 duration-500 h-screen ${
-              !navbarCollapsed ? 'hidden' : ''
-            }`}
-          >
-            <div
-              className={`bg-[url(/logos/logo-blur.svg)] bg-no-repeat bg-cover w-full opacity-25 fixed -z-100 inset-0 duration-500 h-screen ${
-                !navbarCollapsed ? 'hidden' : ''
-              }`}
-            ></div>
-          </div>
-          
-          
-          <div className="relative text-2xl capitalize font-signature text-accent group top-1">
-            <Link href="/">
-              <Image
-                src={ isDarkMode ? '/logos/artisan-small-logo-black.svg' : '/logos/artisan-small-logo-black.svg'}
-                alt="Logo"
-                width={25}
-                height={25}
-                className="cursor-pointer"
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              />
-            </Link>
-          </div>
-
-          {renderAuthComponent()}
-          {/* { !loading && !navbarCollapsed &&( userObject && userWallet && !_params ? <UserDropdown user={userObject!}/> : <LoginDialog />) } */}
-          <NavButton
-            onClick={() => {
-              setNavbarCollapsed((prev) => !prev);
-            }}
-            navbarCollapsed={navbarCollapsed}
-            className="text-primary"
-          />
-
-          {navbarCollapsed && (
-            <MobileNavbar
-              links={links}
-              LoginFeatureProps={{ 
-                isOpen: navbarCollapsed,
-                onClose: () => setNavbarCollapsed(false),
-                onCompleted: () => setNavbarCollapsed(false),
-              }}
-            />
-          )}
-
-          
-        </motion.header>
-  
-
       {/* Desktop Navbar */}
-        <motion.header
-          variants={fadeIn(0.5)}
-          initial="hidden"
-          animate="show"
-          id="navbar"
-          className="hidden md:flex lg:flex fixed inset-x-0 top-0 right-0 z-50 items-center justify-between px-8 py-4 duration-500 md:px-6 xl:px-12 backdrop-blur-lg w-full"
-          style={{ backgroundColor: '#ffffff0e' }}
-        >
+      <header className="hidden md:flex fixed inset-x-0 top-0 z-50 items-center justify-between px-8 py-4 backdrop-blur-lg">
+        <Link href="/" className="flex items-center">
+          <Image
+            src={logoPath}
+            alt="Logo"
+            width={32}
+            height={32}
+            className="cursor-pointer"
+            priority
+          />
+        </Link>
+        
+        <div className="flex items-center space-x-6">
+          <Button variant="ghost" asChild>
+            <Link className="about-link" href="/about">
+              About Us
+            </Link>
+          </Button>
           
-          <div className="flex flex-row gap-6">
-            <div className={`relative text-2xl capitalize font-signature text-accent group top-1`}>
-              <Link href="/">
-                <Image
-                  src={isDarkMode ? '/logos/artisan-small-logo-white.svg' : '/logos/artisan-small-logo-black.svg'}
-                  alt="Logo"
-                  width={32}
-                  height={32}
-                  className="cursor-pointer"
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                />
-              </Link>
-            </div>
-            {/* <div
-              className={`flex flex-row items-center justify-start px-2 border-2  rounded-xl bg-bg w-1/2`}
-            >
-              <SearchIcon className="text-slate-400" />
-              <Input type="text" placeholder={`Search any fraction, product...`} className="bg-bg text-slate-400 border-none shadow-none" />
-            </div> */}
-            
-            {/* <div className="flex flex-row  items-center gap-1 text-nowrap">
-              <Image
-                src='/logos/sol-logo-grey.svg'
-                alt="Search"
-                width={25}
-                height={25}
-                className="cursor-pointer"
-              />
-              <p className="text-slate-400 w-full ">Powered by Solana</p>
-            </div> */}
-          </div>
-          
-          {/* Map Links in separate div */}
-          <ul className="flex flex-row items-stretch gap-6 list-style-none lg:gap-5 xl:gap-6 md:flex-row md:items-center">
-            <Button variant={'ghost'} asChild>
-              <Link className="text-secondary text-nowrap w-full about-link" href='/about'>
-                About Us
-              </Link>
-            </Button>
-            {/* <Button
-              variant={'ghost'} 
-              asChild
-            >
-              <Link className="text-secondary text-nowrap w-full about-link" href='#howitworks'>
-                How it Works
-              </Link>
-            </Button> */}
-            
-            <Button className="bg-bg text-dark-1 border-dark-1 border-2 w-3/4 rounded-xl border-y border-x " asChild>
-              <Link className="text-dark-1 text-nowrap w-full marketplace-link" href='/marketplace'>
-                Explore the Marketplace <ChevronRightIcon />
-              </Link>
-            </Button>
-              {/* { loading && <div className='animate-pulse'>Loading...</div> } */}
-              {/* <LoginDialog _isOpen={true} /> */}
-              {renderAuthComponent()}
-        </ul>
-        </motion.header>
-      {/* <motion.header
-      >
-        <ul className="flex flex-row items-stretch gap-6 list-style-none lg:gap-5 xl:gap-6 md:flex-row md:items-center">
+          <Button 
+            variant="outline"
+            className="marketplace-link"
+            asChild
+          >
+            <Link href="/marketplace">
+              Explore the Marketplace
+              <ChevronRightIcon className="ml-2" />
+            </Link>
+          </Button>
+
           {renderAuthComponent()}
-        </ul>
-      </motion.header> */}
+        </div>
+      </header>
+
+      {/* Mobile Navbar */}
+      <header className="md:hidden fixed inset-x-0 top-0 z-50 flex items-center justify-between p-4 backdrop-blur-lg">
+        <Link href="/">
+          <Image
+            src={logoPath}
+            alt="Logo"
+            width={25}
+            height={25}
+            className="cursor-pointer"
+            priority
+          />
+        </Link>
+
+        {renderAuthComponent()}
+        
+        <NavButton
+          onClick={() => setNavbarCollapsed(prev => !prev)}
+          navbarCollapsed={navbarCollapsed}
+          className="text-primary"
+        />
+
+        {navbarCollapsed && (
+          <MobileNavbar
+            links={links}
+            LoginFeatureProps={{ 
+              isOpen: navbarCollapsed,
+              onClose: () => setNavbarCollapsed(false),
+              onCompleted: () => setNavbarCollapsed(false),
+            }}
+          />
+        )}
+      </header>
     </Suspense>
-  );
-};
+  )
+})
 
-// Helper functions
-const initializeWeb3Auth = async () => {
-  const chainConfig = {
-    chainNamespace: CHAIN_NAMESPACES.SOLANA,
-    chainId: "0x3",
-    rpcTarget: "https://api.devnet.solana.com",
-    displayName: "Solana Devnet",
-    blockExplorerUrl: "https://explorer.solana.com",
-    ticker: "SOL",
-    tickerName: "Solana Token",
-    logo: "",
-  };
-
-  const privateKeyProvider = new SolanaPrivateKeyProvider({ config: { chainConfig } });
-  const web3auth = new Web3AuthNoModal({
-    clientId,
-    privateKeyProvider,
-    web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
-  });
-
-  const authAdapter = new AuthAdapter({
-    privateKeyProvider,
-    adapterSettings: { uxMode: UX_MODE.REDIRECT },
-  });
-  web3auth.configureAdapter(authAdapter);
-
-  const web3authOptions: IWeb3AuthCoreOptions = {
-    clientId,
-    privateKeyProvider,
-    web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
-  };
-
-  defaultSolanaAdapters = await getDefaultExternalAdapters({ options: web3authOptions });
-  defaultSolanaAdapters.forEach((adapter) => {
-    web3auth.configureAdapter(adapter);
-  });
-
-  await web3auth.init();
-
-  return web3auth;
-};
-
-export default Navbar;
+export default Navbar
