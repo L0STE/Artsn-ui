@@ -1,9 +1,9 @@
 'use client';
-import Image from 'next/image';
+
 import { useState, Suspense } from 'react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/providers/Web3AuthProvider';
+import { useRouter } from 'next/navigation';
 import { Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -19,38 +19,48 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdownMenu';
-import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/stores/useAuthStore';
+import { useWeb3Auth } from '@/hooks/use-web3-auth';
+import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
 
 type LoginDialogProps = {
   className?: string;
   onClose?: () => void;
 }
+
 export function LoginDialog({ className }: LoginDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+
+  // Auth store state
   const { 
-    login, 
-    isAuthenticated, 
-    loading, 
-    user, 
+    currentUser,
+    loading,
+    userInfo,
+  } = useAuthStore();
+
+  // Web3Auth hook
+  const {
+    login,
+    loginWithAdapter,
     injectedAdapters,
-    loginUserWithAdapter
-  } = useAuth();
+  } = useWeb3Auth();
 
   const handleOpen = () => setIsOpen(true);
   const handleClose = () => setIsOpen(false);
 
-  if (user) {
+  // Show connected state if user exists
+  if (currentUser) {
     return (
       <Button disabled className="flex items-center gap-2">
         <Mail className="w-4 h-4" />
-        Connected as {user.email}
+        Connected as {userInfo?.email || currentUser.email}
       </Button>
     );
   }
 
   return (
-    <Suspense fallback={<div >Loading...</div>}>
+    <Suspense fallback={<LoadingSpinner />}>
       <div className={className}>
         <Button 
           variant='secondary' 
@@ -118,7 +128,7 @@ export function LoginDialog({ className }: LoginDialogProps) {
                           {injectedAdapters.map((adapter) => (
                             <DropdownMenuItem 
                               key={adapter.name} 
-                              onClick={() => loginUserWithAdapter(adapter.name)}
+                              onClick={() => loginWithAdapter(adapter.name)}
                               className='flex items-center gap-2'
                             >
                               <img 

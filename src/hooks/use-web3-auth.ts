@@ -1,39 +1,76 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+// src/hooks/use-web3-auth.ts
+import { useCallback, useEffect } from 'react'
 import { CHAIN_NAMESPACES, IProvider, WALLET_ADAPTERS, WEB3AUTH_NETWORK, UX_MODE, IWeb3AuthCoreOptions, IAdapter } from "@web3auth/base";
 import { getInjectedAdapters } from "@web3auth/default-solana-adapter";
-import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider";
-import { Web3AuthNoModal } from "@web3auth/no-modal";
-import { AuthAdapter } from "@web3auth/auth-adapter";
-import RPC from "@/components/blockchain/solana-rpc";
-import { LOGIN_USER } from '@/graphql/mutations/user';
-import { useMutation } from '@apollo/client';
+import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider"
+import { Web3AuthNoModal } from "@web3auth/no-modal"
+import { AuthAdapter } from "@web3auth/auth-adapter"
+import { useMutation } from '@apollo/client'
+import { LOGIN_USER } from '@/graphql/mutations/user'
+import { useAuthStore } from '@/lib/stores/useAuthStore'
+import { usePaymentStore } from '@/lib/stores/usePaymentStore'
+import RPC from "@/components/blockchain/solana-rpc"
+import { useToast } from '@/hooks/use-toast'
 
-const clientId = "BI8MhAUT4vK4cfQZRQ_NEUYOHE3dhD4ouJif9SUgbgBeeZwP6wBlXast2pZsQJlney3nPBDb-PcMl9oF6lV67P0";
+const clientId = "BI8MhAUT4vK4cfQZRQ_NEUYOHE3dhD4ouJif9SUgbgBeeZwP6wBlXast2pZsQJlney3nPBDb-PcMl9oF6lV67P0"
 let injectedAdapters: IAdapter<unknown>[] = [];
+
+// RPC functions interface
+interface RPCFunctions {
+  getAccounts: () => Promise<string[]>
+  getBalance: () => Promise<{ sol: number; usdc: number }>
+  signTransaction: (params: { tx: any }) => Promise<any>
+}
+
 export const useWeb3Auth = () => {
-  const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
-  const [provider, setProvider] = useState<IProvider | null>(null);
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [userWallet, setUserWallet] = useState<string | null>(null);
-  const [loginUserMutation] = useMutation(LOGIN_USER);
-  const rpc = useMemo(() => provider ? new RPC(provider) : null, [provider]);
+  const [loginUserMutation] = useMutation(LOGIN_USER)
+  const { toast } = useToast()
+  
+  // Auth store state and actions
+  const {
+    web3auth,
+    provider,
+    loggedIn,
+    loading,
+    error,
+    setWeb3AuthState,
+    setLoading,
+    setError: setStoreError,
+    setAuth
+  } = useAuthStore()
+
+  // Payment store actions for balance
+  const { setBalance } = usePaymentStore()
+
+  // RPC instance
+  const getRPC = useCallback((): RPCFunctions | null => {
+    if (!provider) return null
+    return new RPC(provider)
+  }, [provider])
 
   const initWeb3Auth = useCallback(async () => {
     try {
       const chainConfig = {
         chainNamespace: CHAIN_NAMESPACES.SOLANA,
-        chainId: "0x3", // Please use 0x1 for Mainnet, 0x2 for Testnet, 0x3 for Devnet
+        chainId: "0x3", // devnet
         rpcTarget: "https://api.devnet.solana.com",
         displayName: "Solana Devnet",
         blockExplorerUrl: "https://explorer.solana.com",
         ticker: "SOL",
-        tickerName: "Solana Token",
-        logo: "",
-      };
+        tickerName: "Solana Token"
+      }
 
-      const privateKeyProvider = new SolanaPrivateKeyProvider({ config: { chainConfig } });
+      // Create provider with explicit config option
+      const privateKeyProvider = new SolanaPrivateKeyProvider({
+        config: { chainConfig }  // Ensure this is properly nested
+      })
+
+      const web3authInstance = new Web3AuthNoModal({
+        clientId,
+        chainConfig, // Add chainConfig here as well
+        web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+        privateKeyProvider,
+      })
 
       const web3authOptions: IWeb3AuthCoreOptions = {
         clientId,
@@ -42,233 +79,233 @@ export const useWeb3Auth = () => {
       };
       const web3auth = new Web3AuthNoModal(web3authOptions);
 
-      setWeb3auth(web3auth);
-
       const authAdapter = new AuthAdapter({
         privateKeyProvider,
         adapterSettings: {
           uxMode: UX_MODE.REDIRECT,
         },
-      });
-      web3auth.configureAdapter(authAdapter);
+      })
+      web3authInstance.configureAdapter(authAdapter)
 
       injectedAdapters = getInjectedAdapters({ options: web3authOptions });
       injectedAdapters.forEach((adapter) => {
         web3auth.configureAdapter(adapter);
       });
 
-      const availableAdapters = injectedAdapters.map((adapter) => adapter.name);
+      await web3authInstance.init()
 
-      await web3auth.init();
-      setProvider(web3auth.provider);
-      if (web3auth.connected) {
+      setWeb3AuthState({
+        web3auth: web3authInstance,
+        provider: web3authInstance.provider,
+        loggedIn: web3authInstance.connected
+      })
 
-
-        const rpc = new RPC(web3auth.provider!);
-        const accounts = await rpc?.getAccounts();
-        const publicKey = accounts![0];
-        const{ idToken }= await web3auth.authenticateUser();
-        const user = await web3auth.getUserInfo();
-
-
-        const userObject= {
-            email: user.email || '',
-            publicKey: publicKey,
-            username: user.name || '',
-            profilePictureUrl: user.profileImage || '',
-        };  
-
-        setUserWallet(userObject.publicKey);
-
-            const result = await loginUserMutation({
-              variables: {
-                publicKey: userObject.publicKey,
-                password: userObject.publicKey,
-              },
-              onCompleted: (data) => {
-                // console.log('Mutation completed with data:', data);
-              },
-              onError: (error) => {
-                console.error('Mutation error:', {
-                  message: error.message,
-                  graphQLErrors: error.graphQLErrors?.map(err => ({
-                    message: err.message,
-                    path: err.path,
-                    extensions: err.extensions
-                  })),
-                  networkError: error.networkError
-                });
-              }
-            }).catch(error => {
-              console.error('Caught in mutation catch block:', error);
-              throw error;
-            });
-
-            // toast({
-            //   title: 'Welcome back!',
-            //   description: 'You have successfully logged in.',
-            // })
-            // router.push('/dashboard');
-        
-        // else {
-        //   router.push('/register');
-        // }
-
+      if (web3authInstance.connected) {
+        await handlePostConnection(web3authInstance)
       }
     } catch (error) {
-      console.error(error);
-    }  finally {
-      setLoading(false);
+      console.error('Init error:', error)
+      setStoreError(error as Error)
+    } finally {
+      setLoading(false)
     }
-  }, []);
+  }, [setWeb3AuthState, setLoading, setStoreError])
 
-  useEffect(() => {
-    initWeb3Auth();
-  }, [initWeb3Auth]);
+  const handlePostConnection = async (web3authInstance: Web3AuthNoModal) => {
+    const rpc = new RPC(web3authInstance.provider!)
+    const accounts = await rpc.getAccounts()
+    const publicKey = accounts[0]
+    const { idToken } = await web3authInstance.authenticateUser()
+    const user = await web3authInstance.getUserInfo()
+
+    try {
+      const result = await loginUserMutation({
+        variables: {
+          publicKey,
+          password: publicKey,
+        }
+      })
+
+      if (result.data?.login) {
+        setAuth(result.data.login)
+        
+        // Get and set balance after successful login
+        const balance = await rpc.getBalance()
+        setBalance(balance)
+
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully logged in.',
+        })
+      }
+    } catch (error) {
+      console.error('Login mutation error:', error)
+      throw error
+    }
+  }
 
   const login = useCallback(async () => {
     if (!web3auth) {
-      console.log('Web3Auth not initialized, initializing...');
-      await initWeb3Auth();
+      await initWeb3Auth()
     }
 
     try {
-      setLoading(true);
-      if(web3auth && web3auth.connected) {
-
-        setLoggedIn(true);
-
-        const user = await web3auth!.getUserInfo();
-        
-        const accounts = await rpc?.getAccounts();
-        
-        const publicKey = accounts?.[0];
-
-        // Store auth state in localStorage
-        localStorage.setItem('web3auth_logged_in', 'true');
-        
-        return {
-          email: user.email,
-          publicKey,
-          profileImage: user.profileImage,
-        };
+      setLoading(true)
+      
+      if (web3auth?.connected) {
+        const userInfo = await getUserInfo()
+        return userInfo
       }
+
       const web3authProvider = await web3auth!.connectTo(WALLET_ADAPTERS.AUTH, {
         loginProvider: "google",
-      });
+      })
 
-      setProvider(web3authProvider);
-      setLoggedIn(true);
+      setWeb3AuthState({
+        provider: web3authProvider,
+        loggedIn: true
+      })
 
-      const user = await web3auth!.getUserInfo();
-      
-      const accounts = await rpc?.getAccounts();
-      
-      const publicKey = accounts?.[0];
-
-      // Store auth state in localStorage
-      localStorage.setItem('web3auth_logged_in', 'true');
-      
-      return {
-        email: user.email,
-        publicKey,
-        profileImage: user.profileImage,
-      };
-    } catch (err) {
-      console.error("Login failed:", err);
-      setError("Login failed");
-      return null;
+      await handlePostConnection(web3auth!)
+      return await getUserInfo()
+    } catch (error) {
+      console.error('Login error:', error)
+      setStoreError(error as Error)
+      return null
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [web3auth, rpc, initWeb3Auth]);
+  }, [web3auth, initWeb3Auth, setLoading, setWeb3AuthState, setStoreError])
 
   const loginWithAdapter = useCallback(async (adapterName: string) => {
     if (!web3auth) {
-      console.error("Web3Auth not initialized");
-      return;
+      console.error("Web3Auth not initialized")
+      return
     }
 
     try {
-      setLoading(true);
-      const web3authProvider = await web3auth.connectTo(adapterName);
-      setProvider(web3authProvider);
-      setLoggedIn(true);
+      setLoading(true)
+      const web3authProvider = await web3auth.connectTo(adapterName)
+      
+      setWeb3AuthState({
+        provider: web3authProvider,
+        loggedIn: true
+      })
 
-      const user = await web3auth.getUserInfo();
-      
-      const accounts = await rpc?.getAccounts();
-      
-      const publicKey = accounts?.[0];
-
-      // Store auth state in localStorage
-      localStorage.setItem('web3auth_logged_in', 'true');
-      
-      return {
-        email: user.email || 'adapter',
-        publicKey,
-        profileImage: user.profileImage || 'adapter',
-      };
-    } catch (err) {
-      console.error("Login failed:", err);
-      setError("Login failed");
-      return null;
+      await handlePostConnection(web3auth)
+      return await getUserInfo()
+    } catch (error) {
+      console.error('Login with adapter error:', error)
+      setStoreError(error as Error)
+      return null
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [web3auth, rpc, initWeb3Auth]);
+  }, [web3auth, setLoading, setWeb3AuthState, setStoreError])
 
   const logout = useCallback(async () => {
     if (!web3auth) {
-      console.error("Web3Auth not initialized");
-      return;
+      console.error("Web3Auth not initialized")
+      return
     }
 
     try {
-      await web3auth.logout();
-      setProvider(null);
-      setLoggedIn(false);
-      localStorage.removeItem('web3auth_logged_in');
-    } catch (err) {
-      console.error("Logout failed:", err);
-      setError("Logout failed");
+      await web3auth.logout()
+      useAuthStore.getState().logout()
+      setBalance({ sol: 0, usdc: 0 })
+    } catch (error) {
+      console.error('Logout error:', error)
+      setStoreError(error as Error)
     }
-  }, [web3auth]);
+  }, [web3auth, setStoreError, setBalance])
 
   const getUserInfo = useCallback(async () => {
+    if (!web3auth) return null
+
     try {
-      const user = await web3auth!.getUserInfo();
+      const user = await web3auth.getUserInfo()
+      const rpc = getRPC()
+      if (!rpc) return null
       
-      const accounts = await rpc?.getAccounts();
+      const accounts = await rpc.getAccounts()
+      const balance = await rpc.getBalance()
+      setBalance(balance)
       
       return {
         ...user,
-        publicKey: accounts?.[0],
-      };
-    } catch (err) {
-      console.error("Failed to get user info:", err);
-      return null;
+        publicKey: accounts[0],
+      }
+    } catch (error) {
+      console.error('Get user info error:', error)
+      return null
     }
-  }, [web3auth, rpc]);
+  }, [web3auth, getRPC, setBalance])
 
-  // Check localStorage on mount
-  useEffect(() => {
-    if (web3auth && web3auth?.connected) {
-      setProvider(web3auth.provider);
+  // Transaction signing utility
+  const signTransaction = useCallback(async (tx: any) => {
+    if (!provider) {
+      console.error('No provider available for transaction signing');
+      throw new Error('Web3 provider not initialized');
     }
-  }, [web3auth]);
+  
+    try {
+      const rpc = new RPC(provider);
+      // Make sure we're using the version-specific signing method
+      const signature = await rpc.signVersionedTransaction({ tx });
+      
+      if (!signature) {
+        throw new Error('No signature returned');
+      }
+  
+      console.log('Transaction signed successfully:', signature);
+      return signature;
+    } catch (error) {
+      console.error('Transaction signing error:', error);
+      throw new Error('Failed to sign transaction');
+    }
+  }, [provider]);
+
+  useEffect(() => {
+    initWeb3Auth()
+  }, [initWeb3Auth])
 
   return {
     web3auth,
-    injectedAdapters,
     provider,
     loggedIn,
     loading,
     error,
-    rpc,
     login,
     loginWithAdapter,
     logout,
     getUserInfo,
-  };
-};
+    signTransaction,
+    injectedAdapters
+  }
+}
+
+// Optional: Export a simpler hook for just Web3 utilities
+export const useWeb3 = () => {
+  const { provider } = useAuthStore()
+  const { setBalance } = usePaymentStore()
+
+  const rpc = provider ? new RPC(provider) : null
+
+  return {
+    rpc,
+    getBalance: useCallback(async () => {
+      if (!rpc) return null
+      const balance = await rpc.getBalance()
+      setBalance(balance)
+      return balance
+    }, [rpc, setBalance]),
+    getAccounts: useCallback(async () => {
+      if (!rpc) return null
+      return await rpc.getAccounts()
+    }, [rpc]),
+    signTransaction: useCallback(async (tx: any) => {
+      if (!rpc) return null
+      return await rpc.signTransaction({ tx })
+    }, [rpc])
+  }
+}

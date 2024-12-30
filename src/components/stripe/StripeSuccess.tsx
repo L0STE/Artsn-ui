@@ -1,354 +1,334 @@
 "use client"
 
-import { useEffect, useState, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/providers/Web3AuthProvider';
-import { VersionedTransaction } from "@solana/web3.js";
-import { useWeb3Auth } from "@/hooks/use-web3-auth";
-import RPC from "@/components/blockchain/solana-rpc";
-import { Button } from '../ui/button';
+import { useEffect, useCallback } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useToast } from '@/hooks/use-toast'
+import { VersionedTransaction } from "@solana/web3.js"
+import { useAuthStore } from '@/lib/stores/useAuthStore'
+import { useWeb3Auth } from '@/hooks/use-web3-auth'
+import { LoadingSpinner } from '@/components/loading/LoadingSpinner'
+import { Button } from '@/components/ui/button'
 
 interface PaymentParams {
-  sessionId: string;
-  assetId: string;
-  amount: string;
-  ref: string;
-  objectRef: string;
-  uri: string;
-}
-
-interface ProcessingState {
-  stage: 'initializing' | 'verifying' | 'processing' | 'complete' | 'error';
-  message: string;
-  error?: string;
+  sessionId: string | null
+  assetId: string | null
+  amount: string | null
+  ref: string | null
+  objectRef: string | null
+  uri: string | null
 }
 
 export default function StripeSuccess() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const { toast } = useToast();
-  const { user, checkAuth } = useAuth();
-  const { provider, loading: web3Loading } = useWeb3Auth();
-  const [processingState, setProcessingState] = useState<ProcessingState>({
-    stage: 'initializing',
-    message: 'Initializing your purchase...'
-  });
-  const [state, setState] = useState({
-    isVerifying: true,
-    isProcessing: false,
-    hasProcessed: false,
-    verificationAttempted: false,
-    authInitialized: false,
-    error: null as string | null,
-    paymentParams: null as PaymentParams | null
-  });
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const { toast } = useToast()
+  
+  // Auth store state
+  const { 
+    currentUser, 
+    authToken,
+    loading: authLoading,
+    setAuth,
+  } = useAuthStore()
 
-  // Store payment params in sessionStorage immediately upon page load
-  useEffect(() => {
-    try {
-      const params = extractPaymentParams();
-      if (params) {
-        sessionStorage.setItem('pendingPaymentParams', JSON.stringify(params));
-        setState(prev => ({ ...prev, paymentParams: params }));
-      }
-    } catch (error) {
-      console.error('Failed to store payment params:', error);
-    }
-  }, [searchParams]);
+  // Web3Auth hook
+  const { 
+    web3auth, 
+    provider,
+    signTransaction,
+    loading: web3Loading 
+  } = useWeb3Auth()
 
-  // Handle authentication initialization
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        await checkAuth();
-        setState(prev => ({ ...prev, authInitialized: true }));
-      } catch (error) {
-        console.error('Auth initialization failed:', error);
-        setState(prev => ({ 
-          ...prev, 
-          error: 'Authentication failed. Please try again.',
-          isVerifying: false 
-        }));
-      }
-    };
+  // Add this to your StripeSuccess component
 
-    if (!state.authInitialized) {
-      initAuth();
-    }
-  }, [checkAuth, state.authInitialized]);
-
-  // Extract payment params with retry mechanism
-  const extractPaymentParams = useCallback((): PaymentParams | null => {
-    // First try from URL params
-    if (searchParams) {
-      const params = {
-        sessionId: searchParams.get('session_id'),
-        assetId: searchParams.get('asset_id'),
-        amount: searchParams.get('amount'),
-        ref: searchParams.get('ref'),
-        objectRef: searchParams.get('object_ref'),
-        uri: searchParams.get('uri')
-      };
-
-      if (Object.values(params).every(Boolean)) {
-        return {
-          ...params,
-          uri: decodeURIComponent(params.uri!)
-        } as PaymentParams;
-      }
-    }
-
-    // If URL params fail, try from sessionStorage
-    const storedParams = sessionStorage.getItem('pendingPaymentParams');
-    if (storedParams) {
-      return JSON.parse(storedParams);
-    }
-
-    return null;
-  }, [searchParams]);
-
-  const buyStripeTx = useCallback(async (params: PaymentParams) => {
+  const verifyPayment = useCallback(async (params: PaymentParams) => {
+    // Get fresh token
     const token = localStorage.getItem('authToken');
-    if (!token) throw new Error('Authentication required');
+    console.log('Verifying payment with token:', token ? 'exists' : 'missing');
 
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+
+    try {
+      // Log the request details
+      console.log('Sending verification request:', {
+        sessionId: params.sessionId,
+        assetId: params.assetId,
+        amount: params.amount,
+        ref: params.ref
+      });
+
+      const response = await fetch('/api/stripe/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          sessionId: params.sessionId,
+          assetId: params.assetId,
+          amount: params.amount,
+          ref: params.ref
+        })
+      });
+
+      // Log the response status
+      console.log('Response status:', response.status);
+
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.log('Auth failed, clearing token');
+          localStorage.removeItem('authToken');
+          router.push('/login');
+          throw new Error('Authentication expired. Please login again.');
+        }
+        throw new Error(data.error || `Verification failed: ${response.status}`);
+      }
+
+      return data.verified;
+    } catch (error) {
+      console.error('Verification error:', error);
+      throw error;
+    }
+  }, [router]);
+
+// Update auth check effect
+useEffect(() => {
+  const checkAuthStatus = async () => {
+    const token = localStorage.getItem('authToken');
+    
+    // If no token, redirect to login
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    // Only try to rehydrate if we have a token but no user
+    if (!currentUser) {
+      try {
+        const response = await fetch('/api/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to verify auth');
+        }
+
+        const data = await response.json();
+        
+        if (data.user) {
+          setAuth({
+            token,
+            user: data.user
+          });
+        } else {
+          throw new Error('No user data returned');
+        }
+      } catch (error) {
+        console.error('Auth rehydration failed:', error);
+        localStorage.removeItem('authToken');
+        router.push('/login');
+      }
+    }
+  };
+
+  checkAuthStatus();
+}, [currentUser, router, setAuth]);
+
+  // Function to create and sign transaction
+  const processTransaction = useCallback(async (params: PaymentParams) => {
+    if (!authToken || !currentUser?.publicKey) {
+      throw new Error('Missing auth token or public key')
+    }
+
+    console.log('Processing transaction:', params)
     const response = await fetch('/api/protocol/buy-stripe', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${authToken}`
       },
       body: JSON.stringify({
         id: params.assetId,
         reference: params.objectRef,
-        publicKey: user?.publicKey,
-        amount: +params.amount,
+        publicKey: currentUser.publicKey,
+        amount: +(params.amount || 0),
         sessionId: params.sessionId,
-        uri: encodeURIComponent(params.uri)
+        uri: params.uri
       })
-    });
+    })
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to create transaction');
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Failed to create transaction')
     }
 
-    const { transaction } = await response.json();
-    return VersionedTransaction.deserialize(Buffer.from(transaction, "base64"));
-  }, [user]);
+    const { transaction } = await response.json()
+    console.log('Got transaction:', transaction)
 
-  const processTransaction = useCallback(async (params: PaymentParams) => {
-    if (!provider || !user) {
-      throw new Error('Web3 provider not initialized');
-    }
-
-    const tx = await buyStripeTx(params);
-    if (!tx) throw new Error('No transaction to sign');
-
-    const rpc = new RPC(provider);
-    const signature = await rpc.signVersionedTransaction({ tx });
+    const tx = VersionedTransaction.deserialize(Buffer.from(transaction, "base64"))
+    const signature = await signTransaction(tx)
     
     if (!signature) {
-      throw new Error('Failed to sign transaction');
+      throw new Error('Failed to sign transaction')
     }
 
-    return signature;
-  }, [provider, user, buyStripeTx]);
+    return signature
+  }, [authToken, currentUser, signTransaction])
 
-  // Main payment verification and processing logic
+  // Effect to check auth status on mount
   useEffect(() => {
-    const processPayment = async () => {
-      if (!state.authInitialized || !user || !provider || web3Loading || 
-          !state.paymentParams || state.verificationAttempted) {
-        return;
+    const checkAuthStatus = async () => {
+      const storedToken = localStorage.getItem('authToken')
+      console.log('Checking auth status, token:', storedToken ? 'exists' : 'missing')
+      
+      if (!currentUser && storedToken) {
+        try {
+          const response = await fetch('/api/me', {
+            headers: {
+              'Authorization': `Bearer ${storedToken}`
+            }
+          })
+          const data = await response.json()
+          
+          if (data.user) {
+            console.log('Rehydrated user:', data.user)
+            setAuth({
+              token: storedToken,
+              user: data.user
+            })
+          }
+        } catch (error) {
+          console.error('Failed to rehydrate auth:', error)
+          localStorage.removeItem('authToken')
+        }
+      }
+    }
+
+    checkAuthStatus()
+  }, [currentUser, setAuth])
+
+  // Process the stripe success
+  useEffect(() => {
+    const processStripeSuccess = async () => {
+      // Check requirements
+      if (!web3auth || !provider || !currentUser || !authToken) {
+        console.log('Missing requirements:', { 
+          web3auth: !!web3auth, 
+          provider: !!provider, 
+          currentUser: !!currentUser,
+          authToken: !!authToken
+        })
+        return
       }
 
-      setState(prev => ({ ...prev, verificationAttempted: true }));
-
       try {
-        // Verify payment first
-        const verificationResponse = await fetch('/api/stripe/verify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          },
-          body: JSON.stringify({
-            sessionId: state.paymentParams.sessionId,
-            assetId: state.paymentParams.assetId,
-            amount: state.paymentParams.amount,
-            ref: state.paymentParams.ref
-          })
-        });
-
-        const verificationData = await verificationResponse.json();
-        
-        if (!verificationResponse.ok || !verificationData.verified) {
-          throw new Error(verificationData.error || 'Payment verification failed');
+        // Extract and validate params
+        if (!searchParams) {
+          throw new Error('Search parameters are missing')
         }
 
-        setState(prev => ({ ...prev, isProcessing: true }));
+        const params: PaymentParams = {
+          sessionId: searchParams.get('session_id'),
+          assetId: searchParams.get('asset_id'),
+          amount: searchParams.get('amount'),
+          ref: searchParams.get('ref'),
+          objectRef: searchParams.get('object_ref'),
+          uri: searchParams.get('uri')
+        }
+
+        // Validate required params
+        const requiredParams = ['sessionId', 'assetId', 'amount', 'ref', 'objectRef']
+        const missingParams = requiredParams.filter(param => !params[param as keyof PaymentParams])
         
-        // Process blockchain transaction
-        await processTransaction(state.paymentParams);
+        if (missingParams.length > 0) {
+          throw new Error(`Missing required parameters: ${missingParams.join(', ')}`)
+        }
+
+        // Verify payment
+        const verified = await verifyPayment(params)
+        if (!verified) {
+          throw new Error('Payment verification failed')
+        }
+
+        // Process transaction
+        const signature = await processTransaction(params)
+        console.log('Transaction signature:', signature)
 
         toast({
           title: 'Transaction Complete',
-          description: 'Your purchase has been processed successfully',
-        });
+          description: 'Your purchase has been processed successfully'
+        })
 
-        setState(prev => ({ 
-          ...prev, 
-          hasProcessed: true,
-          isProcessing: false,
-          isVerifying: false 
-        }));
-
-        // Clean up
-        sessionStorage.removeItem('pendingPaymentParams');
-        sessionStorage.removeItem('sessionId');
-        
-        // Redirect
-        router.push('/dashboard');
+        // Clean up and redirect
+        sessionStorage.removeItem('pendingPaymentParams')
+        sessionStorage.removeItem('sessionId')
+        router.push('/dashboard')
 
       } catch (error) {
-        console.error('Payment processing failed:', error);
+        console.error('Payment processing failed:', error)
         toast({
           title: 'Transaction Failed',
           description: error instanceof Error ? error.message : 'Failed to process transaction',
           variant: 'destructive'
-        });
-        setState(prev => ({
-          ...prev,
-          error: error instanceof Error ? error.message : 'Transaction failed',
-          isProcessing: false,
-          isVerifying: false
-        }));
+        })
       }
-    };
+    }
 
-    processPayment();
+    processStripeSuccess()
   }, [
-    state.authInitialized,
-    state.paymentParams,
-    state.verificationAttempted,
-    user,
-    provider,
-    web3Loading,
-    processTransaction,
-    toast,
-    router
-  ]);
+    web3auth, 
+    provider, 
+    currentUser, 
+    authToken, 
+    searchParams, 
+    router, 
+    toast, 
+    verifyPayment, 
+    processTransaction
+  ])
 
-  // Update the UI state based on processing stage
-  useEffect(() => {
-    if (state.error) {
-      setProcessingState({
-        stage: 'error',
-        message: 'Transaction failed',
-        error: state.error
-      });
-      return;
-    }
+  // Loading state
+  if (authLoading || web3Loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    )
+  }
 
-    if (state.hasProcessed) {
-      setProcessingState({
-        stage: 'complete',
-        message: 'Purchase complete!'
-      });
-      return;
-    }
-
-    if (state.isProcessing) {
-      setProcessingState({
-        stage: 'processing',
-        message: 'Processing your purchase...'
-      });
-      return;
-    }
-
-    if (state.isVerifying) {
-      setProcessingState({
-        stage: 'verifying',
-        message: 'Verifying payment...'
-      });
-      return;
-    }
-  }, [state.error, state.hasProcessed, state.isProcessing, state.isVerifying]);
-
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-background to-muted">
-      <div className="w-full max-w-md mx-auto p-6">
-        <div className="bg-card rounded-lg shadow-lg p-6 space-y-2">
-          {/* Status Icon */}
-          <div className="flex justify-center">
-            {processingState.stage === 'error' ? (
-              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-red-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </div>
-            ) : processingState.stage === 'complete' ? (
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-            ) : (
-              <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-            )}
-          </div>
-
-          {/* Status Message */}
-          <div className="text-center space-y-2">
-            <h2 className="text-xl font-semibold">
-              {processingState.message}
-            </h2>
-            {processingState.stage !== 'complete' && processingState.stage !== 'error' && (
-              <p className="text-muted-foreground">
-                {"Please don't close this window"}
-              </p>
-            )}
-            {processingState.error && (
-              <p className="text-red-600">{processingState.error}</p>
-            )}
-          </div>
-
-          {/* Action Button */}
-          {(processingState.stage === 'complete' || processingState.stage === 'error') && (
-            <div className="flex justify-center">
-              <Button
-                variant={'destructive'}
-                onClick={() => router.push('/dashboard')}
-                className="px-4 py-2 rounded-md hover:bg-black/90 transition-colors"
-              >
-                Return to Dashboard
-              </Button>
-            </div>
-          )}
+  // Auth required state
+  if (!currentUser || !web3auth) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-4">Authentication Required</h2>
+          <p>Please log in to complete your purchase.</p>
+          <Button
+            onClick={() => router.push('/login')}
+            className="mt-4"
+            variant="default"
+          >
+            Go to Login
+          </Button>
         </div>
       </div>
+    )
+  }
+
+  // Processing state
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <h2 className="text-xl font-semibold mb-4">Processing your purchase...</h2>
+        <LoadingSpinner />
+      </div>
     </div>
-  );
+  )
 }

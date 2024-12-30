@@ -1,81 +1,124 @@
+// app/api/stripe/verify/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { connectToDatabase } from '@/config/mongodb';
+import { headers } from 'next/headers';
 
+// Initialize Stripe with the secret key
 const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
+  const headersList = headers();
+  const authToken = headersList.get('authorization');
+  
+  console.log('Starting verification process');
+  console.log('Auth header:', authToken ? 'present' : 'missing');
+
   try {
-    const { sessionId, assetId, amount, ref } = await req.json();
-    console.log('Verifying payment:', sessionId);
-    // Input validation
+    // 1. Check Authorization
+    if (!authToken?.startsWith('Bearer ')) {
+      console.log('Invalid auth header format');
+      return NextResponse.json(
+        { error: 'Invalid authorization header' },
+        { status: 401 }
+      );
+    }
+
+    // 2. Parse Request
+    let body;
+    try {
+      body = await req.json();
+      console.log('Request body:', body);
+    } catch (error) {
+      console.error('Failed to parse request body:', error);
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+
+    // 3. Validate Required Fields
+    const { sessionId, assetId, amount, ref } = body;
+    console.log('Parsed fields:', { sessionId, assetId, amount, ref });
+
     if (!sessionId || !assetId || !amount || !ref) {
+      console.log('Missing required fields');
+      return NextResponse.json({
+        error: 'Missing required fields',
+        received: { sessionId, assetId, amount, ref }
+      }, { status: 400 });
+    }
+
+    // 4. Connect to Database
+    let db;
+    try {
+      const { db: database } = await connectToDatabase();
+      db = database;
+      console.log('Database connected');
+    } catch (error) {
+      console.error('Database connection failed:', error);
       return NextResponse.json(
-        { error: 'Missing required parameters' },
-        { status: 400 }
+        { error: 'Database connection failed' },
+        { status: 500 }
       );
     }
 
-    // Retrieve the session from Stripe
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-    // Connect to database
-    const { db } = await connectToDatabase();
-
-    // Check if this session was already processed
-    const existingSession = await db.collection('stripe_sessions').findOne({
-      session_id: sessionId,
-      status: 'completed'
-    });
-
-    if (existingSession) {
+    // 5. Check Stripe Session
+    let session;
+    try {
+      session = await stripe.checkout.sessions.retrieve(sessionId);
+      console.log('Stripe session:', {
+        id: session.id,
+        payment_status: session.payment_status,
+        status: session.status
+      });
+    } catch (error) {
+      console.error('Failed to retrieve Stripe session:', error);
       return NextResponse.json(
-        { error: 'Payment already processed' },
-        { status: 400 }
+        { error: 'Failed to retrieve Stripe session' },
+        { status: 500 }
       );
     }
 
-    // Verify payment status
+    // 6. Verify Payment Status
     if (session.payment_status !== 'paid') {
+      console.log('Payment not completed:', session.payment_status);
+      return NextResponse.json({
+        error: 'Payment not completed',
+        status: session.payment_status
+      }, { status: 400 });
+    }
+
+    // 7. Update Database
+    try {
+      const result = await db.collection('stripe_sessions').updateOne(
+        { session_id: sessionId },
+        {
+          $setOnInsert: {
+            session_id: sessionId,
+            asset_id: assetId,
+            amount: Number(amount),
+            reference_id: ref,
+            created_at: new Date()
+          },
+          $set: {
+            status: 'completed',
+            completed_at: new Date(),
+            payment_intent: session.payment_intent
+          }
+        },
+        { upsert: true }
+      );
+      console.log('Database update result:', result);
+    } catch (error) {
+      console.error('Failed to update database:', error);
       return NextResponse.json(
-        { error: 'Payment not completed' },
-        { status: 400 }
+        { error: 'Failed to update database' },
+        { status: 500 }
       );
     }
 
-    // Verify amount matches
-    // const expectedAmount = parseInt(amount) * 100; // Stripe amounts are in cents
-    // if (session.amount_total !== expectedAmount) {
-    //   return NextResponse.json(
-    //     { error: 'Amount mismatch' },
-    //     { status: 400 }
-    //   );
-    // }
-
-    // Update session status in database if not already done by webhook
-    await db.collection('stripe_sessions').updateOne(
-      { session_id: sessionId },
-      {
-        $setOnInsert: {
-          session_id: sessionId,
-          asset_id: assetId,
-          amount: parseInt(amount),
-          reference_id: ref,
-          created_at: new Date(),
-          expires_at: new Date(Date.now() + (30 * 60 * 1000)) // 30 minutes
-        },
-        $set: {
-          status: 'completed',
-          completed_at: new Date(),
-          payment_intent: session.payment_intent
-        }
-      },
-      { upsert: true }
-    );
-
-    console.log('Payment verified:', sessionId);
-
-    // Return success with session details
+    // 8. Return Success
     return NextResponse.json({
       verified: true,
       details: {
@@ -87,18 +130,18 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Verification error:', error);
+    console.error('Verification process failed:', error);
     
     if (error instanceof Stripe.errors.StripeError) {
-      return NextResponse.json(
-        { error: `Stripe error: ${error.message}` },
-        { status: error.statusCode || 500 }
-      );
+      return NextResponse.json({
+        error: `Stripe error: ${error.message}`,
+        code: error.code
+      }, { status: error.statusCode || 500 });
     }
 
-    return NextResponse.json(
-      { error: 'Verification failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

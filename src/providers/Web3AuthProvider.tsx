@@ -11,6 +11,8 @@ import { CREATE_USER, LOGIN_USER } from '@/graphql/mutations/user';
 import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
 import { useWeb3Auth } from '@/hooks/use-web3-auth';
 
+
+// For Web3Auth specific operations
 // Create a mock version of useWeb3Auth for initial render
 const mockWeb3Auth = {
   provider: null,
@@ -50,7 +52,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: any;
-  injectedAdapters: any[];
+  injectedAdapters?: any[];
   login: () => Promise<any>;
   loginUserWithAdapter: (adapter: any) => Promise<any>;
   logout: () => Promise<void>;
@@ -80,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     provider,
     login: web3Login,
     loginWithAdapter,
-    injectedAdapters,
+    // injectedAdapters,
     logout: web3Logout,
     getUserInfo,
     web3auth,
@@ -596,7 +598,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const contextValue: AuthContextType = {
     user,
     loading: loading || web3Loading,
-    injectedAdapters,
+    // injectedAdapters,
     error,
     login,
     loginUserWithAdapter,
