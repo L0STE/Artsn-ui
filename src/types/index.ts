@@ -50,3 +50,60 @@ export type Direction = 'up' | 'right' | 'down' | 'left';
 export type SoftwareSkillType = { name: string; icon: string };
 
 export type BreakpointType = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+
+export interface HeliusMplCoreAsset {
+  interface: 'MplCoreAsset';
+  id: string;
+  authorities: Array<{
+    address: string;
+    scopes: Array<'full'>;
+  }>;
+  burnt: boolean;
+  compression: {
+    asset_hash: string;
+    compressed: boolean;
+    creator_hash: string;
+    data_hash: string;
+    eligible: boolean;
+    leaf_id: number;
+    seq: number;
+    tree: string;
+  };
+  content: {
+    $schema: string;
+    files: Array<any>;
+    json_uri: string;
+    links: Record<string, unknown>;
+    metadata: {
+      name: string;
+      symbol: string;
+    };
+  };
+  creators: Array<any>;
+  external_plugins: Array<any>;
+  grouping: Array<{
+    group_key: 'collection';
+    group_value: string;
+  }>;
+  mpl_core_info: {
+    plugins_json_version: number;
+  };
+  mutable: boolean;
+  ownership: {
+    delegate: string | null;
+    delegated: boolean;
+    frozen: boolean;
+    owner: string;
+    ownership_model: 'single';
+  };
+  plugins: Record<string, unknown>;
+  royalty: {
+    basis_points: number;
+    locked: boolean;
+    percent: number;
+    primary_sale_happened: boolean;
+    royalty_model: string;
+    target: string | null;
+  };
+  supply: number | null;
+}

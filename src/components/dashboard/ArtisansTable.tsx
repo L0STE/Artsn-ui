@@ -66,31 +66,32 @@ const ArtisansTable = ({assets}: TableProps) => {
   const sortAssets = async (assets: any) => {
     const listingArray: any[] = [];
     
-
     for (let i = 0; i < assets.length; i++) {
-      const listing = await getListingByWatch(assets[i].updateAuthority.address);
-      
-      // if the listing exists already in the listingArray with the same associatedId as the listing.listing, then increase the quantity by 1
-      // else just push the new listing to the listingArray
-      if (listingArray.find((item) => item.associatedId === listing!.listing)) {
-        const index = listingArray.findIndex((item) => item.associatedId === listing!.listing);
-        listingArray[index].quantity += 1;
-        continue; 
-      } 
-      console.log('listing ->', listing);
-      if (!listing) { continue; }
-      
-      listingArray.push({
-        ...assets[i],
-        shares: listing!.shares,
-        sharesSold: listing!.sharesSold,
-        associatedId: listing!.listing,
-        price: listing!.price,
-        quantity: 1,
-      });
+        const listing = await getListingByWatch(assets[i].grouping[0].group_value);
+        
+        if (!listing) { continue; }
+        
+        if (listingArray.find((item) => item.associatedId === listing.listing)) {
+            const index = listingArray.findIndex((item) => item.associatedId === listing.listing);
+            listingArray[index].quantity += 1;
+            continue; 
+        } 
+        
+        listingArray.push({
+            ...assets[i],
+            shares: listing.shares,
+            sharesSold: listing.sharesSold,
+            associatedId: listing.listing,
+            price: listing.price,
+            quantity: 1,
+        });
     }
 
-    listingArray.sort((a, b) => a.name.localeCompare(b.name));
+    listingArray.sort((a, b) => {
+        if (!a.associatedId || !b.associatedId) return 0;
+        return a.associatedId.localeCompare(b.associatedId);
+    });
+    
     console.log('sortedAssets', listingArray);
     setSortedAssets(listingArray);
   }
@@ -128,7 +129,7 @@ const ArtisansTable = ({assets}: TableProps) => {
                       <AvatarImage
                         src={`https://artisan-solana.s3.eu-central-1.amazonaws.com/${asset.associatedId}-0.jpg`}
                       />
-                      <AvatarFallback>{asset.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{asset.content.metadata.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>
                       <div>{asset.name}</div>

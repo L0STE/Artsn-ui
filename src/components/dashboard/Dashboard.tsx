@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { fetchAssets } from '@/components/blockchain/umiAccess';
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { useWallet } from '@solana/wallet-adapter-react';
 import { AssetV1 } from '@metaplex-foundation/mpl-core';
 import { Card } from '@/components/ui/card';
@@ -16,7 +17,6 @@ import ArtisansTable from './ArtisansTable';
 import InvitationCTA from './InvitationCTA';
 import { useAuth } from '@/providers/Web3AuthProvider';
 import { Connection, GetProgramAccountsConfig, Keypair, PublicKey } from '@solana/web3.js';
-import { Program } from '@coral-xyz/anchor';
 import { IDL } from '@coral-xyz/anchor/dist/cjs/native/system';
 import { ArtsnCore, getArtisanProgram } from '@/components/blockchain/artisan-exports';
 import TrendingUp from './TrendingUp';
@@ -29,7 +29,9 @@ import RPC from '@/components/blockchain/solana-rpc';
 import { set } from 'lodash';
 import { useSolanaPrice } from '@/hooks/use-solana-price';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-
+import { HeliusMplCoreAsset } from '@/types';
+import { rpcManager } from '@/lib/rpc/rpc-manager';
+const SolanaRPC = rpcManager.getConnection();
 // Dynamically import Joyride with ssr disabled
 const Joyride = dynamic(() => import('react-joyride'), { ssr: false });
 type BalanceObject = {
@@ -38,7 +40,7 @@ type BalanceObject = {
 };
 export default function DashboardFeature() {
   const [runTour, setRunTour] = useState(false);
-  const [userAssets, setUserAssets] = useState<AssetV1[]>([]);
+  const [userAssets, setUserAssets] = useState<HeliusMplCoreAsset[]>([]);
   const [userBalance, setUserBalance] = useState<BalanceObject>();
   const [fractions, setFractions] = useState<any[]>([]);
   const [tokensLoading, setTokensLoading] = useState(true);
@@ -172,7 +174,7 @@ export default function DashboardFeature() {
             { dataSize: 70 }
           ]
       };
-      const connection = new Connection('https://devnet.helius-rpc.com/?api-key=b7faf1b9-5b70-4085-bf8e-a7be3e3b78c2', 'confirmed');
+      const connection = SolanaRPC;
       const wallet = Keypair.generate();
       //@ts-expect-error - we are not signing
       const provider = new AnchorProvider(connection,  wallet, {commitment: "confirmed"});
@@ -202,7 +204,8 @@ export default function DashboardFeature() {
     const listingArray: any[] = [];
 
     for (let i = 0; i < assets.length; i++) {
-      const listing = await getListingByWatch(assets[i].updateAuthority.address!);
+      const listing = await getListingByWatch(assets[i].grouping[0].group_value);
+      console.log('listing ->', listing);
       if(!listing) continue;
       // if the listing exists already in the listingArray with the same associatedId as the listing.listing, then increase the quantity by 1
       // else just push the new listing to the listingArray

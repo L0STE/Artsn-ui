@@ -1,12 +1,13 @@
 import { publicKey } from '@metaplex-foundation/umi'
 import { Connection, GetProgramAccountsConfig, Keypair, PublicKey } from '@solana/web3.js'
 import { fetchAssetsByOwner, AssetV1, fetchCollectionV1, CollectionV1 } from '@metaplex-foundation/mpl-core'
-import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { ArtsnCore, PROTOCOL } from '@/components/blockchain/artisan-exports';
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { rpcManager } from '@/lib/rpc/rpc-manager';
+import { HeliusMplCoreAsset } from '@/types';
 const IDL = require('@/components/blockchain/idl/artisan.json');
 const RPC = rpcManager.getConnection();
+const helius = 'https://devnet.helius-rpc.com/?api-key=b7faf1b9-5b70-4085-bf8e-a7be3e3b78c2';
 // Create Umi Instance
 const umi = rpcManager.getUmi();
 
@@ -17,16 +18,41 @@ interface ListingResult {
   sharesSold: number;
 }
 
-export const fetchAssets = async (owner: string): Promise<AssetV1[]> => {
+export const fetchAssets = async (owner: string): Promise<HeliusMplCoreAsset[]> => {
     try {
       console.log('fetching assets for ->', owner);
-      const assetsByOwner = await fetchAssetsByOwner(umi, owner, {
-        skipDerivePlugins: false,
-      });
-      console.log('assetsByOwner', assetsByOwner);
-  
-      const filteredAccounts = assetsByOwner.filter((asset) => {
-        if (asset.updateAuthority.toString() === "GC1ebi99yrcurrTJMEhCp4oCmMg8CNrhAsKFJ3arQeg1") {
+
+      // const assetsByOwner = await fetchAssetsByOwner(umi, owner, {
+      //   skipDerivePlugins: false,
+      // });
+      // console.log('assetsByOwner', assetsByOwner);
+
+      const getAssetsByOwner = async () => {
+        const response = await fetch(helius, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 'my-id',
+            method: 'getAssetsByOwner',
+            params: {
+              ownerAddress: owner,
+              page: 1, // Starts at 1
+              limit: 1000,
+            },
+          }),
+        });
+        const { result } = await response.json();
+        console.log("Assets by Owner Length: ", result.items.length);
+        console.log("Assets by Owner: ", result.items);
+        return result.items;
+      };
+      const assetsByOwner = await getAssetsByOwner();
+
+      const filteredAccounts: HeliusMplCoreAsset[] = assetsByOwner.filter((asset: HeliusMplCoreAsset) => {
+        if (asset.authorities[0].address === "GC1ebi99yrcurrTJMEhCp4oCmMg8CNrhAsKFJ3arQeg1") {
           console.log('asset match ->', asset);
           return true;
         }
