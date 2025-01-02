@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react'
 import {
   LineChart,
   Line,
@@ -9,39 +9,39 @@ import {
   Tooltip,
   CartesianGrid,
   ResponsiveContainer,
-  Area
-} from "recharts";
+  Area,
+} from 'recharts'
 
 const data = [
-  { name: "Lorem", value: 2000 },
-  { name: "Lorem", value: 4000 },
-  { name: "Lorem", value: 3000 },
-  { name: "Lorem", value: 5000 },
-  { name: "Lorem", value: 4000 },
-  { name: "Lorem", value: 6000 },
-  { name: "Lorem", value: 3000 },
-  { name: "Lorem", value: 5000 },
-  { name: "Lorem", value: 3000 },
-  { name: "Lorem", value: 5000 },
-  { name: "Lorem", value: 4000 },
-  { name: "Lorem", value: 6000 },
-];
+  { name: 'Lorem', value: 2000 },
+  { name: 'Lorem', value: 4000 },
+  { name: 'Lorem', value: 3000 },
+  { name: 'Lorem', value: 5000 },
+  { name: 'Lorem', value: 4000 },
+  { name: 'Lorem', value: 6000 },
+  { name: 'Lorem', value: 3000 },
+  { name: 'Lorem', value: 5000 },
+  { name: 'Lorem', value: 3000 },
+  { name: 'Lorem', value: 5000 },
+  { name: 'Lorem', value: 4000 },
+  { name: 'Lorem', value: 6000 },
+]
 
 export default function PriceHistory() {
-  const [isClient, setIsClient] = useState(false);
+  const [isClient, setIsClient] = useState(false)
 
   // Ensure we're on the client side
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    setIsClient(true)
+  }, [])
 
   if (!isClient) {
-    return <p>Loading chart...</p>;
+    return <p>Loading chart...</p>
   }
 
   return (
-    <section className="bg-white rounded-3xl border-gray pt-6 pr-6 pb-3 pl-3 mb-5 ">
-      <h2 className="text-xl pl-4 font-bold mb-5 flex items-center gap-2">
+    <section className="border-gray mb-5 rounded-3xl bg-white pb-3 pl-3 pr-6 pt-6">
+      <h2 className="mb-5 flex items-center gap-2 pl-4 text-xl font-bold">
         <svg
           width="20"
           height="20"
@@ -110,11 +110,13 @@ export default function PriceHistory() {
         </ResponsiveContainer>
       </div> */}
       {/* Overlay */}
-      <div className="h-36 inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center rounded-3xl">
-        <div className="bg-white/90 px-6 py-3 rounded-lg shadow-lg">
-          <p className="text-xl font-semibold text-gray-800">Feature Coming Soon</p>
+      <div className="inset-0 flex h-36 items-center justify-center rounded-3xl bg-black/30 backdrop-blur-sm">
+        <div className="rounded-lg bg-white/90 px-6 py-3 shadow-lg">
+          <p className="text-xl font-semibold text-gray-800">
+            Feature Coming Soon
+          </p>
         </div>
       </div>
     </section>
-  );
+  )
 }

@@ -1,31 +1,36 @@
-import React from 'react';
-import { FilterState, AvailableFilters, SidebarFilterProps, ObjectType } from '../Marketplace';
+import React from 'react'
+import {
+  FilterState,
+  AvailableFilters,
+  SidebarFilterProps,
+  ObjectType,
+} from '../Marketplace'
 
 const SidebarFilter: React.FC<SidebarFilterProps> = ({
   filters,
   onFilterChange,
-  availableFilters
+  availableFilters,
 }) => {
   // Convert object type strings to display format
   const getDisplayName = (type: ObjectType): string => {
-    switch(type) {
+    switch (type) {
       case 'watch':
-        return 'Watches';
+        return 'Watches'
       case 'diamond':
-        return 'Diamonds';
+        return 'Diamonds'
       default:
-        return type;
+        return type
     }
-  };
+  }
 
   const handleObjectTypeChange = (type: ObjectType) => {
-    onFilterChange({ objectType: type });
-  };
+    onFilterChange({ objectType: type })
+  }
 
   return (
     <div className="w-full">
-      <h2 className="text-xl font-semibold mb-6">Filters</h2>
-      
+      <h2 className="mb-6 text-xl font-semibold">Filters</h2>
+
       {/* Category Filter */}
       {/* <div className="mb-8">
         <h3 className="text-base font-medium mb-4">Category</h3>
@@ -58,7 +63,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
       {/* Brand/Model Filter */}
       {availableFilters.models.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-base font-medium mb-4">Brand/Model</h3>
+          <h3 className="mb-4 text-base font-medium">Brand/Model</h3>
           <div className="space-y-3">
             {availableFilters.models.map((model: string) => (
               <label key={model} className="flex items-center">
@@ -68,10 +73,10 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                   onChange={() => {
                     const newModels = filters.model.includes(model)
                       ? filters.model.filter((m: string) => m !== model)
-                      : [...filters.model, model];
-                    onFilterChange({ model: newModels });
+                      : [...filters.model, model]
+                    onFilterChange({ model: newModels })
                   }}
-                  className="form-checkbox h-4 w-4 text-black border-gray-300"
+                  className="form-checkbox h-4 w-4 border-gray-300 text-black"
                 />
                 <span className="ml-3 text-sm">{model}</span>
               </label>
@@ -83,7 +88,7 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
       {/* Color Filter */}
       {availableFilters.colors.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-base font-medium mb-4">Color</h3>
+          <h3 className="mb-4 text-base font-medium">Color</h3>
           <div className="space-y-3">
             {availableFilters.colors.map((color: string) => (
               <label key={color} className="flex items-center">
@@ -93,10 +98,10 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
                   onChange={() => {
                     const newColors = filters.color.includes(color)
                       ? filters.color.filter((c: string) => c !== color)
-                      : [...filters.color, color];
-                    onFilterChange({ color: newColors });
+                      : [...filters.color, color]
+                    onFilterChange({ color: newColors })
                   }}
-                  className="form-checkbox h-4 w-4 text-black border-gray-300"
+                  className="form-checkbox h-4 w-4 border-gray-300 text-black"
                 />
                 <span className="ml-3 text-sm">{color}</span>
               </label>
@@ -106,60 +111,69 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
       )}
 
       {/* Movement Filter - Only show for watches */}
-      {filters.objectType !== 'diamond' && availableFilters.movements.length > 0 && (
-        <div className="mb-8">
-          <h3 className="text-base font-medium mb-4">Movement</h3>
-          <div className="space-y-3">
-            {availableFilters.movements.map((movement: string) => (
-              <label key={movement} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={filters.movement.includes(movement)}
-                  onChange={() => {
-                    const newMovements = filters.movement.includes(movement)
-                      ? filters.movement.filter((m: string) => m !== movement)
-                      : [...filters.movement, movement];
-                    onFilterChange({ movement: newMovements });
-                  }}
-                  className="form-checkbox h-4 w-4 text-black border-gray-300"
-                />
-                <span className="ml-3 text-sm">{movement}</span>
-              </label>
-            ))}
+      {filters.objectType !== 'diamond' &&
+        availableFilters.movements.length > 0 && (
+          <div className="mb-8">
+            <h3 className="mb-4 text-base font-medium">Movement</h3>
+            <div className="space-y-3">
+              {availableFilters.movements.map((movement: string) => (
+                <label key={movement} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={filters.movement.includes(movement)}
+                    onChange={() => {
+                      const newMovements = filters.movement.includes(movement)
+                        ? filters.movement.filter((m: string) => m !== movement)
+                        : [...filters.movement, movement]
+                      onFilterChange({ movement: newMovements })
+                    }}
+                    className="form-checkbox h-4 w-4 border-gray-300 text-black"
+                  />
+                  <span className="ml-3 text-sm">{movement}</span>
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Price Range */}
       <div className="mb-8">
-        <h3 className="text-base font-medium mb-4">Price Range</h3>
+        <h3 className="mb-4 text-base font-medium">Price Range</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm mb-1">Min Price</label>
+            <label className="mb-1 block text-sm">Min Price</label>
             <input
               type="number"
               value={filters.priceRange.min}
-              onChange={(e) => onFilterChange({
-                priceRange: {
-                  ...filters.priceRange,
-                  min: Number(e.target.value)
-                }
-              })}
-              className="w-full px-3 py-2 border rounded"
+              onChange={(e) =>
+                onFilterChange({
+                  priceRange: {
+                    ...filters.priceRange,
+                    min: Number(e.target.value),
+                  },
+                })
+              }
+              className="w-full rounded border px-3 py-2"
             />
           </div>
           <div>
-            <label className="block text-sm mb-1">Max Price</label>
+            <label className="mb-1 block text-sm">Max Price</label>
             <input
               type="number"
-              value={filters.priceRange.max === Infinity ? '' : filters.priceRange.max}
-              onChange={(e) => onFilterChange({
-                priceRange: {
-                  ...filters.priceRange,
-                  max: Number(e.target.value) || Infinity
-                }
-              })}
-              className="w-full px-3 py-2 border rounded"
+              value={
+                filters.priceRange.max === Infinity
+                  ? ''
+                  : filters.priceRange.max
+              }
+              onChange={(e) =>
+                onFilterChange({
+                  priceRange: {
+                    ...filters.priceRange,
+                    max: Number(e.target.value) || Infinity,
+                  },
+                })
+              }
+              className="w-full rounded border px-3 py-2"
             />
           </div>
         </div>
@@ -167,19 +181,21 @@ const SidebarFilter: React.FC<SidebarFilterProps> = ({
 
       {/* Reset Button */}
       <button
-        onClick={() => onFilterChange({
-          objectType: 'all',
-          model: [],
-          color: [],
-          movement: [],
-          priceRange: { min: 0, max: Infinity }
-        })}
-        className="w-full bg-black text-white py-2 rounded-xl hover:bg-gray-800"
+        onClick={() =>
+          onFilterChange({
+            objectType: 'all',
+            model: [],
+            color: [],
+            movement: [],
+            priceRange: { min: 0, max: Infinity },
+          })
+        }
+        className="w-full rounded-xl bg-black py-2 text-white hover:bg-gray-800"
       >
         Reset Filters
       </button>
     </div>
-  );
-};
+  )
+}
 
-export default SidebarFilter;
+export default SidebarFilter

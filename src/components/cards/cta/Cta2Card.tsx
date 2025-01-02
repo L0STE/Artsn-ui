@@ -1,6 +1,6 @@
-'use client';
-import Image from "next/image";
-import Link from "next/link";
+'use client'
+import Image from 'next/image'
+import Link from 'next/link'
 import {
   Card,
   CardContent,
@@ -8,17 +8,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { EnvelopeClosedIcon, TwitterLogoIcon } from '@radix-ui/react-icons'
 
 interface DefaultProps {
-  className?: string;
+  className?: string
 }
 
-const CtaCard2 = (
-  props: DefaultProps
-) => {
+const CtaCard2 = (props: DefaultProps) => {
   return (
     <Card className={`${props.className}`}>
       {/* <CardHeader>
@@ -27,18 +25,21 @@ const CtaCard2 = (
         </CardTitle>
         <CardDescription>January - June 2024</CardDescription>
       </CardHeader> */}
-      <CardContent className='flex flex-col py-4 gap-6'>
-        <p className='text-3xl text-center text-secondary'>
-            
-            <span className='italic font-normal'>Diversify with luxury:</span>
+      <CardContent className="flex flex-col gap-6 py-4">
+        <p className="text-center text-3xl text-secondary">
+          <span className="font-normal italic">Diversify with luxury:</span>
         </p>
-        <p className='text-2xl text-center text-zinc-400'>
+        <p className="text-center text-2xl text-zinc-400">
           Own and trade real-world assets
         </p>
       </CardContent>
       <CardFooter className="flex-col justify-center">
-        <Button asChild variant='ghost' className='w-3/4 h-12 gap-6 rounded-xl bg-secondary-text text-xl underline' >
-          <Link href="/marketplace" target="_blank" >
+        <Button
+          asChild
+          variant="ghost"
+          className="bg-secondary-text h-12 w-3/4 gap-6 rounded-xl text-xl underline"
+        >
+          <Link href="/marketplace" target="_blank">
             Explore the marketplace
           </Link>
         </Button>
@@ -47,4 +48,4 @@ const CtaCard2 = (
   )
 }
 
-export default CtaCard2;
+export default CtaCard2

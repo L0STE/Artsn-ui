@@ -2,14 +2,11 @@ import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 
 // Dynamically import the Navbar with no SSR
-const Navbar = dynamic(
-  () => import('./Navbar'),
-  { ssr: false }
-)
+const Navbar = dynamic(() => import('./Navbar'), { ssr: false })
 
-export function NavbarWrapper({ 
+export function NavbarWrapper({
   links,
-  searchParams 
+  searchParams,
 }: {
   links: { label: string; path: string }[]
   searchParams?: { get: (key: string) => string | null }

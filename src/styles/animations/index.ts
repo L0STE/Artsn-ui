@@ -1,6 +1,6 @@
-import { Direction } from '@/types';
+import { Direction } from '@/types'
 
-import { Variants } from 'framer-motion';
+import { Variants } from 'framer-motion'
 
 /**
  * Make component fade in from opacity 0 to opacity 1
@@ -19,7 +19,7 @@ export const fadeIn = (delay = 0): Variants => ({
       delay,
     },
   },
-});
+})
 
 /**
  * Makes component slide in from given direction
@@ -35,9 +35,9 @@ export const slideIn = ({
   direction = 'up',
   offset = 10,
 }: {
-  delay?: number;
-  direction?: Direction;
-  offset?: number;
+  delay?: number
+  direction?: Direction
+  offset?: number
 }): Variants => {
   return {
     hidden: {
@@ -56,8 +56,8 @@ export const slideIn = ({
         delay,
       },
     },
-  };
-};
+  }
+}
 
 /**
  * Slide's component in up direction
@@ -77,9 +77,9 @@ export const slideUp = ({
   duration = 1.25,
   offset = 20,
 }: {
-  delay?: number;
-  duration?: number;
-  offset?: number;
+  delay?: number
+  duration?: number
+  offset?: number
 }): Variants => ({
   hidden: {
     y: offset,
@@ -94,7 +94,7 @@ export const slideUp = ({
       duration,
     },
   },
-});
+})
 
 // * SECTION VARIANTS
 
@@ -104,14 +104,14 @@ export const sectionVariants = slideUp({
   delay: 0.5,
   duration: 1.75,
   offset: 50,
-});
+})
 
 export const getSectionAnimation = {
   variants: sectionVariants,
   initial: 'hidden',
   whileInView: 'show',
   viewport: { once: true },
-};
+}
 
 // * For projects
 
@@ -131,4 +131,4 @@ export const projectVariants: Variants = {
       // duration: 0.5,
     },
   }),
-};
+}

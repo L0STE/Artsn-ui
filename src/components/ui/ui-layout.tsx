@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { ReactNode, Suspense, useEffect, useRef } from 'react';
-import { usePathname, useSearchParams } from 'next/navigation';
-import Navbar from '@/components/navbar/Navbar';
-import Footer from '@/components/footer/Footer';
+import * as React from 'react'
+import { ReactNode, Suspense, useEffect, useRef } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import Navbar from '@/components/navbar/Navbar'
+import Footer from '@/components/footer/Footer'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
-import { NavbarWrapper } from '../navbar/NavbarWrapper';
+import { NavbarWrapper } from '../navbar/NavbarWrapper'
 
 // import { AccountChecker } from '../account/account-ui';
 // import {
@@ -20,13 +20,12 @@ export function UiLayout({
   children,
   links,
 }: {
-  children: ReactNode;
-  links: { label: string; path: string }[];
+  children: ReactNode
+  links: { label: string; path: string }[]
 }) {
-  
-  const searchParams = useSearchParams() || undefined;
+  const searchParams = useSearchParams() || undefined
   const pathname = usePathname()
-  
+
   useEffect(() => {
     NProgress.configure({ showSpinner: false })
     NProgress.start()
@@ -41,16 +40,13 @@ export function UiLayout({
   }, [pathname, searchParams])
 
   return (
-    <div className="h-full flex flex-col bg-bg items-center w-full overflow-none">
+    <div className="overflow-none flex h-full w-full flex-col items-center bg-bg">
       {/* <Navbar searchParams={searchParams} links={links} scrollThreshold={1} blurAmount={400} /> */}
-      <NavbarWrapper 
-          links={links} 
-          searchParams={searchParams as any} 
-        />
-      <div className="flex-grow mx-4 lg:mx-auto w-full">
+      <NavbarWrapper links={links} searchParams={searchParams as any} />
+      <div className="mx-4 w-full flex-grow lg:mx-auto">
         <Suspense
           fallback={
-            <div className="text-center my-32">
+            <div className="my-32 text-center">
               <span className="loading loading-spinner loading-lg"></span>
             </div>
           }
@@ -61,7 +57,7 @@ export function UiLayout({
       </div>
       <Footer />
     </div>
-  );
+  )
 }
 
 export function AppModal({
@@ -73,29 +69,29 @@ export function AppModal({
   submitDisabled,
   submitLabel,
 }: {
-  children: ReactNode;
-  title: string;
-  hide: () => void;
-  show: boolean;
-  submit?: () => void;
-  submitDisabled?: boolean;
-  submitLabel?: string;
+  children: ReactNode
+  title: string
+  hide: () => void
+  show: boolean
+  submit?: () => void
+  submitDisabled?: boolean
+  submitLabel?: string
 }) {
-  const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const dialogRef = useRef<HTMLDialogElement | null>(null)
 
   useEffect(() => {
-    if (!dialogRef.current) return;
+    if (!dialogRef.current) return
     if (show) {
-      dialogRef.current.showModal();
+      dialogRef.current.showModal()
     } else {
-      dialogRef.current.close();
+      dialogRef.current.close()
     }
-  }, [show, dialogRef]);
+  }, [show, dialogRef])
 
   return (
     <dialog className="modal" ref={dialogRef}>
       <div className="modal-box space-y-5">
-        <h3 className="font-bold text-lg">{title}</h3>
+        <h3 className="text-lg font-bold">{title}</h3>
         {children}
         <div className="modal-action">
           <div className="join space-x-2">
@@ -115,7 +111,7 @@ export function AppModal({
         </div>
       </div>
     </dialog>
-  );
+  )
 }
 
 export function AppHero({
@@ -123,9 +119,9 @@ export function AppHero({
   title,
   subtitle,
 }: {
-  children?: ReactNode;
-  title: ReactNode;
-  subtitle: ReactNode;
+  children?: ReactNode
+  title: ReactNode
+  subtitle: ReactNode
 }) {
   return (
     <div className="hero py-[64px]">
@@ -145,16 +141,16 @@ export function AppHero({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export function ellipsify(str = '', len = 4) {
   if (str.length > 30) {
     return (
       str.substring(0, len) + '..' + str.substring(str.length - len, str.length)
-    );
+    )
   }
-  return str;
+  return str
 }
 
 // export function useTransactionToast() {

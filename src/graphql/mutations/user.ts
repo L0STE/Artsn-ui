@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from '@apollo/client'
 
 export const CREATE_USER = gql`
   mutation CreateUser($input: CreateUserInput!) {
@@ -29,7 +29,7 @@ export const CREATE_USER = gql`
       }
     }
   }
-`;
+`
 
 export const REGISTER_USER = gql`
   mutation RegisterUser($input: RegisterInput!) {
@@ -60,7 +60,7 @@ export const REGISTER_USER = gql`
       }
     }
   }
-`;
+`
 
 export const UPDATE_USER = gql`
   mutation UpdateUser($input: UpdateUserInput!) {
@@ -104,7 +104,7 @@ export const UPDATE_USER = gql`
       }
     }
   }
-`;
+`
 
 export const LOGIN_USER = gql`
   mutation LoginUser($publicKey: String!, $password: String!) {
@@ -147,4 +147,4 @@ export const LOGIN_USER = gql`
       }
     }
   }
-`;
+`

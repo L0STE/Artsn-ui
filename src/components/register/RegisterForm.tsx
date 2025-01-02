@@ -1,339 +1,303 @@
-"use client"
+'use client'
 
-import React, { useState, useEffect, Suspense, useCallback } from 'react'
-import dynamic from 'next/dynamic'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
 import { countries } from '@/lib/countries'
-import { REGISTER_USER } from '@/graphql/mutations/user'
+import { REGISTER_USER, CREATE_USER } from '@/graphql/mutations/user'
 import { IS_USER_REGISTERED } from '@/graphql/queries/user'
 import { useLazyQuery, useMutation } from '@apollo/client'
-import { 
-  DropdownMenu, 
-  DropdownMenuTrigger, 
-  DropdownMenuContent, 
-  DropdownMenuGroup, 
-  DropdownMenuItem 
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
 } from '@/components/ui/dropdownMenu'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { LoadingSpinner } from '@/components/loading/LoadingSpinner'
+import { useWeb3Auth } from '@/hooks/use-web3-auth'
+import { IAdapter } from '@web3auth/base'
 import { useAuthStore } from '@/lib/stores/useAuthStore'
-import { WALLET_ADAPTERS, IAdapter } from "@web3auth/base"
+import { v4 as uuidv4 } from 'uuid'
 import RPC from '@/components/blockchain/solana-rpc'
 
-const WalletMultiButton = dynamic(
-  () => import('@solana/wallet-adapter-react-ui').then((mod) => mod.WalletMultiButton),
-  { ssr: false }
-)
-
 interface RegisterFormProps {
-  onClose: () => void
+  initialData: {
+    publicKey: string;
+    userInfo: {
+      email?: string;
+      name?: string;
+      profileImage?: string;
+    };
+  };
+  onClose: () => void;
 }
 
-const defaultSolanaAdapters: IAdapter<unknown>[] = []
-
-export function RegisterForm({ onClose }: RegisterFormProps) {
+export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
   const router = useRouter()
   const { toast } = useToast()
-
-  // Auth store state and actions
-  const { 
-    web3auth,
-    loading,
-    loggedIn,
-    userInfo,
-    currentUser,
-    setUserInfo,
-    setWeb3AuthState,
-    setError: setStoreError
-  } = useAuthStore()
-
-  // Local form state
   const [step, setStep] = useState(1)
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    country: 'CH',
-    acceptTerms: '',
-    plan: ''
-  })
+  const { setCurrentUser } = useAuthStore()
+  // Use the web3auth hook
+  const {
+    web3auth,
+    provider,
+    loading: web3Loading,
+    injectedAdapters,
+    login,
+    loginWithAdapter
+  } = useWeb3Auth()
 
   // GraphQL mutations and queries
   const [checkRegistration] = useLazyQuery(IS_USER_REGISTERED)
-  const [registerUser] = useMutation(REGISTER_USER)
+  // const [registerUser] = useMutation(REGISTER_USER)
+  const [registerUser] = useMutation(CREATE_USER)
 
-  // Derived values from store
-  const userPublicKey = currentUser?.publicKey || ''
+  // Form state
+  const [formData, setFormData] = useState({
+    email: initialData?.userInfo?.email || '',
+    username: '',
+    publicKey: initialData?.publicKey || '',
+    firstName: initialData?.userInfo?.name?.split(' ')[0] || '',
+    lastName: initialData?.userInfo?.name?.split(' ')[1] || '',
+    country: 'CH',
+    acceptTerms: new Date().toISOString(),
+    plan: '',
+  })
 
-  const getLocalStorage = () => {
-    if (typeof window !== 'undefined') {
-      return window.localStorage
-    }
-    return null
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? Date.now() : value
+    }))
   }
 
-  const handleInputChange = (e: any) => {
-    const { name, value, type, checked } = e.target
-    setFormData((prevData) => {
-      const newData = {
-        ...prevData,
-        [name]: type === 'checkbox' ? Date.now() : value
-      }
-      // Save to localStorage
-      const storage = getLocalStorage()
-      if (storage) {
-        storage.setItem('signupFormData', JSON.stringify(newData))
-      }
-      return newData
-    })
-  }
-
-  const fetchUserInfo = async () => {
+  const handleLogin = useCallback(async (adapterName: string) => {
     try {
-      if (!web3auth || !web3auth.provider) {
-        throw new Error("Web3Auth not initialized or no provider")
-      }
-
-      const rpc = new RPC(web3auth.provider)
-      const accounts = await rpc.getAccounts()
-      const publicKey = accounts[0]
-      
-      const user = await web3auth.getUserInfo()
-      
-      // Update store with user info
-      setUserInfo({
-        email: user.email || '',
-        name: user.name || '',
-        profileImage: user.profileImage || ''
-      })
-
-      const _isRegistered = await checkRegistration({ 
-        variables: { publicKey } 
-      })
-      
-      if (_isRegistered.data.isUserRegistered) {
-        setWeb3AuthState({
-          loggedIn: true
-        })
-      } else {
-        // Register new user
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'
-        await fetch(`${baseUrl}/api/auth/register`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            country: formData.country,
-            email: user.email || '',
-            password: publicKey,
-            publicKey: publicKey
-          }),
-        })
-      }
-    } catch (error) {
-      console.error("Error fetching user info:", error)
-      setStoreError(error as Error)
-    }
-  }
-
-  const loginWithGoogle = async () => {
-    try {
-      if (!web3auth) {
-        console.error("Web3Auth not initialized yet")
-        return
-      }
-
-      if (web3auth.connected) {
-        await fetchUserInfo()
-        return
-      }
-
-      const web3authProvider = await web3auth.connectTo(WALLET_ADAPTERS.AUTH, {
-        loginProvider: "google",
-      })
-
-      if (!web3authProvider) {
-        throw new Error('No provider')
-      }
-
-      setWeb3AuthState({
-        provider: web3authProvider,
-        loggedIn: true
-      })
-      
-      await fetchUserInfo()
-
-    } catch (error) {
-      console.error("Error during Google login:", error)
-      if (error instanceof Error && error.message.includes("Already connected")) {
-        await fetchUserInfo()
-      } else {
-        setStoreError(error as Error)
-        toast({
-          title: 'Login Failed',
-          description: 'Failed to login with Google. Please try again.',
-          variant: 'destructive'
-        })
-      }
-    }
-  }
-
-  const loginWithAdapter = async (adapterName: string) => {
-    try {
-      if (!web3auth) {
-        throw new Error("web3auth not initialized yet")
-      }
-
-      const web3authProvider = await web3auth.connectTo(adapterName)
-      
-      setWeb3AuthState({
-        provider: web3authProvider,
-        loggedIn: true
-      })
-
-      await fetchUserInfo()
-
+      await loginWithAdapter(adapterName)
       toast({
         title: 'Connected',
-        description: 'Successfully connected to your wallet',
+        description: 'Successfully connected wallet'
       })
     } catch (error) {
-      console.error('Login with adapter error:', error)
-      setStoreError(error as Error)
+      console.error('Login error:', error)
       toast({
-        title: 'Failed to connect',
-        description: 'Failed to connect to your wallet',
+        title: 'Connection Failed',
+        description: 'Failed to connect wallet',
+        variant: 'destructive'
+      })
+    }
+  }, [loginWithAdapter, toast])
+
+  const handleRegistration = async () => {
+    if (!formData.firstName || !formData.lastName || !formData.country || !formData.publicKey) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please fill in all required fields and connect your wallet',
+        variant: 'destructive'
+      })
+      return
+    }
+  
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'
+      const response = await fetch(`${baseUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.publicKey, // Using publicKey as password
+          publicKey: formData.publicKey,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          country: formData.country,
+          profilePictureUrl: initialData?.userInfo?.profileImage || ''
+        })
+      })
+  
+      const data = await response.json()
+  
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed')
+      }
+
+      // export interface User {
+      //   _id?: string
+      //   uuid: string
+      //   email: string
+      //   username: string
+      //   publicKey: string
+      //   firstName?: string
+      //   lastName?: string
+      //   investorInfo?: any
+      //   baseProfile?: any
+      //   createdAt: string
+      //   updatedAt: string
+      //   lastLogin?: string
+      //   isActive: boolean
+      //   isVerified: boolean
+      //   role: string
+      //   verificationToken?: string
+      //   solanaTransactionId?: string
+      //   phoneNumber?: string
+      //   kycInfo?: any
+      // }
+  
+      setCurrentUser({
+              _id: data.userId,
+              uuid: data.uuid,
+              publicKey: formData.publicKey,
+              email: formData.email,
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              username: `user_${formData.publicKey.slice(-4)}`,
+              isActive: true,
+              isVerified: false,
+              role: 'USER',
+              baseProfile: {
+                displayName: `${formData.firstName} ${formData.lastName}`,
+                displayRole: 'USER',
+                photoUrl: initialData?.userInfo?.profileImage || '',
+                bio: ''
+              }
+            })
+  
+      toast({
+        title: 'Registration Successful',
+        description: 'Your account has been created successfully'
+      })
+  
+      setStep(2)
+  
+    } catch (error) {
+      console.error('Registration error:', error)
+      toast({
+        title: 'Registration Failed',
+        description: error instanceof Error ? error.message : 'Failed to register user',
         variant: 'destructive'
       })
     }
   }
 
-  const handleLogin = useCallback(async (adapterName: string) => {
-      await loginWithAdapter(adapterName)
-    }, [loginWithAdapter])
-
-  // Load saved form data
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storage = getLocalStorage()
-      if (storage) {
-        const savedData = storage.getItem('signupFormData')
-        if (savedData) {
-          setFormData(JSON.parse(savedData))
-        }
-      }
-    }
-  }, [])
-
-  if (!web3auth || loading) {
+  if (web3Loading) {
     return <LoadingSpinner />
   }
 
   return (
-    <div className="fixed h-full inset-0 bg-black bg-opacity-100 flex items-center justify-center z-[100]">
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10" />
-      <div className="bg-transparent rounded-lg p-6 w-full max-w-4xl relative z-20">
-        <Button 
-          onClick={() => router.push('/')} 
+    <div className="fixed inset-0 z-[100] flex h-full items-center justify-center bg-black bg-opacity-100">
+      <div className="fixed inset-0 z-10 flex items-center justify-center bg-black bg-opacity-50" />
+      <div className="relative z-20 w-full max-w-4xl rounded-lg bg-transparent p-6">
+        <Button
+          onClick={() => router.push('/')}
           className="absolute -top-10 right-2 z-30"
         >
           Close
         </Button>
-        <Progress 
-          className='w-full my-6 shadow-sm rounded-full bg-gradient-to-r from-primary to-secondary' 
-          value={step === 1 ? 50 : 100} 
-          max={100} 
+        
+        <Progress
+          className="my-6 w-full rounded-full bg-gradient-to-r from-primary to-secondary shadow-sm"
+          value={step === 1 ? 50 : 100}
         />
 
         {step === 1 ? (
-          <div className='flex flex-row gap-6'>
-            <Card className='bg-primary p-8 flex flex-col text-secondary border-none w-full md:w-1/2'>
-              <h3 className="text-xl font-bold mb-4">FILL YOUR ACCOUNT INFORMATION</h3>
-              <div className="flex flex-col gap-4 mb-4">
+          <div className="flex flex-row gap-6">
+            <Card className="flex w-full flex-col border-none bg-primary p-8 text-secondary md:w-1/2">
+              <h3 className="mb-4 text-xl font-bold">FILL YOUR ACCOUNT INFORMATION</h3>
+              
+              <div className="mb-4 flex flex-col gap-4">
                 <input
                   type="text"
                   name="firstName"
                   placeholder="First name"
                   value={formData.firstName}
                   onChange={handleInputChange}
-                  className="border p-2 rounded"
+                  className="rounded border p-2"
                   required
                 />
+                
                 <input
                   type="text"
                   name="lastName"
                   placeholder="Last name"
                   value={formData.lastName}
                   onChange={handleInputChange}
-                  className="border p-2 rounded"
+                  className="rounded border p-2"
                   required
                 />
+                
                 <select
                   name="country"
                   value={formData.country}
                   onChange={handleInputChange}
-                  className="border p-2 rounded"
+                  className="rounded border p-2"
                   required
                 >
-                  <option value='CH' label='Switzerland 🇨🇭'>
-                    Switzerland 🇨🇭
-                  </option>
-                  {countries.map(country => (
-                    <option key={country.value} value={country.label}>
+                  <option value="CH">Switzerland 🇨🇭</option>
+                  {countries.map((country) => (
+                    <option key={country.value} value={country.value}>
                       {country.label}
                     </option>
                   ))}
                 </select>
 
                 <div className="mt-4">
-                  <h3 className="text-xl font-bold mb-2">CONNECT A WALLET</h3>
-                  <div className="flex flex-col justify-evenly mb-4 gap-4">
-                    <Button 
-                      disabled={loggedIn || userPublicKey ? true : false} 
-                      variant="outline" 
-                      className='w-full rounded-full border-none font-urbanist text-lg hover:bg-secondary hover:text-primary' 
-                      style={{boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)'}} 
-                      onClick={loginWithGoogle}
+                  <h3 className="mb-2 text-xl font-bold">CONNECT A WALLET</h3>
+                  <div className="mb-4 flex flex-col justify-evenly gap-4">
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-full border-none font-urbanist text-lg hover:bg-secondary hover:text-primary"
+                      onClick={() => login()}
+                      disabled={!!formData.publicKey}
                     >
                       Google
                     </Button>
+                    
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button 
-                          disabled={loggedIn || userPublicKey ? true : false} 
-                          variant='default'
-                          className='w-full rounded-full border-secondary font-urbanist text-lg hover:bg-secondary hover:text-primary'
+                        <Button
+                          variant="default"
+                          className="w-full rounded-full border-secondary font-urbanist text-lg hover:bg-secondary hover:text-primary"
+                          disabled={!!formData.publicKey}
                         >
-                          Connect 
-                          {['phantom', 'solflare', 'backpack', 'ledger'].map(icon => (
-                            <img 
-                              key={icon} 
-                              src={`/login/${icon}_icon.svg`} 
-                              alt={icon} 
-                              className='ml-2' 
-                              style={{ width: '20px', height: '20px'}} 
-                            />
-                          ))}
+                          Connect Wallet
+                          <div className="ml-2 flex">
+                            {['phantom', 'solflare', 'backpack', 'ledger'].map(icon => (
+                              <img
+                                key={icon}
+                                src={`/login/${icon}_icon.svg`}
+                                alt={icon}
+                                className="h-5 w-5"
+                              />
+                            ))}
+                          </div>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56 z-[201]">
+                      
+                      <DropdownMenuContent className="z-[201] w-56">
                         <DropdownMenuGroup>
-                          {defaultSolanaAdapters?.map((adapter: IAdapter<unknown>) => (
-                            <DropdownMenuItem 
-                              key={adapter.name.toUpperCase()} 
+                          {injectedAdapters?.map((adapter: IAdapter<unknown>) => (
+                            <DropdownMenuItem
+                              key={adapter.name}
                               onClick={() => handleLogin(adapter.name)}
                             >
-                              <img 
-                                src={`/login/${adapter.name}_icon.svg`} 
-                                alt={adapter.name ?? ''} 
-                                className='ml-2' 
-                                style={{ width: '20px', height: '20px'}} 
+                              <img
+                                src={`/login/${adapter.name.toLowerCase()}_icon.svg`}
+                                alt={adapter.name}
+                                className="mr-2 h-5 w-5"
                               />
                               {adapter.name.charAt(0).toUpperCase() + adapter.name.slice(1)}
                             </DropdownMenuItem>
@@ -345,65 +309,67 @@ export function RegisterForm({ onClose }: RegisterFormProps) {
                 </div>
               </div>
 
-              <Button 
-                disabled={!userPublicKey} 
-                type="submit" 
-                className="bg-secondary text-primary hover:text-secondary px-4 py-2 rounded" 
-                onClick={() => setStep(2)}
+              <Button
+                disabled={!formData.publicKey}
+                onClick={handleRegistration}
+                className="rounded bg-secondary px-4 py-2 text-primary hover:text-secondary"
               >
-                Next 
+                Next
               </Button>
-              <div className="flex text-sm items-center mb-4">
+              
+              <div className="mt-4 text-sm text-gray-600">
                 By continuing, you agree to our Terms and Conditions.
               </div>
             </Card>
 
-            <Card className='bg-bg hidden md:flex flex-col relative w-1/2 text-secondary overflow-hidden'>
-              <div className='h-full w-full rounded-xl bg-[url(/products/rolex-bg.svg)] bg-contain bg-right-middle bg-no-repeat transform translate-x-[4rem] scale-150 translate-y-[7rem] ' />
-              <CardHeader className='absolute bottom-0 left-0 w-1/2'>
-                <CardTitle className='text-xl font-bold'>
+            <Card className="relative hidden w-1/2 flex-col overflow-hidden bg-bg text-secondary md:flex">
+              <div className="bg-right-middle h-full w-full translate-x-[4rem] translate-y-[7rem] scale-150 transform rounded-xl bg-[url(/products/rolex-bg.svg)] bg-contain bg-no-repeat" />
+              <CardHeader className="absolute bottom-0 left-0 w-1/2">
+                <CardTitle className="text-xl font-bold">
                   Buy a fraction of your favorite asset
                 </CardTitle>
-                <CardDescription className='text-md'>
+                <CardDescription className="text-md">
                   Democratizing Luxury one fraction at a time
                 </CardDescription>
               </CardHeader>
             </Card>
           </div>
         ) : (
-          <div className='flex flex-row gap-6'>
-            <Card className='bg-primary p-8 flex flex-col text-secondary border-none w-full md:w-1/2'>
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="flex flex-row gap-6">
+            <Card className="flex w-full flex-col border-none bg-primary p-8 text-secondary md:w-1/2">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500">
                 <Check className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold mb-4">Congratulations!</h3>
-              <p className="mb-4">Your account with The Artisan has been created</p>
-              <p className="mb-4">Head over to your dashboard to learn how to collect!</p>
-              {userPublicKey && (
+              
+              <h3 className="mb-4 text-2xl font-bold">Congratulations!</h3>
+              <p className="mb-4">Your account has been created</p>
+              
+              {formData.publicKey && (
                 <p className="mb-4">
                   <strong>
-                    Wallet: {userPublicKey.slice(0,4)}...{userPublicKey.slice(-4)}
+                    Wallet: {formData.publicKey.slice(0, 4)}...{formData.publicKey.slice(-4)}
                   </strong>
                 </p>
               )}
-              <Button 
+              
+              <Button
                 onClick={() => {
                   onClose()
                   router.push('/dashboard')
-                }} 
-                className="bg-black text-white px-4 py-2 rounded"
+                }}
+                className="rounded bg-black px-4 py-2 text-white"
               >
-                Enter
+                Enter Dashboard
               </Button>
             </Card>
 
-            <Card className='bg-bg hidden md:flex flex-col relative w-1/2 text-secondary overflow-hidden'>
-              <div className='hidden md:flex h-full w-full rounded-xl bg-[url(/products/rolex-bg.svg)] bg-contain bg-right-middle bg-no-repeat transform translate-x-20 scale-150 translate-y-20 ' />
-              <CardHeader className='absolute bottom-0 left-0 w-1/2'>
-                <CardTitle className='text-xl font-bold'>
+            <Card className="relative hidden w-1/2 flex-col overflow-hidden bg-bg text-secondary md:flex">
+              <div className="bg-right-middle hidden h-full w-full translate-x-20 translate-y-20 scale-150 transform rounded-xl bg-[url(/products/rolex-bg.svg)] bg-contain bg-no-repeat md:flex" />
+              <CardHeader className="absolute bottom-0 left-0 w-1/2">
+                <CardTitle className="text-xl font-bold">
                   Buy a fraction of your favorite asset
                 </CardTitle>
-                <CardDescription className='text-md'>
+                <CardDescription className="text-md">
                   Democratizing Luxury one fraction at a time
                 </CardDescription>
               </CardHeader>

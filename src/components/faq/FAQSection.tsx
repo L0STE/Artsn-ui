@@ -40,7 +40,7 @@ const faqs = [
       {
         question: 'How can I liquidate my investment?',
         answer:
-          'Our platform features a secondary marketplace where you can trade your tokens after the initial holding period. The liquidity timeline varies by asset class and is clearly specified in each offering\'s documentation.',
+          "Our platform features a secondary marketplace where you can trade your tokens after the initial holding period. The liquidity timeline varies by asset class and is clearly specified in each offering's documentation.",
       },
     ],
   },
@@ -64,7 +64,7 @@ const faqs = [
       },
     ],
   },
-];
+]
 
 export default function FAQSection() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -95,7 +95,7 @@ export default function FAQSection() {
   }
 
   return (
-    <div className="w-full mx-auto rounded-2xl bg-bg px-[10vw] py-16 mt-12 z-[20]">
+    <div className="z-[20] mx-auto mt-12 w-full rounded-2xl bg-bg px-[10vw] py-16">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

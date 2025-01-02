@@ -1,17 +1,56 @@
 'use client'
-import { Suspense } from 'react';
-import { useRouter } from 'next/navigation';
-import { RegisterForm } from '@/components/register/RegisterForm';
-import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
+
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { RegisterForm } from '@/components/register/RegisterForm'
+import { LoadingSpinner } from '@/components/loading/LoadingSpinner'
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const handleClose = () => { router.push('/dashboard'); };
+  const router = useRouter()
+  const [pendingRegistration, setPendingRegistration] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadRegistrationData = () => {
+      try {
+        const stored = sessionStorage.getItem('pendingRegistration')
+        if (stored) {
+          setPendingRegistration(JSON.parse(stored))
+        } else {
+          console.log('No pending registration found')
+          router.push('/login')
+        }
+      } catch (error) {
+        console.error('Error loading registration data:', error)
+        router.push('/login')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadRegistrationData()
+  }, [router])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    )
+  }
+
+  if (!pendingRegistration) {
+    return null
+  }
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
-        <p>Register</p>
       <RegisterForm
-        onClose={() => handleClose()}
+        initialData={pendingRegistration}
+        onClose={() => {
+          sessionStorage.removeItem('pendingRegistration')
+          router.push('/dashboard')
+        }}
       />
     </Suspense>
   )

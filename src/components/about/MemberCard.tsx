@@ -1,45 +1,50 @@
-import React from "react";
-import Image from "next/image";
-import { Linkedin, Instagram, Twitter } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { motion } from "framer-motion";
+import React from 'react'
+import Image from 'next/image'
+import { Linkedin, Instagram, Twitter } from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { motion } from 'framer-motion'
 
 type Member = {
-  name: string;
-  title: string;
-  imageUrl: string;
-  achievements: string[];
+  name: string
+  title: string
+  imageUrl: string
+  achievements: string[]
   socialLinks: {
-    linkedin?: string;
-    instagram?: string;
-    twitter?: string;
-  };
-};
+    linkedin?: string
+    instagram?: string
+    twitter?: string
+  }
+}
 
 type SocialIcon = {
-  url: string | undefined;
-  Icon: React.ForwardRefExoticComponent<React.SVGProps<SVGSVGElement> & { size?: string | number; className?: string }>;
-  label: string;
-};
+  url: string | undefined
+  Icon: React.ForwardRefExoticComponent<
+    React.SVGProps<SVGSVGElement> & {
+      size?: string | number
+      className?: string
+    }
+  >
+  label: string
+}
 
-const MotionCard = motion(Card);
-const MotionAvatar = motion(Avatar);
+const MotionCard = motion(Card)
+const MotionAvatar = motion(Avatar)
 
-const MemberCard = ({ member, index } : { member: Member, index: number}) => {
-  const MotionLink = motion("a");
-  
+const MemberCard = ({ member, index }: { member: Member; index: number }) => {
+  const MotionLink = motion('a')
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="flex justify-center h-full"
+      className="flex h-full justify-center"
     >
-      <Card className="w-full max-w-sm bg-white hover:shadow-lg transition-all duration-300 flex flex-col rounded-3xl p-6">
+      <Card className="flex w-full max-w-sm flex-col rounded-3xl bg-white p-6 transition-all duration-300 hover:shadow-lg">
         {/* Profile Section */}
-        <div className="text-center space-y-4">
-          <div className="relative w-32 h-32 mx-auto">
+        <div className="space-y-4 text-center">
+          <div className="relative mx-auto h-32 w-32">
             <Image
               src={member.imageUrl}
               alt={member.name}
@@ -56,28 +61,37 @@ const MemberCard = ({ member, index } : { member: Member, index: number}) => {
         </div>
 
         {/* Achievements Section */}
-        <div className="flex-1 flex flex-col mt-4">
-          <ul className="space-y-2 text-gray-600 text-left">  {/* Added text-left */}
+        <div className="mt-4 flex flex-1 flex-col">
+          <ul className="space-y-2 text-left text-gray-600">
+            {' '}
+            {/* Added text-left */}
             {member.achievements.map((achievement: string, i: number) => (
               <li key={i} className="flex items-start">
-                <span className="text-gray-400 mr-2 flex-shrink-0">•</span>
+                <span className="mr-2 flex-shrink-0 text-gray-400">•</span>
                 <span className="text-base">{achievement}</span>
               </li>
             ))}
           </ul>
 
           {/* Social Icons Section with divider */}
-          {Object.entries(member.socialLinks).some(([_, url]) => url && url !== "#") && (
+          {Object.entries(member.socialLinks).some(
+            ([_, url]) => url && url !== '#'
+          ) && (
             <div className="mt-auto">
-              <div className="w-full h-px bg-gray-200 my-6" /> {/* Added divider */}
+              <div className="my-6 h-px w-full bg-gray-200" />{' '}
+              {/* Added divider */}
               <div className="flex justify-center space-x-4">
                 {Object.entries(member.socialLinks).map(([platform, url]) => {
-                  if (!url || url === "#") return null;
+                  if (!url || url === '#') return null
 
-                  const Icon = platform.toLowerCase() === "linkedin" ? Linkedin :
-                              platform.toLowerCase() === "twitter" ? Twitter : null;
+                  const Icon =
+                    platform.toLowerCase() === 'linkedin'
+                      ? Linkedin
+                      : platform.toLowerCase() === 'twitter'
+                        ? Twitter
+                        : null
 
-                  if (!Icon) return null;
+                  if (!Icon) return null
 
                   return (
                     <MotionLink
@@ -85,13 +99,13 @@ const MemberCard = ({ member, index } : { member: Member, index: number}) => {
                       href={url as string}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                      className="text-gray-400 transition-colors hover:text-gray-600"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                     >
                       <Icon size={20} />
                     </MotionLink>
-                  );
+                  )
                 })}
               </div>
             </div>
@@ -99,7 +113,7 @@ const MemberCard = ({ member, index } : { member: Member, index: number}) => {
         </div>
       </Card>
     </motion.div>
-  );
-};
+  )
+}
 
-export default MemberCard;
+export default MemberCard

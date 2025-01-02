@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useKYC } from '@/hooks/use-kyc';
-import { countries } from '@/lib/countries';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { useKYC } from '@/hooks/use-kyc'
+import { countries } from '@/lib/countries'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Form,
   FormControl,
@@ -13,7 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from '@/components/ui/form'
 import {
   Card,
   CardHeader,
@@ -21,14 +21,14 @@ import {
   CardContent,
   CardDescription,
   CardFooter,
-} from '@/components/ui/card';
+} from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/select'
 
 // Form validation schema
 const kycFormSchema = z.object({
@@ -41,24 +41,30 @@ const kycFormSchema = z.object({
     .min(2, { message: 'Last name must be at least 2 characters' })
     .max(50),
   email: z.string().email({ message: 'Please enter a valid email address' }),
-  dateOfBirth: z.string().refine((dob) => {
-    const date = new Date(dob);
-    const age = (new Date().getTime() - date.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-    return age >= 18;
-  }, { message: 'You must be at least 18 years old' }),
-  phoneNumber: z.string().min(10, { message: 'Please enter a valid phone number' }),
+  dateOfBirth: z.string().refine(
+    (dob) => {
+      const date = new Date(dob)
+      const age =
+        (new Date().getTime() - date.getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+      return age >= 18
+    },
+    { message: 'You must be at least 18 years old' }
+  ),
+  phoneNumber: z
+    .string()
+    .min(10, { message: 'Please enter a valid phone number' }),
   countryCode: z.string().min(2, { message: 'Please select a country' }).max(2),
-});
+})
 
-type KYCFormValues = z.infer<typeof kycFormSchema>;
+type KYCFormValues = z.infer<typeof kycFormSchema>
 
 interface KYCVerificationProps {
-  onComplete?: () => void;
-  className?: string;
+  onComplete?: () => void
+  className?: string
 }
 
 const KycForm = ({ onComplete, className }: KYCVerificationProps) => {
-  const { startKYCVerification, kycStatus, loading, verificationUrl } = useKYC();
+  const { startKYCVerification, kycStatus, loading, verificationUrl } = useKYC()
   const form = useForm<KYCFormValues>({
     resolver: zodResolver(kycFormSchema),
     defaultValues: {
@@ -69,42 +75,43 @@ const KycForm = ({ onComplete, className }: KYCVerificationProps) => {
       phoneNumber: '',
       countryCode: '',
     },
-  });
+  })
 
   const onSubmit = async (data: KYCFormValues) => {
     await startKYCVerification({
       ...data,
       phoneNumber: parseInt(data.phoneNumber.replace(/[^0-9]/g, ''), 10),
-    });
-    onComplete?.();
-  };
+    })
+    onComplete?.()
+  }
 
   if (verificationUrl) {
     return (
-      <Card className="w-full max-w-lg mx-auto">
+      <Card className="mx-auto w-full max-w-lg">
         <CardHeader>
           <CardTitle>Complete Your Verification</CardTitle>
           <CardDescription>
-            Please complete your verification process by clicking the button below.
+            Please complete your verification process by clicking the button
+            below.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button
             className="w-full"
             onClick={() => {
-              window.open(verificationUrl, '_blank');
-              onComplete?.();
+              window.open(verificationUrl, '_blank')
+              onComplete?.()
             }}
           >
             Start Verification Process
           </Button>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
-    <Card className={`w-full max-w-lg mx-auto ${className || ''}`}>
+    <Card className={`mx-auto w-full max-w-lg ${className || ''}`}>
       <CardHeader>
         <CardTitle>KYC Verification</CardTitle>
         <CardDescription>
@@ -191,7 +198,7 @@ const KycForm = ({ onComplete, className }: KYCVerificationProps) => {
                       <SelectContent>
                         {countries.map((country, index) => (
                           <SelectItem key={index} value={country.value}>
-                          {country.label}
+                            {country.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -217,18 +224,14 @@ const KycForm = ({ onComplete, className }: KYCVerificationProps) => {
             </div>
           </CardContent>
           <CardFooter>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Starting Verification...' : 'Start KYC Verification'}
             </Button>
           </CardFooter>
         </form>
       </Form>
     </Card>
-  );
-};
+  )
+}
 
-export default KycForm;
+export default KycForm

@@ -1,4 +1,4 @@
-'use client';
+'use client'
 // import { useState, useEffect } from 'react';
 // import Breadcrumb from "./components/Breadcrumb";
 // import SidebarFilter from "./components/Sidebar";
@@ -9,7 +9,6 @@
 // import {
 //   useArtisanProgram,
 // } from '@/components/blockchain/protocolAccess';
-  
 
 // const products = [
 //   {
@@ -186,48 +185,47 @@
 //   );
 // }
 
-import React, { useState, useEffect, useMemo } from 'react';
-import Breadcrumb from "./components/Breadcrumb";
-import SidebarFilter from "./components/Sidebar";
-import ProductCard from "@/components/product/components/ProductCard";
-import ReferralCard from "./components/ReferralCard";
-import { useArtisanProgram } from '@/components/blockchain/protocolAccess';
-import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
-import { fetchCollectionV1 } from '@metaplex-foundation/mpl-core';
-import { publicKey } from '@metaplex-foundation/umi';
-import { LoadingSpinner } from '@/components/loading/LoadingSpinner';
+import React, { useState, useEffect, useMemo } from 'react'
+import Breadcrumb from './components/Breadcrumb'
+import SidebarFilter from './components/Sidebar'
+import ProductCard from '@/components/product/components/ProductCard'
+import ReferralCard from './components/ReferralCard'
+import { useArtisanProgram } from '@/components/blockchain/protocolAccess'
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults'
+import { fetchCollectionV1 } from '@metaplex-foundation/mpl-core'
+import { publicKey } from '@metaplex-foundation/umi'
+import { LoadingSpinner } from '@/components/loading/LoadingSpinner'
 
-
-export type ObjectType = 'all' | 'watch' | 'diamond';
+export type ObjectType = 'all' | 'watch' | 'diamond'
 
 export interface FilterState {
-  objectType: ObjectType;
-  model: string[];
-  color: string[];
-  movement: string[];
+  objectType: ObjectType
+  model: string[]
+  color: string[]
+  movement: string[]
   priceRange: {
-    min: number;
-    max: number;
-  };
+    min: number
+    max: number
+  }
 }
 
 export interface AvailableFilters {
-  objectTypes: ObjectType[];
-  models: string[];
-  colors: string[];
-  movements: string[];
+  objectTypes: ObjectType[]
+  models: string[]
+  colors: string[]
+  movements: string[]
 }
 
 export interface SidebarFilterProps {
-  filters: FilterState;
-  onFilterChange: (newFilters: Partial<FilterState>) => void;
-  availableFilters: AvailableFilters;
+  filters: FilterState
+  onFilterChange: (newFilters: Partial<FilterState>) => void
+  availableFilters: AvailableFilters
 }
 
 const Marketplace = () => {
-  const { listings } = useArtisanProgram();
-  const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<any[]>([]);
+  const { listings } = useArtisanProgram()
+  const [loading, setLoading] = useState(true)
+  const [products, setProducts] = useState<any[]>([])
   const [filters, setFilters] = useState<FilterState>({
     objectType: 'all',
     model: [],
@@ -235,160 +233,171 @@ const Marketplace = () => {
     movement: [],
     priceRange: {
       min: 0,
-      max: Infinity
-    }
-  });
+      max: Infinity,
+    },
+  })
 
-  const umi = useMemo(() => 
-    createUmi('https://soft-cold-energy.solana-devnet.quiknode.pro/ad0dda04b536ff45a76465f9ceee5eea6a048a8f'),
+  const umi = useMemo(
+    () =>
+      createUmi(
+        'https://soft-cold-energy.solana-devnet.quiknode.pro/ad0dda04b536ff45a76465f9ceee5eea6a048a8f'
+      ),
     []
-  );
+  )
 
   // Fetch product details
   useEffect(() => {
     const fetchProductDetails = async () => {
-      if (!listings.data) return;
-      
+      if (!listings.data) return
+
       try {
         const productPromises = listings.data.map(async (listing: any) => {
           const productDetails = await fetchCollectionV1(
-            umi, 
+            umi,
             publicKey(listing.account.object.toString())
-          );
-          
+          )
+
           return {
             ...listing,
             details: productDetails,
-            type: listing.account.objectType
-          };
-        });
+            type: listing.account.objectType,
+          }
+        })
 
-        const productsWithDetails = await Promise.all(productPromises);
-        setProducts(productsWithDetails);
-        setLoading(false);
+        const productsWithDetails = await Promise.all(productPromises)
+        setProducts(productsWithDetails)
+        setLoading(false)
       } catch (error) {
-        console.error('Error fetching product details:', error);
-        setLoading(false);
+        console.error('Error fetching product details:', error)
+        setLoading(false)
       }
-    };
+    }
 
-    fetchProductDetails();
-  }, [listings.data, umi]);
+    fetchProductDetails()
+  }, [listings.data, umi])
   const getObjectType = (objectType: any): string => {
-    if (objectType?.watch !== undefined) return 'watch';
-    if (objectType?.diamond !== undefined) return 'diamond';
-    return 'unknown';
-  };
-  
+    if (objectType?.watch !== undefined) return 'watch'
+    if (objectType?.diamond !== undefined) return 'diamond'
+    return 'unknown'
+  }
+
   // Inside your Marketplace component:
   const availableFilters: AvailableFilters = useMemo(() => {
     const initialFilters = {
       objectTypes: ['watch', 'diamond'] as ObjectType[],
       models: [] as string[],
       colors: [] as string[],
-      movements: [] as string[]
-    };
-  
-    if (!products?.length) return initialFilters;
-  
-    products.forEach(product => {
+      movements: [] as string[],
+    }
+
+    if (!products?.length) return initialFilters
+
+    products.forEach((product) => {
       // Get the correct object type
-      const type = getObjectType(product.account.objectType);
-      
+      const type = getObjectType(product.account.objectType)
+
       // Get all attributes from the product
-      const attributes = product.details?.attributeList || [];
-      
+      const attributes = product.details?.attributeList || []
+
       attributes.forEach((attr: any) => {
-        const { key, value } = attr;
-        
+        const { key, value } = attr
+
         if (value) {
-          switch(key) {
+          switch (key) {
             case 'brand':
               if (!initialFilters.models.includes(value)) {
-                initialFilters.models.push(value);
+                initialFilters.models.push(value)
               }
-              break;
+              break
             case 'dialColor':
             case 'color':
               if (!initialFilters.colors.includes(value)) {
-                initialFilters.colors.push(value);
+                initialFilters.colors.push(value)
               }
-              break;
+              break
             case 'movement':
               if (!initialFilters.movements.includes(value)) {
-                initialFilters.movements.push(value);
+                initialFilters.movements.push(value)
               }
-              break;
+              break
           }
         }
-      });
-    });
-  
-    console.log('Available filters:', initialFilters);
-    return initialFilters;
-  }, [products]);
-  
+      })
+    })
+
+    console.log('Available filters:', initialFilters)
+    return initialFilters
+  }, [products])
+
   // Update the filtering logic
   const filteredProducts = useMemo(() => {
-    return products.filter(product => {
+    return products.filter((product) => {
       // Get the correct object type
-      const productType = getObjectType(product.account.objectType);
-      
-      const attributes = product.details?.attributeList?.reduce((acc: any, attr: any) => {
-        acc[attr.key] = attr.value;
-        return acc;
-      }, {}) || {};
-  
+      const productType = getObjectType(product.account.objectType)
+
+      const attributes =
+        product.details?.attributeList?.reduce((acc: any, attr: any) => {
+          acc[attr.key] = attr.value
+          return acc
+        }, {}) || {}
+
       // Category filter
       if (filters.objectType !== 'all' && productType !== filters.objectType) {
-        return false;
+        return false
       }
-  
+
       // Brand/Model filter
-      if (filters.model.length > 0 && !filters.model.includes(attributes.brand)) {
-        return false;
+      if (
+        filters.model.length > 0 &&
+        !filters.model.includes(attributes.brand)
+      ) {
+        return false
       }
-  
+
       // Color filter
       if (filters.color.length > 0) {
-        const colorValue = productType === 'watch' ? attributes.dialColor : attributes.color;
+        const colorValue =
+          productType === 'watch' ? attributes.dialColor : attributes.color
         if (!filters.color.includes(colorValue)) {
-          return false;
+          return false
         }
       }
-  
+
       // Movement filter (watches only)
-      if (productType === 'watch' && 
-          filters.movement.length > 0 && 
-          !filters.movement.includes(attributes.movement)) {
-        return false;
+      if (
+        productType === 'watch' &&
+        filters.movement.length > 0 &&
+        !filters.movement.includes(attributes.movement)
+      ) {
+        return false
       }
-  
+
       // Price filter
-      const price = Number(product.account.price.toString());
-      if (price < filters.priceRange.min || 
-         (filters.priceRange.max !== Infinity && price > filters.priceRange.max)) {
-        return false;
+      const price = Number(product.account.price.toString())
+      if (
+        price < filters.priceRange.min ||
+        (filters.priceRange.max !== Infinity && price > filters.priceRange.max)
+      ) {
+        return false
       }
-  
-      return true;
-    });
-  }, [products, filters]);
-  
+
+      return true
+    })
+  }, [products, filters])
 
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
-    console.log('Applying filters:', newFilters);
-    setFilters(prev => ({
+    console.log('Applying filters:', newFilters)
+    setFilters((prev) => ({
       ...prev,
-      ...newFilters
-    }));
-  };
+      ...newFilters,
+    }))
+  }
 
   return (
     <div className="mt-20">
       <Breadcrumb />
-      <div className="bg-gray-light min-h-screen px-6 py-5 border border-b-gray">
-        <div className="max-w-screen-xl mx-auto flex flex-wrap">
+      <div className="bg-gray-light border-b-gray min-h-screen border px-6 py-5">
+        <div className="mx-auto flex max-w-screen-xl flex-wrap">
           {/* <div className="hidden md:flex w-full md:w-1/4 md:pr-4 mb-4">
           <SidebarFilter 
             filters={filters}
@@ -397,7 +406,7 @@ const Marketplace = () => {
           />
           </div> */}
 
-          <div className="w-full md:w-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-3">
+          <div className="grid w-full grid-cols-1 gap-3 md:w-full md:grid-cols-3 lg:grid-cols-3">
             {filteredProducts.map((product, index) => (
               <React.Fragment key={product.publicKey.toString()}>
                 {index === 2 && <ReferralCard />}
@@ -413,7 +422,7 @@ const Marketplace = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Marketplace;
+export default Marketplace

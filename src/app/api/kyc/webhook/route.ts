@@ -1,36 +1,36 @@
 // app/api/kyc/webhook/route.ts
-import { NextResponse } from 'next/server';
-import { MongoClient, ObjectId } from 'mongodb';
-import { headers } from 'next/headers';
-import { connectToDatabase } from '@/config/mongodb';
+import { NextResponse } from 'next/server'
+import { MongoClient, ObjectId } from 'mongodb'
+import { headers } from 'next/headers'
+import { connectToDatabase } from '@/config/mongodb'
 
 interface OndatoWebhookPayload {
-  id: string;
-  applicationId: string;
-  createdUtc: string;
+  id: string
+  applicationId: string
+  createdUtc: string
   payload: {
-    id: string;
-    status: string;
-    statusReason: string;
-    completedUtc: string;
+    id: string
+    status: string
+    statusReason: string
+    completedUtc: string
     document?: {
-      type: string;
+      type: string
       files: Array<{
-        fileId: string;
-        fileName: string;
-        fileType: string;
-        part: string;
-      }>;
-    };
-  };
-  type: string;
+        fileId: string
+        fileName: string
+        fileType: string
+        part: string
+      }>
+    }
+  }
+  type: string
 }
 
 interface KYCDocument {
-  fileId: string;
-  fileName: string;
-  type: string;
-  part: string;
+  fileId: string
+  fileName: string
+  type: string
+  part: string
 }
 
 // KYC Status mapping to match your schema
@@ -39,91 +39,102 @@ const KYC_STATUS_MAPPING = {
   Rejected: 'REJECTED',
   Processing: 'PENDING',
   Failed: 'FAILED',
-} as const;
+} as const
 
 export async function POST(request: Request) {
-  let client;
+  let client
   try {
-    const webhookData: OndatoWebhookPayload = await request.json();
-    console.log('Received webhook data:', JSON.stringify(webhookData, null, 2));
+    const webhookData: OndatoWebhookPayload = await request.json()
+    console.log('Received webhook data:', JSON.stringify(webhookData, null, 2))
 
     if (webhookData.type !== 'KycIdentification.Updated') {
-      return NextResponse.json({ received: true, message: 'Webhook type not processed' });
+      return NextResponse.json({
+        received: true,
+        message: 'Webhook type not processed',
+      })
     }
 
     if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI is not defined');
+      throw new Error('MONGODB_URI is not defined')
     }
-    
-    const { db } = await connectToDatabase();
-    const collection = db.collection('users');
 
-    
-     // Find user by KYC ID
+    const { db } = await connectToDatabase()
+    const collection = db.collection('users')
+
+    // Find user by KYC ID
     const user = await collection.findOne({
-      'kycInfo.idvId': webhookData.payload.id
-    });
+      'kycInfo.idvId': webhookData.payload.id,
+    })
 
     if (!user) {
-      console.log('User not found, trying to find by partial match...');
-      const usersWithKyc = await collection.find({
-        'kycInfo': { $exists: true }
-      }).toArray();
-      
+      console.log('User not found, trying to find by partial match...')
+      const usersWithKyc = await collection
+        .find({
+          kycInfo: { $exists: true },
+        })
+        .toArray()
+
       return NextResponse.json(
-        { 
+        {
           error: 'User not found',
           debug: {
             searchedId: webhookData.payload.id,
-            availableUsers: usersWithKyc.length
-          }
+            availableUsers: usersWithKyc.length,
+          },
         },
         { status: 404 }
-      );
+      )
     }
 
     // Process document files
-    const kycDocuments = webhookData.payload.document?.files.map(file => ({
-      fileId: file.fileId,
-      fileName: file.fileName,
-      type: file.fileType,
-      part: file.part,
-    })) || [];
+    const kycDocuments =
+      webhookData.payload.document?.files.map((file) => ({
+        fileId: file.fileId,
+        fileName: file.fileName,
+        type: file.fileType,
+        part: file.part,
+      })) || []
 
     // Create the complete kycInfo object
     const kycInfo = {
       idvId: webhookData.payload.id,
-      kycStatus: KYC_STATUS_MAPPING[webhookData.payload.status as keyof typeof KYC_STATUS_MAPPING] || 'PENDING',
+      kycStatus:
+        KYC_STATUS_MAPPING[
+          webhookData.payload.status as keyof typeof KYC_STATUS_MAPPING
+        ] || 'PENDING',
       kycCompletionDate: webhookData.payload.completedUtc,
       kycDocuments: kycDocuments,
-    };
+    }
 
     // Update the entire kycInfo object at once
     const updateResult = await collection.updateOne(
       { _id: new ObjectId(user._id) },
       { $set: { kycInfo } }
-    );
+    )
 
     // Verify the update
-    const updatedUser = await collection.findOne({ _id: new ObjectId(user._id) });
-    
+    const updatedUser = await collection.findOne({
+      _id: new ObjectId(user._id),
+    })
+
     // Check if the update was successful (either modified or data was the same)
-    const updateSuccessful = updateResult.matchedCount > 0 && 
-      updatedUser?.kycInfo?.kycStatus === kycInfo.kycStatus;
+    const updateSuccessful =
+      updateResult.matchedCount > 0 &&
+      updatedUser?.kycInfo?.kycStatus === kycInfo.kycStatus
 
     if (!updateSuccessful) {
       return NextResponse.json(
-        { 
+        {
           error: 'Update verification failed',
           debug: {
             originalUser: user,
             attemptedUpdate: kycInfo,
             updateResult,
-            finalState: updatedUser?.kycInfo
-          }
+            finalState: updatedUser?.kycInfo,
+          },
         },
         { status: 500 }
-      );
+      )
     }
 
     // Log the successful update
@@ -133,9 +144,9 @@ export async function POST(request: Request) {
       newStatus: updatedUser.kycInfo?.kycStatus,
       updateStats: {
         matched: updateResult.matchedCount,
-        modified: updateResult.modifiedCount
-      }
-    });
+        modified: updateResult.modifiedCount,
+      },
+    })
 
     return NextResponse.json({
       received: true,
@@ -143,21 +154,21 @@ export async function POST(request: Request) {
       userId: user._id,
       kycStatus: updatedUser.kycInfo.kycStatus,
       modified: updateResult.modifiedCount > 0,
-      message: updateResult.modifiedCount === 0 
-        ? 'Webhook received, no changes needed (data already up to date)'
-        : 'Webhook received, KYC information updated successfully'
-    });
-
+      message:
+        updateResult.modifiedCount === 0
+          ? 'Webhook received, no changes needed (data already up to date)'
+          : 'Webhook received, KYC information updated successfully',
+    })
   } catch (error) {
-    console.error('Webhook processing error:', error);
+    console.error('Webhook processing error:', error)
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
-    );
-  } 
+    )
+  }
 }
 
 export async function OPTIONS() {
@@ -167,13 +178,12 @@ export async function OPTIONS() {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-ondato-signature',
+        'Access-Control-Allow-Headers':
+          'Content-Type, Authorization, x-ondato-signature',
       },
     }
-  );
+  )
 }
-
-
 
 // EXAMPLE CURL REQUEST
 // curl -X POST 'http://localhost:3000/api/kyc/webhook' \

@@ -1,19 +1,19 @@
-import { Connection } from '@solana/web3.js';
-import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
-import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
+import { Connection } from '@solana/web3.js'
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults'
+import { dasApi } from '@metaplex-foundation/digital-asset-standard-api'
 
 interface RpcConfig {
-  url: string;
-  weight: number;
-  currentCalls: number;
-  lastUsed: number;
-  isHealthy: boolean;
+  url: string
+  weight: number
+  currentCalls: number
+  lastUsed: number
+  isHealthy: boolean
 }
 
 export class RpcManager {
-  private rpcs: RpcConfig[];
-  private lastRotation: number = 0;
-  private rotationInterval: number = 1000; // 1 second
+  private rpcs: RpcConfig[]
+  private lastRotation: number = 0
+  private rotationInterval: number = 1000 // 1 second
 
   constructor() {
     this.rpcs = [
@@ -22,7 +22,7 @@ export class RpcManager {
         weight: 1,
         currentCalls: 0,
         lastUsed: 0,
-        isHealthy: true
+        isHealthy: true,
       },
       // {
       //   url: 'https://devnet.helius-rpc.com/?api-key=b7faf1b9-5b70-4085-bf8e-a7be3e3b78c2',
@@ -36,64 +36,64 @@ export class RpcManager {
         weight: 3,
         currentCalls: 0,
         lastUsed: 0,
-        isHealthy: true
-      }
-    ];
+        isHealthy: true,
+      },
+    ]
   }
 
   private selectRpc(): RpcConfig {
-    const now = Date.now();
-    
+    const now = Date.now()
+
     // Reset call counts periodically
     if (now - this.lastRotation > this.rotationInterval) {
-      this.rpcs.forEach(rpc => {
-        rpc.currentCalls = 0;
-      });
-      this.lastRotation = now;
+      this.rpcs.forEach((rpc) => {
+        rpc.currentCalls = 0
+      })
+      this.lastRotation = now
     }
 
     // Filter healthy RPCs
-    const healthyRpcs = this.rpcs.filter(rpc => rpc.isHealthy);
+    const healthyRpcs = this.rpcs.filter((rpc) => rpc.isHealthy)
     if (healthyRpcs.length === 0) {
       // If all RPCs are unhealthy, reset them and try again
-      this.rpcs.forEach(rpc => {
-        rpc.isHealthy = true;
-      });
-      return this.selectRpc();
+      this.rpcs.forEach((rpc) => {
+        rpc.isHealthy = true
+      })
+      return this.selectRpc()
     }
 
     // Select RPC with lowest (currentCalls / weight) ratio
     return healthyRpcs.reduce((best, current) => {
-      const bestLoad = best.currentCalls / best.weight;
-      const currentLoad = current.currentCalls / current.weight;
-      return currentLoad < bestLoad ? current : best;
-    });
+      const bestLoad = best.currentCalls / best.weight
+      const currentLoad = current.currentCalls / current.weight
+      return currentLoad < bestLoad ? current : best
+    })
   }
 
   public getConnection(): Connection {
-    const rpc = this.selectRpc();
-    rpc.currentCalls++;
-    rpc.lastUsed = Date.now();
-    return new Connection(rpc.url, 'confirmed');
+    const rpc = this.selectRpc()
+    rpc.currentCalls++
+    rpc.lastUsed = Date.now()
+    return new Connection(rpc.url, 'confirmed')
   }
 
   public getUmi() {
-    const rpc = this.selectRpc();
-    rpc.currentCalls++;
-    rpc.lastUsed = Date.now();
-    return createUmi(rpc.url).use(dasApi());
+    const rpc = this.selectRpc()
+    rpc.currentCalls++
+    rpc.lastUsed = Date.now()
+    return createUmi(rpc.url).use(dasApi())
   }
 
   public markRpcUnhealthy(url: string) {
-    const rpc = this.rpcs.find(r => r.url === url);
+    const rpc = this.rpcs.find((r) => r.url === url)
     if (rpc) {
-      rpc.isHealthy = false;
+      rpc.isHealthy = false
       setTimeout(() => {
-        rpc.isHealthy = true;
-      }, 60000); // Reset after 1 minute
+        rpc.isHealthy = true
+      }, 60000) // Reset after 1 minute
     }
   }
 }
 
 // Create a singleton instance
-export const rpcManager = new RpcManager();
+export const rpcManager = new RpcManager()

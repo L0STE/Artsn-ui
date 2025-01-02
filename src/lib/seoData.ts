@@ -1,17 +1,14 @@
-
 export const socialLinks: any = {
   twitter: 'https://twitter.com/ArtsnFi',
   linkedin: 'https://www.linkedin.com/company/the-artisan-nft/',
-};
-
+}
 
 export const seoData = {
   title: 'The Artisan',
   description:
     'The Artisan is a digital boutique specializing in fractionalized high-end collectibles on the Solana blockchain.',
   author: 'The Artisan',
-  image:
-    '/public/assets/brand-vertical.webp',
+  image: '/public/assets/brand-vertical.webp',
   url: 'https://artisan-one.vercel.app/',
   keywords: [
     'Artisan',
@@ -40,6 +37,5 @@ export const seoData = {
     'Solana Switzerland',
     'ROS',
     'Virtual Boutique',
-
   ],
-};
+}

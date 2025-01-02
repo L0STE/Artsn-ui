@@ -1,18 +1,18 @@
-import { slideUp } from '.';
-import { Variants } from 'framer-motion';
+import { slideUp } from '.'
+import { Variants } from 'framer-motion'
 
 export const sectionVariants = slideUp({
   delay: 0.5,
   duration: 1.75,
   offset: 50,
-});
+})
 
 export const getSectionAnimation = {
   variants: sectionVariants,
   initial: 'hidden',
   whileInView: 'show',
   viewport: { once: true },
-};
+}
 
 export const projectVariants: Variants = {
   hidden: {
@@ -31,4 +31,4 @@ export const projectVariants: Variants = {
       // duration: 0.5,
     },
   }),
-};
+}

@@ -48,11 +48,7 @@ export function LoginDialog({ className }: LoginDialogProps) {
   const { solToUsd } = useSolanaPrice()
 
   // Auth store state
-  const { 
-    currentUser,
-    loading: authLoading,
-    clearAuth
-  } = useAuthStore()
+  const { currentUser, loading: authLoading, clearAuth } = useAuthStore()
 
   // Web3Auth hook
   const {
@@ -61,7 +57,7 @@ export function LoginDialog({ className }: LoginDialogProps) {
     injectedAdapters,
     provider,
     logout,
-    loading: web3Loading
+    loading: web3Loading,
   } = useWeb3Auth()
 
   const loading = authLoading || web3Loading
@@ -127,13 +123,13 @@ export function LoginDialog({ className }: LoginDialogProps) {
     if (currentUser && provider) {
       // Initial fetch
       debouncedFetchBalance()
-  
+
       // Set up polling with rate limiting
       fetchTimeoutRef.current = setInterval(() => {
         debouncedFetchBalance()
       }, MIN_FETCH_INTERVAL)
     }
-  
+
     return () => {
       if (fetchTimeoutRef.current) {
         clearInterval(fetchTimeoutRef.current)
@@ -150,9 +146,9 @@ export function LoginDialog({ className }: LoginDialogProps) {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-9 w-9">
-              <AvatarImage 
-                src={currentUser.baseProfile?.photoUrl || ''} 
-                alt={currentUser.baseProfile?.displayName || 'User'} 
+              <AvatarImage
+                src={currentUser.baseProfile?.photoUrl || ''}
+                alt={currentUser.baseProfile?.displayName || 'User'}
               />
               <AvatarFallback>
                 {currentUser.baseProfile?.displayName?.[0] || 'U'}
@@ -160,17 +156,17 @@ export function LoginDialog({ className }: LoginDialogProps) {
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        
+
         <DropdownMenuContent
           align="end"
-          className="w-[300px] p-4 bg-white dark:bg-white rounded-3xl border border-zinc-300"
+          className="w-[300px] rounded-3xl border border-zinc-300 bg-white p-4 dark:bg-white"
         >
           {/* Profile Section */}
-          <div className="flex items-center space-x-4 mb-4">
+          <div className="mb-4 flex items-center space-x-4">
             <Avatar className="h-12 w-12">
-              <AvatarImage 
-                src={currentUser.baseProfile?.photoUrl} 
-                alt={currentUser.baseProfile?.displayName || 'User'} 
+              <AvatarImage
+                src={currentUser.baseProfile?.photoUrl}
+                alt={currentUser.baseProfile?.displayName || 'User'}
               />
               <AvatarFallback>
                 {currentUser.baseProfile?.displayName?.[0] || 'U'}
@@ -178,11 +174,13 @@ export function LoginDialog({ className }: LoginDialogProps) {
             </Avatar>
             <div>
               <p className="text-sm font-medium">
-                {currentUser.baseProfile?.displayName || `User_${currentUser.publicKey.slice(-4)}`}
+                {currentUser.baseProfile?.displayName ||
+                  `User_${currentUser.publicKey.slice(-4)}`}
               </p>
               <div className="flex items-center text-xs text-gray-500">
                 <span className="truncate">
-                  {currentUser.publicKey.slice(0, 4)}...{currentUser.publicKey.slice(-4)}
+                  {currentUser.publicKey.slice(0, 4)}...
+                  {currentUser.publicKey.slice(-4)}
                 </span>
                 <Copy
                   className="ml-2 h-3 w-3 cursor-pointer"
@@ -196,11 +194,16 @@ export function LoginDialog({ className }: LoginDialogProps) {
           </div>
 
           {/* Balance Section */}
-          <div className="mb-4 p-3 bg-slate-50 rounded-xl">
-            <div className="flex justify-between mb-2">
+          <div className="mb-4 rounded-xl bg-slate-50 p-3">
+            <div className="mb-2 flex justify-between">
               <span className="text-sm">Buying power</span>
               <span className="font-medium">
-                ${userBalance ? (solToUsd(userBalance.sol) + (userBalance.usdc || 0)).toFixed(2) : '0.00'}
+                $
+                {userBalance
+                  ? (
+                      solToUsd(userBalance.sol) + (userBalance.usdc || 0)
+                    ).toFixed(2)
+                  : '0.00'}
               </span>
             </div>
 
@@ -239,7 +242,9 @@ export function LoginDialog({ className }: LoginDialogProps) {
 
           {/* Menu Items */}
           <div className="space-y-1">
-            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+            <DropdownMenuItem
+              onClick={() => router.push('/dashboard/settings')}
+            >
               <Settings2 className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
@@ -261,41 +266,42 @@ export function LoginDialog({ className }: LoginDialogProps) {
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <div className={className}>
-        <Button 
-          variant="secondary" 
-          className="rounded-xl z-[1]" 
+        <Button
+          variant="secondary"
+          className="z-[1] rounded-xl"
           onClick={handleOpen}
         >
           Login
         </Button>
 
         {isOpen && (
-          <div className="fixed h-screen inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[201]">
-            <div 
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10" 
-              onClick={handleClose} 
+          <div className="fixed inset-0 z-[201] flex h-screen items-center justify-center bg-black bg-opacity-50">
+            <div
+              className="fixed inset-0 z-10 flex items-center justify-center bg-black bg-opacity-50"
+              onClick={handleClose}
             />
-            <div className="bg-transparent rounded-lg p-6 w-full max-w-4xl relative z-20">
-              <Button 
-                onClick={handleClose} 
+            <div className="relative z-20 w-full max-w-4xl rounded-lg bg-transparent p-6">
+              <Button
+                onClick={handleClose}
                 className="absolute -top-10 right-2 z-10"
               >
                 Close
               </Button>
 
-              <div className="flex flex-col md:flex-row gap-6">
-                <Card className="bg-transparent flex flex-col text-secondary border-none w-full md:w-1/2 z-[301]">
-                  <CardHeader className="bg-bg rounded-t-xl">
+              <div className="flex flex-col gap-6 md:flex-row">
+                <Card className="z-[301] flex w-full flex-col border-none bg-transparent text-secondary md:w-1/2">
+                  <CardHeader className="rounded-t-xl bg-bg">
                     <CardTitle className="font-bold">
                       Welcome to the Artisan
                     </CardTitle>
                     <CardDescription>
-                      Connect your buyer profile to access the marketplace and begin collecting
+                      Connect your buyer profile to access the marketplace and
+                      begin collecting
                     </CardDescription>
                   </CardHeader>
 
-                  <CardContent className="bg-bg flex flex-col gap-2">
-                    <Button 
+                  <CardContent className="flex flex-col gap-2 bg-bg">
+                    <Button
                       className="w-full rounded-full border-secondary font-urbanist text-lg hover:bg-secondary hover:text-primary"
                       onClick={login}
                       disabled={loading}
@@ -305,38 +311,46 @@ export function LoginDialog({ className }: LoginDialogProps) {
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="default" 
+                        <Button
+                          variant="default"
                           className="w-full rounded-full border-secondary font-urbanist text-lg hover:bg-secondary hover:text-primary"
                           disabled={loading}
                         >
                           <span>Connect Wallet</span>
-                          <div className="flex ml-2">
-                            {['phantom', 'solflare', 'backpack', 'ledger'].map(icon => (
-                              <img 
-                                key={icon} 
-                                src={`/login/${icon}_icon.svg`}
-                                alt={icon} 
-                                className="w-5 h-5" 
-                              />
-                            ))}
+                          <div className="ml-2 flex">
+                            {['phantom', 'solflare', 'backpack', 'ledger'].map(
+                              (icon) => (
+                                <img
+                                  key={icon}
+                                  src={`/login/${icon}_icon.svg`}
+                                  alt={icon}
+                                  className="h-5 w-5"
+                                />
+                              )
+                            )}
                           </div>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-36">
                         <DropdownMenuGroup>
                           {injectedAdapters.map((adapter) => (
-                            <DropdownMenuItem 
-                              key={adapter.name} 
-                              onClick={() => loginWithAdapter(adapter.name)}
+                            <DropdownMenuItem
+                              key={adapter.name}
+                              onClick={() => {
+                                loginWithAdapter(adapter.name),
+                                console.log('adapter', adapter.name)
+                              }}
                               className="flex items-center gap-2"
                             >
-                              <img 
-                                src={`/login/${adapter.name.toLowerCase()}_icon.svg`} 
-                                alt={adapter.name} 
-                                className="w-5 h-5" 
+                              <img
+                                src={`/login/${adapter.name.toLowerCase()}_icon.svg`}
+                                alt={adapter.name}
+                                className="h-5 w-5"
                               />
-                              <span>{adapter.name.charAt(0).toUpperCase() + adapter.name.slice(1)}</span>
+                              <span>
+                                {adapter.name.charAt(0).toUpperCase() +
+                                  adapter.name.slice(1)}
+                              </span>
                             </DropdownMenuItem>
                           ))}
                         </DropdownMenuGroup>
@@ -344,29 +358,30 @@ export function LoginDialog({ className }: LoginDialogProps) {
                     </DropdownMenu>
 
                     <div className="flex items-center">
-                      <div className="flex-grow h-px bg-gray-300" />
+                      <div className="h-px flex-grow bg-gray-300" />
                       <span className="px-4 text-gray-500">OR</span>
-                      <div className="flex-grow h-px bg-gray-300" />
+                      <div className="h-px flex-grow bg-gray-300" />
                     </div>
 
-                    <Button 
-                      onClick={() => router.push('/register')} 
-                      variant="secondary" 
-                      className="w-full rounded-full hover:bg-primary hover:text-secondary hover:border-solid hover:border-2 hover:border-secondary hover:animate-pulse"
+                    <Button
+                      onClick={() => router.push('/register')}
+                      variant="secondary"
+                      className="w-full rounded-full hover:animate-pulse hover:border-2 hover:border-solid hover:border-secondary hover:bg-primary hover:text-secondary"
                     >
                       Create account
                     </Button>
                   </CardContent>
 
-                  <CardFooter className="bg-bg flex flex-col gap-2 rounded-b-xl">
+                  <CardFooter className="flex flex-col gap-2 rounded-b-xl bg-bg">
                     <p className="text-sm text-gray-500">
-                      By continuing to use the Artisan you accept our terms and conditions
+                      By continuing to use the Artisan you accept our terms and
+                      conditions
                     </p>
                   </CardFooter>
                 </Card>
 
-                <Card className="hidden md:flex bg-bg flex flex-col relative w-1/2 text-secondary overflow-hidden">
-                  <div className="h-full w-full rounded-xl bg-[url(/products/rolex-bg.svg)] bg-contain bg-right-middle bg-no-repeat transform translate-x-[6rem] scale-[140] translate-y-10" />
+                <Card className="relative flex hidden w-1/2 flex-col overflow-hidden bg-bg text-secondary md:flex">
+                  <div className="bg-right-middle h-full w-full translate-x-[6rem] translate-y-10 scale-[140] transform rounded-xl bg-[url(/products/rolex-bg.svg)] bg-contain bg-no-repeat" />
                   <CardHeader className="absolute bottom-0 left-0 w-1/2">
                     <CardTitle className="text-xl font-bold">
                       Buy a fraction of your favorite asset

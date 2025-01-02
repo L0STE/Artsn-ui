@@ -1,8 +1,8 @@
 // src/store/useAuthStore.ts
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { Web3AuthNoModal } from "@web3auth/no-modal"
-import { IProvider } from "@web3auth/base"
+import { Web3AuthNoModal } from '@web3auth/no-modal'
+import { IProvider } from '@web3auth/base'
 import { User, AuthPayload } from '@/types/resolver-types'
 
 interface AuthState {
@@ -10,7 +10,7 @@ interface AuthState {
   web3auth: Web3AuthNoModal | null
   provider: IProvider | null
   publicKey: string | null
-  loggedIn: boolean  // Added this state
+  loggedIn: boolean // Added this state
   userInfo: {
     email?: string
     name?: string
@@ -53,7 +53,7 @@ export const useAuthStore = create<AuthState>()(
       web3auth: null,
       provider: null,
       publicKey: null,
-      loggedIn: false,  // Added initial state
+      loggedIn: false, // Added initial state
       userInfo: null,
       currentUser: null,
       authToken: null,
@@ -66,26 +66,28 @@ export const useAuthStore = create<AuthState>()(
       setProvider: (provider) => set({ provider }),
       setUserInfo: (info) => set({ userInfo: info }),
       setPublicKey: (key) => set({ publicKey: key }),
-      setCurrentUser: (user) => set({ 
-        currentUser: user,
-        isAuthenticated: !!user 
-      }),
+      setCurrentUser: (user) =>
+        set({
+          currentUser: user,
+          isAuthenticated: !!user,
+        }),
       setAuthToken: (token) => set({ authToken: token }),
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
-      setWeb3AuthState: (state) => set((prev) => ({
-        ...prev,
-        ...state,
-        loggedIn: state.loggedIn ?? prev.loggedIn,
-        isAuthenticated: state.loggedIn ?? prev.isAuthenticated
-      })),
+      setWeb3AuthState: (state) =>
+        set((prev) => ({
+          ...prev,
+          ...state,
+          loggedIn: state.loggedIn ?? prev.loggedIn,
+          isAuthenticated: state.loggedIn ?? prev.isAuthenticated,
+        })),
       setAuth: (auth) => {
         if (!auth) {
           set({
             authToken: null,
             currentUser: null,
             isAuthenticated: false,
-            loggedIn: false
+            loggedIn: false,
           })
           return
         }
@@ -95,7 +97,7 @@ export const useAuthStore = create<AuthState>()(
           currentUser: user,
           isAuthenticated: true,
           loggedIn: true,
-          publicKey: user.publicKey
+          publicKey: user.publicKey,
         })
       },
       logout: () => {
@@ -110,19 +112,20 @@ export const useAuthStore = create<AuthState>()(
           authToken: null,
           isAuthenticated: false,
           loggedIn: false,
-          error: null
+          error: null,
         })
       },
-      resetAuth: () => set({
-        publicKey: null,
-        userInfo: null,
-        currentUser: null,
-        authToken: null,
-        isAuthenticated: false,
-        loggedIn: false,
-        error: null
-      }),
-      clearAuth: () => set({ currentUser: null, authToken: null })
+      resetAuth: () =>
+        set({
+          publicKey: null,
+          userInfo: null,
+          currentUser: null,
+          authToken: null,
+          isAuthenticated: false,
+          loggedIn: false,
+          error: null,
+        }),
+      clearAuth: () => set({ currentUser: null, authToken: null }),
     }),
     {
       name: 'auth-storage',
@@ -132,8 +135,8 @@ export const useAuthStore = create<AuthState>()(
         currentUser: state.currentUser,
         publicKey: state.publicKey,
         userInfo: state.userInfo,
-        loggedIn: state.loggedIn  // Added to persisted state
-      })
+        loggedIn: state.loggedIn, // Added to persisted state
+      }),
     }
   )
 )

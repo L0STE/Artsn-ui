@@ -1,34 +1,39 @@
-'use client';
-import styles from '@/styles/charts/ChartA.module.css';
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
-import { Card } from "@/components/ui/card"
-import Image from 'next/image';
+'use client'
+import styles from '@/styles/charts/ChartA.module.css'
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from '@/components/ui/chart'
+import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts'
+import { Card } from '@/components/ui/card'
+import Image from 'next/image'
 
 interface DefaultProps {
-  className?: string;
+  className?: string
 }
 
-const ChartA = (
-  props: DefaultProps
-) => {
+const ChartA = (props: DefaultProps) => {
   const chartData = [
-    { month: "January", desktop: 186, mobile: 80 },
-    { month: "February", desktop: 305, mobile: 200 },
-    { month: "March", desktop: 237, mobile: 120 },
-    { month: "April", desktop: 73, mobile: 190 },
-    { month: "May", desktop: 209, mobile: 130 },
-    { month: "June", desktop: 214, mobile: 140 },
+    { month: 'January', desktop: 186, mobile: 80 },
+    { month: 'February', desktop: 305, mobile: 200 },
+    { month: 'March', desktop: 237, mobile: 120 },
+    { month: 'April', desktop: 73, mobile: 190 },
+    { month: 'May', desktop: 209, mobile: 130 },
+    { month: 'June', desktop: 214, mobile: 140 },
   ]
-   
+
   const chartConfig = {
     desktop: {
-      label: "Desktop",
-      color: "#2563eb",
+      label: 'Desktop',
+      color: '#2563eb',
     },
     mobile: {
-      label: "Mobile",
-      color: "lightgrey",
+      label: 'Mobile',
+      color: 'lightgrey',
     },
   } satisfies ChartConfig
   return (
@@ -38,24 +43,16 @@ const ChartA = (
           src={'/icons/watch-icon.svg'}
           width={60}
           height={60}
-          alt='watch icon'
+          alt="watch icon"
         />
         <div className={styles.subheader}>
           <div className={styles.textBlock}>
-            <p className="text-secondary">
-              Price evolution
-            </p>
-            <p className="text-secondary">
-              Watches
-            </p>
+            <p className="text-secondary">Price evolution</p>
+            <p className="text-secondary">Watches</p>
           </div>
           <div className={styles.textBlock}>
-            <p className="text-secondary">
-              This month
-            </p>
-            <p className="text-secondary">
-              +60%
-            </p>
+            <p className="text-secondary">This month</p>
+            <p className="text-secondary">+60%</p>
           </div>
         </div>
       </div>
@@ -76,15 +73,11 @@ const ChartA = (
         </BarChart>
       </ChartContainer>
       <div className={styles.footer}>
-        <p className="text-secondary text-lg">
-          All time:
-        </p>
-        <p className="text-secondary text-2xl">
-          +1453%
-        </p>
+        <p className="text-lg text-secondary">All time:</p>
+        <p className="text-2xl text-secondary">+1453%</p>
       </div>
     </Card>
-  );
-};
+  )
+}
 
-export default ChartA;
+export default ChartA

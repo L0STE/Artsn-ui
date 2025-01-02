@@ -1,8 +1,8 @@
 interface Props extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
-  className?: string;
-  children: React.ReactNode;
-  withPadding?: boolean;
-  onClick?: (event: React.MouseEvent) => void;
+  className?: string
+  children: React.ReactNode
+  withPadding?: boolean
+  onClick?: (event: React.MouseEvent) => void
 }
 
 const Link = ({
@@ -23,10 +23,10 @@ const Link = ({
       >
         <span className="relative w-fit">
           {children}
-          <span className="absolute -bottom-0.5 left-0 h-[1px] w-0 group-hover:w-full group-focus:w-full bg-accent duration-300 ease-in-scroll"></span>
+          <span className="ease-in-scroll absolute -bottom-0.5 left-0 h-[1px] w-0 bg-accent duration-300 group-hover:w-full group-focus:w-full"></span>
         </span>
       </a>
-    );
+    )
   }
 
   return (
@@ -37,9 +37,9 @@ const Link = ({
       {...rest}
     >
       {children}
-      <span className="absolute -bottom-0.5 left-0 h-[1px] w-0 group-hover:w-full group-focus:outline-none group-focus:w-full bg-accent duration-300 ease-in-scroll"></span>
+      <span className="ease-in-scroll absolute -bottom-0.5 left-0 h-[1px] w-0 bg-accent duration-300 group-hover:w-full group-focus:w-full group-focus:outline-none"></span>
     </a>
-  );
-};
+  )
+}
 
-export default Link;
+export default Link

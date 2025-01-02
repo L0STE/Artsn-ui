@@ -1,11 +1,11 @@
-'use client';
-import { useTheme } from '@/hooks/use-theme';
+'use client'
+import { useTheme } from '@/hooks/use-theme'
 
-import { Icon } from '@iconify/react';
-import { motion, MotionProps } from 'framer-motion';
+import { Icon } from '@iconify/react'
+import { motion, MotionProps } from 'framer-motion'
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  className?: string;
+  className?: string
 }
 
 const DarkModeButton = ({
@@ -13,16 +13,16 @@ const DarkModeButton = ({
   onClick,
   ...rest
 }: Props & MotionProps) => {
-  const { isDarkMode, toggle } = useTheme();
+  const { isDarkMode, toggle } = useTheme()
 
   const clickHandler = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    onClick && onClick(e);
-    toggle();
-  };
+    onClick && onClick(e)
+    toggle()
+  }
 
   return (
     <motion.button
-      className={`rounded-lg p-1 text-black dark:text-white hover:text-secondary focus:bg-secondary focus:outline-none cursor-pointer w-fit ${className} duration-200`}
+      className={`w-fit cursor-pointer rounded-lg p-1 text-black hover:text-secondary focus:bg-secondary focus:outline-none dark:text-white ${className} duration-200`}
       onClick={clickHandler}
       {...rest}
     >
@@ -32,7 +32,7 @@ const DarkModeButton = ({
         height="26"
       />
     </motion.button>
-  );
-};
+  )
+}
 
-export default DarkModeButton;
+export default DarkModeButton

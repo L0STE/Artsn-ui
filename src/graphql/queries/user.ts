@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from '@apollo/client'
 
 export const ME_QUERY = gql`
   query Me {
@@ -42,10 +42,10 @@ export const ME_QUERY = gql`
       }
     }
   }
-`;
+`
 
 export const IS_USER_REGISTERED = gql`
   query IsUserRegistered($publicKey: String!) {
     isUserRegistered(publicKey: $publicKey)
   }
-`;
+`

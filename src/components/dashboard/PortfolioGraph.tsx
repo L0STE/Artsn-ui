@@ -1,7 +1,15 @@
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts'
 
 const data = [
   { name: 'Jan', value: 5290 },
@@ -11,10 +19,10 @@ const data = [
   { name: 'May', value: 14124 },
   { name: 'Jun', value: 13390 },
   { name: 'Jul', value: 13924 },
-];
+]
 
 const PortfolioGraph = () => {
-  const [activeTab, setActiveTab] = useState('today');
+  const [activeTab, setActiveTab] = useState('today')
 
   return (
     <div className="relative">
@@ -32,7 +40,7 @@ const PortfolioGraph = () => {
                 </TabsList>
               </Tabs>
             </div>
-            
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <p className="text-sm text-gray-500">Current Value</p>
@@ -49,7 +57,7 @@ const PortfolioGraph = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
@@ -57,7 +65,7 @@ const PortfolioGraph = () => {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Line 
+                  <Line
                     type="monotone"
                     dataKey="value"
                     stroke="#8884d8"
@@ -70,15 +78,17 @@ const PortfolioGraph = () => {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Overlay */}
-      <div className="absolute inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center rounded-3xl">
-        <div className="bg-white/90 px-6 py-3 rounded-lg shadow-lg">
-          <p className="text-xl font-semibold text-gray-800">Feature Coming Soon</p>
+      <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-black/30 backdrop-blur-sm">
+        <div className="rounded-lg bg-white/90 px-6 py-3 shadow-lg">
+          <p className="text-xl font-semibold text-gray-800">
+            Feature Coming Soon
+          </p>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default PortfolioGraph;
+export default PortfolioGraph

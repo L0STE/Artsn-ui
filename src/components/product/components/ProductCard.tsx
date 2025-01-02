@@ -1,48 +1,48 @@
-import React from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { PublicKey } from "@solana/web3.js";
-import { BN } from '@coral-xyz/anchor';
+import React from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { PublicKey } from '@solana/web3.js'
+import { BN } from '@coral-xyz/anchor'
 
 type Listing = {
-  id: BN;
-  objectType: any;
-  object: PublicKey;
-  share: number;
-  shareSold: number;
-  price: BN;
-  startingTime: BN;
-  bump: number;
-};
+  id: BN
+  objectType: any
+  object: PublicKey
+  share: number
+  shareSold: number
+  price: BN
+  startingTime: BN
+  bump: number
+}
 
-const ProductCard = ({ 
-  account, 
-  listing, 
+const ProductCard = ({
+  account,
+  listing,
   image,
-  productDetails // Now receiving pre-fetched details
-}: { 
-  image: string, 
-  account: PublicKey, 
-  listing: Listing,
+  productDetails, // Now receiving pre-fetched details
+}: {
+  image: string
+  account: PublicKey
+  listing: Listing
   productDetails: any
 }) => {
   return (
-    <div className="bg-white rounded-3xl p-3.5 flex border-gray flex-col justify-between">
-      <Image 
+    <div className="border-gray flex flex-col justify-between rounded-3xl bg-white p-3.5">
+      <Image
         src={`https://artisan-solana.s3.eu-central-1.amazonaws.com/${image}-0.jpg`}
-        alt='listing image'
+        alt="listing image"
         width={300}
         height={300}
-        className="w-full h-auto object-contain mb-4 rounded-2xl bg-gray"
+        className="bg-gray mb-4 h-auto w-full rounded-2xl object-contain"
       />
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
           <Link href="/product">
-            <h3 className="text-md text-black font-semibold font-urban">
+            <h3 className="text-md font-urban font-semibold text-black">
               {productDetails.name}
             </h3>
           </Link>
-          <p className="text-gray-500 flex items-center gap-2">
+          <p className="flex items-center gap-2 text-gray-500">
             <svg
               width="16"
               height="16"
@@ -85,12 +85,15 @@ const ProductCard = ({
             Starting from {Number(listing.price.toString())}
           </p>
         </div>
-        <Link href={`/product/${image}`} className="bg-black text-white px-4 py-2 rounded-2xl">
+        <Link
+          href={`/product/${image}`}
+          className="rounded-2xl bg-black px-4 py-2 text-white"
+        >
           View Details
         </Link>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ProductCard;
+export default ProductCard

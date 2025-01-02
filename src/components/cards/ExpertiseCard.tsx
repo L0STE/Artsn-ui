@@ -1,26 +1,26 @@
-'use client';
-import { useState, useEffect, forwardRef } from 'react';
+'use client'
+import { useState, useEffect, forwardRef } from 'react'
 import styles from '@/styles/cards/ExpertiseCard.module.css'
-import { Button }from '@/components/ui/button'
-import Image from 'next/image';
-import { ChevronRightIcon } from "@radix-ui/react-icons"
-import { Card, CardContent } from "@/components/ui/card"
-import { Swiper as SwiperType } from "swiper"; // Import the Swiper type
-import { Swiper, SwiperSlide } from "swiper/react";
+import { Button } from '@/components/ui/button'
+import Image from 'next/image'
+import { ChevronRightIcon } from '@radix-ui/react-icons'
+import { Card, CardContent } from '@/components/ui/card'
+import { Swiper as SwiperType } from 'swiper' // Import the Swiper type
+import { Swiper, SwiperSlide } from 'swiper/react'
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel"
-import { Badge } from "@/components/ui/badge"
-import TagMonaco from '../three/TagMonaco';
+} from '@/components/ui/carousel'
+import { Badge } from '@/components/ui/badge'
+import TagMonaco from '../three/TagMonaco'
 // import { motion, MotionProps } from 'framer-motion';
 interface DefaultProps {
-  id?: string;
-  className?: string;
-  ref?: any;
+  id?: string
+  className?: string
+  ref?: any
 }
 
 const cards = [
@@ -32,33 +32,30 @@ const cards = [
   {
     primaryText: 'Authentication & Verification',
     secondaryText: 'certified by experts',
-    image: '/assets/home/checkmark.svg'
+    image: '/assets/home/checkmark.svg',
   },
   {
     primaryText: 'Digital Transformation',
     secondaryText: 'divided into tradeable shares',
-    image: '/assets/home/fractions.svg'
+    image: '/assets/home/fractions.svg',
   },
   {
     primaryText: 'Secure Storage',
     secondaryText: 'insured & stored in our vaults',
-    image: '/assets/home/safe.svg'
-  }
+    image: '/assets/home/safe.svg',
+  },
 ]
 
-const ExpertiseCard = forwardRef((
-  props: DefaultProps,
-  ref: any
-) => {
-  const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
-  const [progressAmount, setProgressAmount] = useState(0);
+const ExpertiseCard = forwardRef((props: DefaultProps, ref: any) => {
+  const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null)
+  const [progressAmount, setProgressAmount] = useState(0)
 
   return (
     <div ref={ref} className={`${props.className}`}>
       <Badge className="w-fit self-center border-zinc-200">
-        <span className='text-secondary text-2xl'>How it Works</span>
+        <span className="text-2xl text-secondary">How it Works</span>
       </Badge>
-      <div className="swiper-container hidden md:block relative mb-5">
+      <div className="swiper-container relative mb-5 hidden md:block">
         <Swiper
           onSwiper={setThumbsSwiper} // Store the instance of the thumbs swiper in the state
           spaceBetween={15}
@@ -67,22 +64,22 @@ const ExpertiseCard = forwardRef((
           className="thumbs-swiper"
         >
           {/* <SwiperSlide className="border-gray rounded-2xl p-2 w-1/4"></SwiperSlide> */}
-          <SwiperSlide className="border-gray rounded-2xl p-2 ">
-            <Card className='h-[500px]'>
-              <CardContent className="flex flex-col aspect-square items-center justify-center p-6 ">
+          <SwiperSlide className="border-gray rounded-2xl p-2">
+            <Card className="h-[500px]">
+              <CardContent className="flex aspect-square flex-col items-center justify-center p-6">
                 {/* <div className={styles.header}>
                   <p className="text-secondary text-xl mb-4 font-bold">
                     {1}
                   </p>
                 </div> */}
-                <div className='flex h-80 mb-6'>
+                <div className="mb-6 flex h-80">
                   <TagMonaco />
                 </div>
                 <div className={styles.footer}>
-                  <p className="text-secondary text-xl font-bold">
+                  <p className="text-xl font-bold text-secondary">
                     {'Expert Selection'}
                   </p>
-                  <p className="text-slate-500 text-xl">
+                  <p className="text-xl text-slate-500">
                     {'curated rare assets'}
                   </p>
                 </div>
@@ -90,28 +87,28 @@ const ExpertiseCard = forwardRef((
             </Card>
           </SwiperSlide>
           {cards.map((card, index) => (
-            <SwiperSlide key={index} className="border-gray rounded-2xl p-2 ">
-              <Card className='h-[500px]'>
-                <CardContent className="flex flex-col aspect-square items-center justify-center p-6">
+            <SwiperSlide key={index} className="border-gray rounded-2xl p-2">
+              <Card className="h-[500px]">
+                <CardContent className="flex aspect-square flex-col items-center justify-center p-6">
                   {/* <div className={styles.header}>
                     <p className="text-secondary text-xl mb-4 font-bold">
                       {index + 1}
                     </p>
                   </div> */}
-                  <div className='flex h-80 mb-6'>
+                  <div className="mb-6 flex h-80">
                     <Image
                       src={card.image}
                       width={249}
                       height={252}
                       alt={card.primaryText}
-                      className='h-full'
+                      className="h-full"
                     />
                   </div>
                   <div className={styles.footer}>
-                    <p className="text-secondary text-xl font-bold">
+                    <p className="text-xl font-bold text-secondary">
                       {card.primaryText}
                     </p>
-                    <p className="text-slate-500 text-xl">
+                    <p className="text-xl text-slate-500">
                       {card.secondaryText}
                     </p>
                   </div>
@@ -121,7 +118,7 @@ const ExpertiseCard = forwardRef((
           ))}
         </Swiper>
       </div>
-      <div className="swiper-container md:hidden relative mb-5">
+      <div className="swiper-container relative mb-5 md:hidden">
         <Swiper
           onSwiper={setThumbsSwiper} // Store the instance of the thumbs swiper in the state
           spaceBetween={15}
@@ -131,20 +128,20 @@ const ExpertiseCard = forwardRef((
         >
           <SwiperSlide className="border-gray rounded-2xl p-2">
             <Card>
-              <CardContent className="flex flex-col aspect-square items-center justify-center p-6">
+              <CardContent className="flex aspect-square flex-col items-center justify-center p-6">
                 {/* <div className={styles.header}>
                   <p className="text-secondary text-xl mb-4 font-bold">
                     {1}
                   </p>
                 </div> */}
-                <div className='flex h-80'>
+                <div className="flex h-80">
                   <TagMonaco />
                 </div>
-                <div className='flex flex-col'>
-                  <p className="text-secondary text-xl font-bold text-center">
+                <div className="flex flex-col">
+                  <p className="text-center text-xl font-bold text-secondary">
                     {'Expert Selection'}
                   </p>
-                  <p className="text-slate-500 text-xl font-bold text-center">
+                  <p className="text-center text-xl font-bold text-slate-500">
                     {'curated rare assets'}
                   </p>
                 </div>
@@ -152,28 +149,31 @@ const ExpertiseCard = forwardRef((
             </Card>
           </SwiperSlide>
           {cards.map((card, index) => (
-            <SwiperSlide key={index} className="border-gray rounded-2xl p-2 font-bold">
+            <SwiperSlide
+              key={index}
+              className="border-gray rounded-2xl p-2 font-bold"
+            >
               <Card>
-                <CardContent className="flex flex-col aspect-square items-center justify-center p-6">
+                <CardContent className="flex aspect-square flex-col items-center justify-center p-6">
                   {/* <div className={styles.header}>
                     <p className="text-secondary text-xl mb-4">
                       {index + 1}
                     </p>
                   </div> */}
-                  <div className='flex h-80'>
+                  <div className="flex h-80">
                     <Image
                       src={card.image}
                       width={249}
                       height={252}
                       alt={card.primaryText}
-                      className='h-full'
+                      className="h-full"
                     />
                   </div>
                   <div className={styles.footer}>
-                  <p className="text-secondary text-xl font-bold text-center">
+                    <p className="text-center text-xl font-bold text-secondary">
                       {card.primaryText}
                     </p>
-                    <p className="text-slate-500 text-xl font-bold text-center">
+                    <p className="text-center text-xl font-bold text-slate-500">
                       {card.secondaryText}
                     </p>
                   </div>
@@ -182,10 +182,10 @@ const ExpertiseCard = forwardRef((
             </SwiperSlide>
           ))}
         </Swiper>
-      </div>    
+      </div>
     </div>
-  );
-});
+  )
+})
 
-export default ExpertiseCard;
-ExpertiseCard.displayName = 'ExpertiseCard';
+export default ExpertiseCard
+ExpertiseCard.displayName = 'ExpertiseCard'

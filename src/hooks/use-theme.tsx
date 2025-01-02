@@ -1,59 +1,59 @@
-'use client';
+'use client'
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useState,
-} from 'react';
+} from 'react'
 
 const initialState = {
   isDarkMode: false,
   toggle: () => {
-    return;
+    return
   },
   enableDarkMode: (_: boolean) => {
-    return;
+    return
   },
   disableDarkMode: (_: boolean) => {
-    return;
+    return
   },
-};
+}
 
-const ThemeContext = createContext(initialState);
+const ThemeContext = createContext(initialState)
 
 export default function ThemeProvider({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(
     typeof window !== 'undefined' &&
       JSON.parse(localStorage.getItem('darkMode') || 'true')
       ? true
       : false
-  );
+  )
 
   const toggle = useCallback(() => {
-    setIsDarkMode((prev) => !prev);
-  }, []);
+    setIsDarkMode((prev) => !prev)
+  }, [])
 
   const enableDarkMode = useCallback(() => {
-    setIsDarkMode(true);
-  }, []);
+    setIsDarkMode(true)
+  }, [])
 
   const disableDarkMode = useCallback(() => {
-    setIsDarkMode(false);
-  }, []);
+    setIsDarkMode(false)
+  }, [])
 
   useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode))
     if (isDarkMode) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add('dark')
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove('dark')
     }
-  }, [isDarkMode]);
+  }, [isDarkMode])
 
   return (
     <ThemeContext.Provider
@@ -66,9 +66,9 @@ export default function ThemeProvider({
     >
       {children}
     </ThemeContext.Provider>
-  );
+  )
 }
 
 export function useTheme() {
-  return useContext(ThemeContext);
+  return useContext(ThemeContext)
 }

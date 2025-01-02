@@ -1,38 +1,38 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { connectToDatabase } from '@/config/mongodb';
-import { hash } from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
-import { ObjectId, Double, MongoServerError } from 'mongodb';
+import { NextApiRequest, NextApiResponse } from 'next'
+import { connectToDatabase } from '@/config/mongodb'
+import { hash } from 'bcrypt'
+import { v4 as uuidv4 } from 'uuid'
+import { ObjectId, Double, MongoServerError } from 'mongodb'
 
 interface RegistrationRequest {
-  email?: string;
-  password: string;
-  publicKey: string;
-  firstName?: string;
-  lastName?: string;
-  country?: string;
-  profilePictureUrl?: string;
+  email?: string
+  password: string
+  publicKey: string
+  firstName?: string
+  lastName?: string
+  country?: string
+  profilePictureUrl?: string
 }
 
 export async function POST(_req: Request) {
   try {
-    const req = await _req.json() as RegistrationRequest;
-    
+    const req = (await _req.json()) as RegistrationRequest
+
     if (!req.publicKey) {
-      return new Response(
-        JSON.stringify({ error: 'Public key is required' }), 
-        { status: 400, headers: { 'Content-Type': 'application/json' }}
-      );
+      return new Response(JSON.stringify({ error: 'Public key is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
 
-    const { db } = await connectToDatabase();
-    const collection = db.collection('users');
-    
+    const { db } = await connectToDatabase()
+    const collection = db.collection('users')
+
     // Ensure index exists (will not recreate if it already exists)
-    await collection.createIndex({ "publicKey": 1 }, { unique: true });
-    
-    const now = new Date().toISOString();
-    const userId = uuidv4();
+    await collection.createIndex({ publicKey: 1 }, { unique: true })
+
+    const now = new Date().toISOString()
+    const userId = uuidv4()
 
     const completeUser = {
       uuid: userId,
@@ -49,17 +49,17 @@ export async function POST(_req: Request) {
       isActive: true,
       isVerified: false,
       phoneNumber: '',
-      solanaTransactionId: '',  // Initialize empty
-      
+      solanaTransactionId: '', // Initialize empty
+
       baseProfile: {
         id: uuidv4(),
         displayName: `${req.firstName || 'Unnamed'} ${req.lastName || 'User'}`,
         displayRole: 'Investor',
         photoUrl: req.profilePictureUrl || '',
         bio: '',
-        totalSpend: new Double(0)
+        totalSpend: new Double(0),
       },
-      
+
       investorInfo: {
         id: uuidv4(),
         createdAt: now,
@@ -68,101 +68,108 @@ export async function POST(_req: Request) {
         investmentHistory: [],
         portfolioSize: new Double(0),
         riskTolerance: 'Not Specified',
-        preferredInvestmentDuration: 'Not Specified'
+        preferredInvestmentDuration: 'Not Specified',
       },
-      
+
       kycInfo: {
         kycStatus: 'Not Started',
         kycCompletionDate: '',
-        kycDocuments: []
-      }
-    };
+        kycDocuments: [],
+      },
+    }
 
-    let insertedId: ObjectId;
-    
+    let insertedId: ObjectId
+
     try {
       // Try to insert the user
-      const result = await collection.insertOne(completeUser);
-      insertedId = result.insertedId;
+      const result = await collection.insertOne(completeUser)
+      insertedId = result.insertedId
     } catch (error) {
       if (error instanceof MongoServerError && error.code === 11000) {
         // Duplicate key error (publicKey already exists)
         return new Response(
-          JSON.stringify({ error: 'User with this public key already exists' }), 
-          { status: 409, headers: { 'Content-Type': 'application/json' }}
-        );
+          JSON.stringify({ error: 'User with this public key already exists' }),
+          { status: 409, headers: { 'Content-Type': 'application/json' } }
+        )
       }
-      throw error; // Re-throw other errors
+      throw error // Re-throw other errors
     }
 
     // Create on-chain profile - wrap in try/catch but don't fail if it errors
-    let solanaSignature = '';
+    let solanaSignature = ''
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
-      const profileResponse = await fetch(`${baseUrl}/api/protocol/create/profile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          publicKey: req.publicKey,
-          username: insertedId.toString(),
-        })
-      });
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'
+      const profileResponse = await fetch(
+        `${baseUrl}/api/protocol/create/profile`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            publicKey: req.publicKey,
+            username: insertedId.toString(),
+          }),
+        }
+      )
 
       if (!profileResponse.ok) {
-        throw new Error(`Profile creation failed: ${profileResponse.statusText}`);
+        throw new Error(
+          `Profile creation failed: ${profileResponse.statusText}`
+        )
       }
 
-      const profileData = await profileResponse.json();
-      solanaSignature = profileData.signature || 'error';
+      const profileData = await profileResponse.json()
+      solanaSignature = profileData.signature || 'error'
 
       // Update transaction ID if we got one
       if (solanaSignature && solanaSignature !== 'error') {
         await collection.updateOne(
           { _id: insertedId },
-          { $set: { solanaTransactionId: solanaSignature }}
-        );
+          { $set: { solanaTransactionId: solanaSignature } }
+        )
       }
     } catch (error) {
-      console.error('Failed to create on-chain profile:', error);
+      console.error('Failed to create on-chain profile:', error)
       // Don't throw error, just continue with registration
-      solanaSignature = 'failed';
+      solanaSignature = 'failed'
     }
 
     return new Response(
       JSON.stringify({
         message: 'User registered successfully',
         userId: insertedId,
-        solanaStatus: solanaSignature ? 'success' : 'failed'
+        solanaStatus: solanaSignature ? 'success' : 'failed',
+        uuid: userId,
       }),
-      { headers: { 'Content-Type': 'application/json' }}
-    );
-
+      { headers: { 'Content-Type': 'application/json' } }
+    )
   } catch (error: any) {
     console.error('Registration error details:', {
       message: error.message,
       code: error.code,
       errInfo: error.errInfo,
-      stack: error.stack
-    });
+      stack: error.stack,
+    })
 
     // Handle validation errors
     if (error.code === 121) {
-      const validationErrors = error.errInfo?.details?.schemaRulesNotSatisfied || [];
+      const validationErrors =
+        error.errInfo?.details?.schemaRulesNotSatisfied || []
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'Registration failed - validation error',
-          details: validationErrors 
-        }), 
-        { status: 400, headers: { 'Content-Type': 'application/json' }}
-      );
+          details: validationErrors,
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      )
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Registration failed',
-        details: error.message 
-      }), 
-      { status: 500, headers: { 'Content-Type': 'application/json' }}
-    );
+        details: error.message,
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    )
   }
 }

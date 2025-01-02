@@ -1,10 +1,10 @@
 'use client'
-import { useState } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Bug } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import * as z from 'zod'
+import { Bug } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   Form,
   FormControl,
@@ -20,51 +20,54 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from '@/components/ui/form'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
+} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 
 const bugReportSchema = z.object({
-  reporterId: z.string().email({ message: "Please enter a valid email" }),
-  issueType: z.enum(["Bug", "Feature Request", "UI Improvement", "Performance"], {
-    required_error: "Please select an issue type",
-  }),
-  priority: z.enum(["High", "Medium", "Low"], {
-    required_error: "Please select a priority level",
+  reporterId: z.string().email({ message: 'Please enter a valid email' }),
+  issueType: z.enum(
+    ['Bug', 'Feature Request', 'UI Improvement', 'Performance'],
+    {
+      required_error: 'Please select an issue type',
+    }
+  ),
+  priority: z.enum(['High', 'Medium', 'Low'], {
+    required_error: 'Please select a priority level',
   }),
   summary: z.string().min(10, {
-    message: "Summary must be at least 10 characters.",
+    message: 'Summary must be at least 10 characters.',
   }),
   stepsToReproduce: z.string().min(10, {
-    message: "Steps must be at least 10 characters.",
+    message: 'Steps must be at least 10 characters.',
   }),
   expectedBehavior: z.string().min(10, {
-    message: "Expected behavior must be at least 10 characters.",
+    message: 'Expected behavior must be at least 10 characters.',
   }),
   actualBehavior: z.string().min(10, {
-    message: "Actual behavior must be at least 10 characters.",
+    message: 'Actual behavior must be at least 10 characters.',
   }),
   deviceInfo: z.string().min(5, {
-    message: "Please provide device information.",
+    message: 'Please provide device information.',
   }),
   appVersion: z.string(),
   screenName: z.string().min(2, {
-    message: "Please specify where this occurred.",
+    message: 'Please specify where this occurred.',
   }),
-  frequency: z.enum(["Always", "Sometimes", "Rarely", "Once"], {
-    required_error: "Please select frequency",
+  frequency: z.enum(['Always', 'Sometimes', 'Rarely', 'Once'], {
+    required_error: 'Please select frequency',
   }),
-  networkStatus: z.enum(["Online", "Offline"], {
-    required_error: "Please select network status",
+  networkStatus: z.enum(['Online', 'Offline'], {
+    required_error: 'Please select network status',
   }),
   additionalNotes: z.string().optional(),
 })
@@ -73,12 +76,12 @@ type BugReportType = z.infer<typeof bugReportSchema>
 
 export function BugReport({ className }: { className?: string }) {
   const [open, setOpen] = useState(false)
-    const { toast } = useToast()
+  const { toast } = useToast()
   const form = useForm<BugReportType>({
     resolver: zodResolver(bugReportSchema),
     defaultValues: {
-      appVersion: process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0",
-      networkStatus: "Online",
+      appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
+      networkStatus: 'Online',
       // Pre-fill device info
       deviceInfo: `${navigator.userAgent}`,
       // Pre-fill current page
@@ -86,40 +89,39 @@ export function BugReport({ className }: { className?: string }) {
     },
   })
 
-  
-  const handleSubmit = async(e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
     try {
-        const response = await fetch("/api/bug", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(form.getValues()),
-        })
-  
-        if (!response.ok) {
-          throw new Error("Failed to submit bug report")
-        }
-  
-        const result = await response.json()
-  
-        toast({
-          title: "Bug Report Submitted",
-          description: `Issue ID: ${result.issueId}`,
-        })
-  
-        form.reset()
-        setOpen(false)
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to submit bug report. Please try again.",
-          variant: "destructive",
-        })
+      const response = await fetch('/api/bug', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form.getValues()),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit bug report')
       }
-  };
+
+      const result = await response.json()
+
+      toast({
+        title: 'Bug Report Submitted',
+        description: `Issue ID: ${result.issueId}`,
+      })
+
+      form.reset()
+      setOpen(false)
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to submit bug report. Please try again.',
+        variant: 'destructive',
+      })
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -128,7 +130,7 @@ export function BugReport({ className }: { className?: string }) {
           variant="outline"
           size="icon"
           className={cn(
-            "fixed bottom-4 left-4 h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-200",
+            'fixed bottom-4 left-4 h-12 w-12 rounded-full shadow-lg transition-all duration-200 hover:shadow-xl',
             className
           )}
         >
@@ -136,7 +138,7 @@ export function BugReport({ className }: { className?: string }) {
           <span className="sr-only">Report an Issue</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full md:max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-full overflow-y-auto md:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Report an Issue</DialogTitle>
           <DialogDescription>
@@ -145,7 +147,7 @@ export function BugReport({ className }: { className?: string }) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={handleSubmit} className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="reporterId"
@@ -166,7 +168,10 @@ export function BugReport({ className }: { className?: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Issue Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select issue type" />
@@ -174,8 +179,12 @@ export function BugReport({ className }: { className?: string }) {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="Bug">Bug</SelectItem>
-                        <SelectItem value="Feature Request">Feature Request</SelectItem>
-                        <SelectItem value="UI Improvement">UI Improvement</SelectItem>
+                        <SelectItem value="Feature Request">
+                          Feature Request
+                        </SelectItem>
+                        <SelectItem value="UI Improvement">
+                          UI Improvement
+                        </SelectItem>
                         <SelectItem value="Performance">Performance</SelectItem>
                       </SelectContent>
                     </Select>
@@ -190,7 +199,10 @@ export function BugReport({ className }: { className?: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select priority" />
@@ -213,7 +225,10 @@ export function BugReport({ className }: { className?: string }) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Frequency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select frequency" />
@@ -239,7 +254,10 @@ export function BugReport({ className }: { className?: string }) {
                 <FormItem>
                   <FormLabel>Summary</FormLabel>
                   <FormControl>
-                    <Input placeholder="Brief description of the issue" {...field} />
+                    <Input
+                      placeholder="Brief description of the issue"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -266,7 +284,7 @@ export function BugReport({ className }: { className?: string }) {
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="expectedBehavior"
@@ -322,7 +340,9 @@ export function BugReport({ className }: { className?: string }) {
               )}
             />
 
-            <Button type="submit" className="w-full">Submit Bug Report</Button>
+            <Button type="submit" className="w-full">
+              Submit Bug Report
+            </Button>
           </form>
         </Form>
       </DialogContent>

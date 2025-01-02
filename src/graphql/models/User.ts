@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const User = new mongoose.Schema({
   uuid: String,
@@ -19,18 +19,20 @@ const User = new mongoose.Schema({
     photoUrl: String,
     bio: String,
     createdAt: Date,
-    updatedAt: Date
+    updatedAt: Date,
   },
   kycInfo: {
     idvId: String,
     kycStatus: String,
     kycCompletionDate: Date,
-    kycDocuments: [{
-      documentType: String,
-      documentUrl: String,
-      verificationStatus: String
-    }]
-  }
-});
+    kycDocuments: [
+      {
+        documentType: String,
+        documentUrl: String,
+        verificationStatus: String,
+      },
+    ],
+  },
+})
 
-export const UserModel = mongoose.model('User', User);
+export const UserModel = mongoose.model('User', User)

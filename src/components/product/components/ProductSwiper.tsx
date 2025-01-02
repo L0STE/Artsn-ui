@@ -1,30 +1,30 @@
-"use client"; // Add this line
+'use client' // Add this line
 
-import { Swiper as SwiperType } from "swiper"; // Import the Swiper type
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Thumbs } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/thumbs";
-import { useState, useRef } from "react";
+import { Swiper as SwiperType } from 'swiper' // Import the Swiper type
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Navigation, Thumbs } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/navigation'
+import 'swiper/css/thumbs'
+import { useState, useRef } from 'react'
 
 const watchImages = [
-  "/images/product.png",
-  "/images/product.png",
-  "/images/product.png",
-  "/images/product.png",
-];
+  '/images/product.png',
+  '/images/product.png',
+  '/images/product.png',
+  '/images/product.png',
+]
 
 const ProductSwiper = ({ images }: { images: string[] }) => {
   // Initialize thumbsSwiper as SwiperType | null
-  const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
+  const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null)
 
   // Refs for custom navigation buttons
-  const prevButtonRef = useRef<HTMLDivElement | null>(null);
-  const nextButtonRef = useRef<HTMLDivElement | null>(null);
+  const prevButtonRef = useRef<HTMLDivElement | null>(null)
+  const nextButtonRef = useRef<HTMLDivElement | null>(null)
 
   return (
-    <div className="swiper-container relative mb-5 ">
+    <div className="swiper-container relative mb-5">
       {/* Main Swiper */}
       <Swiper
         modules={[Navigation, Thumbs]} // Use navigation and thumbs modules
@@ -38,15 +38,15 @@ const ProductSwiper = ({ images }: { images: string[] }) => {
             if (
               swiper.params &&
               swiper.params.navigation &&
-              typeof swiper.params.navigation !== "boolean"
+              typeof swiper.params.navigation !== 'boolean'
             ) {
               if (prevButtonRef.current && nextButtonRef.current) {
-                swiper.params.navigation.prevEl = prevButtonRef.current;
-                swiper.params.navigation.nextEl = nextButtonRef.current;
-                swiper.navigation.update();
+                swiper.params.navigation.prevEl = prevButtonRef.current
+                swiper.params.navigation.nextEl = nextButtonRef.current
+                swiper.navigation.update()
               }
             }
-          });
+          })
         }}
         thumbs={{ swiper: thumbsSwiper }} // Connect the main swiper to the thumbnails
         spaceBetween={10} // Space between slides
@@ -55,11 +55,7 @@ const ProductSwiper = ({ images }: { images: string[] }) => {
       >
         {images.map((image, index) => (
           <SwiperSlide key={index} className="border-gray rounded-2xl p-12">
-            <img
-              src={image}
-              alt={`Watch ${index}`}
-              className="main-image"
-            />
+            <img src={image} alt={`Watch ${index}`} className="main-image" />
           </SwiperSlide>
         ))}
       </Swiper>
@@ -67,7 +63,8 @@ const ProductSwiper = ({ images }: { images: string[] }) => {
       {/* Custom Navigation Buttons */}
       <div
         ref={prevButtonRef}
-        className="hidden md:block absolute transform -translate-y-1/2 z-10 cursor-pointer bg-white p-3 rounded-2xl border-gray" style={{top: "36%", left: "-52px"}}
+        className="border-gray absolute z-10 hidden -translate-y-1/2 transform cursor-pointer rounded-2xl bg-white p-3 md:block"
+        style={{ top: '36%', left: '-52px' }}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -86,7 +83,8 @@ const ProductSwiper = ({ images }: { images: string[] }) => {
       </div>
       <div
         ref={nextButtonRef}
-        className="hidden md:block absolute transform -translate-y-1/2 z-10 cursor-pointer bg-white p-3 rounded-2xl border-gray" style={{top: "36%", right: "-52px"}}
+        className="border-gray absolute z-10 hidden -translate-y-1/2 transform cursor-pointer rounded-2xl bg-white p-3 md:block"
+        style={{ top: '36%', right: '-52px' }}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -123,7 +121,7 @@ const ProductSwiper = ({ images }: { images: string[] }) => {
         ))}
       </Swiper>
     </div>
-  );
-};
+  )
+}
 
-export default ProductSwiper;
+export default ProductSwiper

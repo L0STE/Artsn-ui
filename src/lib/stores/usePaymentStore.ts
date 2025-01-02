@@ -40,7 +40,7 @@ interface PaymentState {
 
 const initialProcessingState = {
   stage: 'initializing' as const,
-  message: 'Initializing your purchase...'
+  message: 'Initializing your purchase...',
 }
 
 export const usePaymentStore = create<PaymentState>()((set) => ({
@@ -52,7 +52,7 @@ export const usePaymentStore = create<PaymentState>()((set) => ({
   hasProcessed: false,
   balance: {
     sol: 0,
-    usdc: 0
+    usdc: 0,
   },
 
   // Actions
@@ -62,11 +62,12 @@ export const usePaymentStore = create<PaymentState>()((set) => ({
   setProcessing: (isProcessing) => set({ isProcessing }),
   setProcessed: (hasProcessed) => set({ hasProcessed }),
   setBalance: (balance) => set({ balance }),
-  resetPayment: () => set({
-    paymentParams: null,
-    processingState: initialProcessingState,
-    isVerifying: true,
-    isProcessing: false,
-    hasProcessed: false
-  })
+  resetPayment: () =>
+    set({
+      paymentParams: null,
+      processingState: initialProcessingState,
+      isVerifying: true,
+      isProcessing: false,
+      hasProcessed: false,
+    }),
 }))

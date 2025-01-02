@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useSolanaPrice } from '@/hooks/use-solana-price';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { ArrowUp, ArrowDown, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react'
+import { useSolanaPrice } from '@/hooks/use-solana-price'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { ArrowUp, ArrowDown, RefreshCw } from 'lucide-react'
 
 const SolanaConverter = () => {
   const {
@@ -15,48 +15,48 @@ const SolanaConverter = () => {
     formatSol,
     isLoading,
     error,
-    lastUpdate
-  } = useSolanaPrice();
+    lastUpdate,
+  } = useSolanaPrice()
 
-  const [solAmount, setSolAmount] = useState('1');
-  const [usdAmount, setUsdAmount] = useState('');
+  const [solAmount, setSolAmount] = useState('1')
+  const [usdAmount, setUsdAmount] = useState('')
 
   // Update USD amount when SOL amount or price changes
   useEffect(() => {
     if (solAmount && !isNaN(Number(solAmount))) {
-      const usdValue = solToUsd(Number(solAmount));
-      setUsdAmount(usdValue ? usdValue.toString() : '');
+      const usdValue = solToUsd(Number(solAmount))
+      setUsdAmount(usdValue ? usdValue.toString() : '')
     }
-  }, [solAmount, currentPrice]);
+  }, [solAmount, currentPrice])
 
   const handleSolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSolAmount(value);
+    const value = e.target.value
+    setSolAmount(value)
     if (value && !isNaN(Number(value))) {
-      const usdValue = solToUsd(Number(value));
-      setUsdAmount(usdValue ? usdValue.toString() : '');
+      const usdValue = solToUsd(Number(value))
+      setUsdAmount(usdValue ? usdValue.toString() : '')
     } else {
-      setUsdAmount('');
+      setUsdAmount('')
     }
-  };
+  }
 
   const handleUsdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setUsdAmount(value);
+    const value = e.target.value
+    setUsdAmount(value)
     if (value && !isNaN(Number(value))) {
-      const solValue = usdToSol(Number(value));
-      setSolAmount(solValue ? solValue.toString() : '');
+      const solValue = usdToSol(Number(value))
+      setSolAmount(solValue ? solValue.toString() : '')
     } else {
-      setSolAmount('');
+      setSolAmount('')
     }
-  };
+  }
 
   return (
-    <Card className="w-full max-w-md mt-20">
+    <Card className="mt-20 w-full max-w-md">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Solana Price Converter</span>
-          {isLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
+          {isLoading && <RefreshCw className="h-4 w-4 animate-spin" />}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -69,17 +69,24 @@ const SolanaConverter = () => {
               <div className="text-3xl font-bold">
                 {currentPrice ? formatUsd(currentPrice) : '-'}
               </div>
-              <div className={`flex items-center text-sm ${
-                priceChange.usd > 0 ? 'text-green-500' : 
-                priceChange.usd < 0 ? 'text-red-500' : 'text-gray-500'
-              }`}>
+              <div
+                className={`flex items-center text-sm ${
+                  priceChange.usd > 0
+                    ? 'text-green-500'
+                    : priceChange.usd < 0
+                      ? 'text-red-500'
+                      : 'text-gray-500'
+                }`}
+              >
                 {priceChange.usd !== 0 && (
                   <>
-                    {priceChange.usd > 0 ? 
-                      <ArrowUp className="w-4 h-4 mr-1" /> : 
-                      <ArrowDown className="w-4 h-4 mr-1" />
-                    }
-                    {formatUsd(Math.abs(priceChange.usd))} ({priceChange.percentage.toFixed(2)}%)
+                    {priceChange.usd > 0 ? (
+                      <ArrowUp className="mr-1 h-4 w-4" />
+                    ) : (
+                      <ArrowDown className="mr-1 h-4 w-4" />
+                    )}
+                    {formatUsd(Math.abs(priceChange.usd))} (
+                    {priceChange.percentage.toFixed(2)}%)
                   </>
                 )}
               </div>
@@ -130,7 +137,7 @@ const SolanaConverter = () => {
         )}
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-export default SolanaConverter;
+export default SolanaConverter

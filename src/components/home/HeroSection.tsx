@@ -1,7 +1,13 @@
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Building2, TrendingUp, Shield, WatchIcon } from 'lucide-react'
+import {
+  ArrowRight,
+  Building2,
+  TrendingUp,
+  Shield,
+  WatchIcon,
+} from 'lucide-react'
 import Image from 'next/image'
 
 export default function HeroSection() {
@@ -38,7 +44,7 @@ export default function HeroSection() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="md:mb-8 max-w-lg text-pretty rounded-2xl bg-white/10 px-2 text-lg text-black backdrop-blur-sm dark:text-white"
+            className="max-w-lg text-pretty rounded-2xl bg-white/10 px-2 text-lg text-black backdrop-blur-sm dark:text-white md:mb-8"
           >
             Start with as little as $100
           </motion.p>
@@ -72,7 +78,9 @@ export default function HeroSection() {
             <div className="flex flex-col">
               <TrendingUp className="mb-2 h-6 w-6" />
               <div className="text-xl font-bold">+20%</div>
-              <div className="text-sm text-muted-foreground">Avg. Annual Growth</div>
+              <div className="text-sm text-muted-foreground">
+                Avg. Annual Growth
+              </div>
             </div>
             <div className="flex flex-col">
               <Shield className="mb-2 h-6 w-6" />
@@ -87,7 +95,7 @@ export default function HeroSection() {
       <div className="relative mt-12 hidden md:block">
         {/* Slanted Overlay */}
         <div
-          className="absolute  left-0 right-0 z-[11] h-[250px] bg-background md:bottom-[180px] lg:bottom-[400px] xl:bottom-[600px] 2xl:bottom-[800px] xl:h-[200px]"
+          className="absolute left-0 right-0 z-[11] h-[250px] bg-background md:bottom-[180px] lg:bottom-[400px] xl:bottom-[600px] xl:h-[200px] 2xl:bottom-[800px]"
           style={{
             transform: 'skewY(-6deg)',
             transformOrigin: 'bottom left',
