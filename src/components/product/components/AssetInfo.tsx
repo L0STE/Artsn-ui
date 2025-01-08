@@ -8,12 +8,16 @@ import { loadStripe } from '@stripe/stripe-js'
 import { v4 as uuid } from 'uuid'
 import { CreditCard } from 'lucide-react'
 import { useHandleShare } from '@/hooks/use-handle-share'
-import { useWeb3 } from '@/hooks/use-web3-auth'
+import { 
+  // useWeb3, 
+  useWeb3Auth 
+} from '@/hooks/use-web3-auth'
 import { useAuthStore } from '@/lib/stores/useAuthStore'
 import { usePaymentStore } from '@/lib/stores/usePaymentStore'
 import { useToast } from '@/hooks/use-toast'
 import { LoginSecondary } from '@/components/login/LoginSecondary'
 import { useRateLimitedBalance } from '@/hooks/use-rate-limited-balance'
+import RPC from "@/components/blockchain/solana-rpc";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,7 +61,7 @@ export default function AssetInfo({ asset }: { asset: AssetInfo }) {
   const router = useRouter()
   const { toast } = useToast()
   const { handleCopy, copied } = useHandleShare()
-  
+  const { provider, web3auth, rpc } = useWeb3Auth();
   // Auth store
   const { currentUser } = useAuthStore()
   const { isLoading: balanceLoading } = useRateLimitedBalance(currentUser?.publicKey);
@@ -65,7 +69,7 @@ export default function AssetInfo({ asset }: { asset: AssetInfo }) {
   const { balance } = usePaymentStore()
   console.log('USER BALANCE', balance)
   // Web3 utilities
-  const { rpc, signTransaction } = useWeb3()
+  // const { rpc, signTransaction } = useWeb3()
 
   // Local state
   const [amount, setAmount] = useState(1)
@@ -136,48 +140,90 @@ export default function AssetInfo({ asset }: { asset: AssetInfo }) {
     }
   }, [asset, currentUser?.publicKey, amount, toast])
 
-  const handleBuy = useCallback(async () => {
-    if (isBuying) return // Prevent multiple calls
+  // const handleBuy = useCallback(async () => {
+  //   if (isBuying) return // Prevent multiple calls
 
-    setIsBuying(true)
-    try {
-      if (!rpc || !currentUser) {
-        throw new Error('Web3 provider not initialized')
-      }
+  //   setIsBuying(true)
+  //   try {
+  //     if (!rpc || !currentUser) {
+  //       throw new Error('Web3 provider not initialized')
+  //     }
 
-      const tx = await buyTx()
-      if (!tx) {
-        throw new Error('No transaction to sign')
-      }
+  //     const tx = await buyTx()
+  //     if (!tx) {
+  //       throw new Error('No transaction to sign')
+  //     }
 
-      setIsProcessing(true)
-      const signature = await signTransaction(tx)
+  //     setIsProcessing(true)
+  //     const signature = await signTransaction(tx)
 
-      if (!signature) {
-        throw new Error('Failed to sign transaction')
-      }
+  //     if (!signature) {
+  //       throw new Error('Failed to sign transaction')
+  //     }
 
-      toast({
-        title: 'Transaction sent',
-        description: 'Transaction has been sent to the blockchain',
-      })
+  //     toast({
+  //       title: 'Transaction sent',
+  //       description: 'Transaction has been sent to the blockchain',
+  //     })
 
-      setIsComplete(true)
-    } catch (error) {
-      console.error('Buy transaction failed:', error)
-      toast({
-        title: 'Transaction Failed',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Failed to process transaction',
-        variant: 'destructive',
-      })
-    } finally {
-      setIsBuying(false)
-      setIsProcessing(false)
+  //     setIsComplete(true)
+  //   } catch (error) {
+  //     console.error('Buy transaction failed:', error)
+  //     toast({
+  //       title: 'Transaction Failed',
+  //       description:
+  //         error instanceof Error
+  //           ? error.message
+  //           : 'Failed to process transaction',
+  //       variant: 'destructive',
+  //     })
+  //   } finally {
+  //     setIsBuying(false)
+  //     setIsProcessing(false)
+  //   }
+  // }, [isBuying, rpc, currentUser, buyTx, signTransaction, toast])
+
+  const handleBuy = async() => {
+    console.log('handleBuy ->', web3auth);
+    if(!web3auth || !web3auth.provider) {
+      console.log('Web3 provider not initialized');
+      return;
     }
-  }, [isBuying, rpc, currentUser, buyTx, signTransaction, toast])
+    setIsBuying(true);
+    const rpc = new RPC(web3auth.provider!);
+    console.log('rpc ->', rpc);
+    const getAccounts = async () => {
+      const accounts = await rpc.getAccounts();
+      console.log('accounts ->', accounts);
+      return accounts;
+    }
+
+    if (web3auth && web3auth.connected && web3auth.provider) {
+      const rpc = new RPC(web3auth.provider);
+      const accounts =  await getAccounts();
+      console.log('userAccounts ->',accounts);
+      if (!accounts) {
+        console.error('No accounts found');
+        return;
+      }
+      const tx = await buyTx();
+      console.log('tx ->', tx); // VersionedTransaction
+      if (tx) {
+        setIsProcessing(true);
+        const signature = await rpc!.signVersionedTransaction({ tx });
+        console.log('signature ->', signature);
+        toast({
+          title: 'Transaction sent',
+          description: 'Transaction has been sent to the blockchain',
+        })
+        setIsBuying(false);
+        setIsProcessing(false);
+        setIsComplete(true);
+      } else {
+        console.error('Transaction is undefined');
+      }
+    }
+  }
 
   // Buy with Stripe
   const asyncStripe = loadStripe(
@@ -409,10 +455,10 @@ export default function AssetInfo({ asset }: { asset: AssetInfo }) {
                   <Button
                     className="w-full rounded-xl bg-secondary text-primary hover:bg-primary hover:text-secondary"
                     onClick={handleBuy}
-                    disabled={
-                      !currentUser ||
-                      balance.usdc < amount * Number(asset.onChainData.price)
-                    }
+                    // disabled={
+                    //   !currentUser ||
+                    //   balance.usdc < amount * Number(asset.onChainData.price)
+                    // }
                   >
                     Pay with crypto ( save $
                     {amount * Number(asset.onChainData.price) * 0.04} )

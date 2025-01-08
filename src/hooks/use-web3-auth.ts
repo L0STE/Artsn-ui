@@ -522,109 +522,416 @@
 // export default useWeb3
 
 
-import { useCallback, useEffect, useState, useMemo, useRef } from 'react'
-import {
-  CHAIN_NAMESPACES,
-  IProvider,
-  WALLET_ADAPTERS,
-  WEB3AUTH_NETWORK,
-  UX_MODE,
-  IWeb3AuthCoreOptions,
-  IAdapter,
-} from '@web3auth/base'
-import { getInjectedAdapters } from '@web3auth/default-solana-adapter'
-import { SolanaPrivateKeyProvider } from '@web3auth/solana-provider'
-import { Web3AuthNoModal } from '@web3auth/no-modal'
-import { AuthAdapter } from '@web3auth/auth-adapter'
-import { useMutation } from '@apollo/client'
-import { LOGIN_USER } from '@/graphql/mutations/user'
-import { useToast } from '@/hooks/use-toast'
-import { useAuthStore } from '@/lib/stores/useAuthStore'
-import { usePaymentStore } from '@/lib/stores/usePaymentStore'
-import RPC from '@/components/blockchain/solana-rpc'
-import debounce from 'lodash/debounce'
+// VERSION 2222222
 
-const CLIENT_ID = 'BI8MhAUT4vK4cfQZRQ_NEUYOHE3dhD4ouJif9SUgbgBeeZwP6wBlXast2pZsQJlney3nPBDb-PcMl9oF6lV67P0'
-const CHAIN_CONFIG = {
-  chainNamespace: CHAIN_NAMESPACES.SOLANA,
-  chainId: '0x3',
-  rpcTarget: 'https://api.devnet.solana.com',
-  displayName: 'Solana Devnet',
-  blockExplorerUrl: 'https://explorer.solana.com',
-  ticker: 'SOL',
-  tickerName: 'Solana Token',
-}
+// import { useCallback, useEffect, useState, useMemo, useRef } from 'react'
+// import {
+//   CHAIN_NAMESPACES,
+//   IProvider,
+//   WALLET_ADAPTERS,
+//   WEB3AUTH_NETWORK,
+//   UX_MODE,
+//   IWeb3AuthCoreOptions,
+//   IAdapter,
+// } from '@web3auth/base'
+// import { getInjectedAdapters } from '@web3auth/default-solana-adapter'
+// import { SolanaPrivateKeyProvider } from '@web3auth/solana-provider'
+// import { Web3AuthNoModal } from '@web3auth/no-modal'
+// import { AuthAdapter } from '@web3auth/auth-adapter'
+// import { useMutation } from '@apollo/client'
+// import { LOGIN_USER } from '@/graphql/mutations/user'
+// import { useToast } from '@/hooks/use-toast'
+// import { useAuthStore } from '@/lib/stores/useAuthStore'
+// import { usePaymentStore } from '@/lib/stores/usePaymentStore'
+// import RPC from '@/components/blockchain/solana-rpc'
+// import debounce from 'lodash/debounce'
 
-class RateLimitedRPC {
-  private static instance: RateLimitedRPC
-  private requestCount: number = 0
-  private lastRequestTime: number = 0
-  private readonly MAX_REQUESTS_PER_WINDOW = 10
-  private readonly WINDOW_MS = 1000
-  private provider: IProvider
+// const CLIENT_ID = 'BI8MhAUT4vK4cfQZRQ_NEUYOHE3dhD4ouJif9SUgbgBeeZwP6wBlXast2pZsQJlney3nPBDb-PcMl9oF6lV67P0'
+// const CHAIN_CONFIG = {
+//   chainNamespace: CHAIN_NAMESPACES.SOLANA,
+//   chainId: '0x3',
+//   rpcTarget: 'https://api.devnet.solana.com',
+//   displayName: 'Solana Devnet',
+//   blockExplorerUrl: 'https://explorer.solana.com',
+//   ticker: 'SOL',
+//   tickerName: 'Solana Token',
+// }
 
-  private constructor(provider: IProvider) {
-    this.provider = provider
-  }
+// class RateLimitedRPC {
+//   private static instance: RateLimitedRPC
+//   private requestCount: number = 0
+//   private lastRequestTime: number = 0
+//   private readonly MAX_REQUESTS_PER_WINDOW = 10
+//   private readonly WINDOW_MS = 1000
+//   private provider: IProvider
 
-  static getInstance(provider: IProvider): RateLimitedRPC {
-    if (!RateLimitedRPC.instance || RateLimitedRPC.instance.provider !== provider) {
-      RateLimitedRPC.instance = new RateLimitedRPC(provider)
-    }
-    return RateLimitedRPC.instance
-  }
+//   private constructor(provider: IProvider) {
+//     this.provider = provider
+//   }
 
-  private async rateLimitedRequest<T>(request: () => Promise<T>): Promise<T> {
-    const now = Date.now()
+//   static getInstance(provider: IProvider): RateLimitedRPC {
+//     if (!RateLimitedRPC.instance || RateLimitedRPC.instance.provider !== provider) {
+//       RateLimitedRPC.instance = new RateLimitedRPC(provider)
+//     }
+//     return RateLimitedRPC.instance
+//   }
+
+//   private async rateLimitedRequest<T>(request: () => Promise<T>): Promise<T> {
+//     const now = Date.now()
     
-    if (now - this.lastRequestTime > this.WINDOW_MS) {
-      this.requestCount = 0
-      this.lastRequestTime = now
-    }
+//     if (now - this.lastRequestTime > this.WINDOW_MS) {
+//       this.requestCount = 0
+//       this.lastRequestTime = now
+//     }
 
-    if (this.requestCount >= this.MAX_REQUESTS_PER_WINDOW) {
-      const waitTime = this.WINDOW_MS - (now - this.lastRequestTime)
-      await new Promise(resolve => setTimeout(resolve, waitTime))
-      return this.rateLimitedRequest(request)
-    }
+//     if (this.requestCount >= this.MAX_REQUESTS_PER_WINDOW) {
+//       const waitTime = this.WINDOW_MS - (now - this.lastRequestTime)
+//       await new Promise(resolve => setTimeout(resolve, waitTime))
+//       return this.rateLimitedRequest(request)
+//     }
 
-    try {
-      this.requestCount++
-      return await request()
-    } catch (error: any) {
-      if (error.message?.includes('429')) {
-        await new Promise(resolve => setTimeout(resolve, this.WINDOW_MS))
-        return this.rateLimitedRequest(request)
-      }
-      throw error
-    }
-  }
+//     try {
+//       this.requestCount++
+//       return await request()
+//     } catch (error: any) {
+//       if (error.message?.includes('429')) {
+//         await new Promise(resolve => setTimeout(resolve, this.WINDOW_MS))
+//         return this.rateLimitedRequest(request)
+//       }
+//       throw error
+//     }
+//   }
 
-  async getBalance() {
-    return this.rateLimitedRequest(async () => {
-      return await new RPC(this.provider).getBalance()
-    })
-  }
+//   async getBalance() {
+//     return this.rateLimitedRequest(async () => {
+//       return await new RPC(this.provider).getBalance()
+//     })
+//   }
 
-  async getAccounts() {
-    return this.rateLimitedRequest(async () => {
-      return await new RPC(this.provider).getAccounts()
-    })
-  }
+//   async getAccounts() {
+//     return this.rateLimitedRequest(async () => {
+//       return await new RPC(this.provider).getAccounts()
+//     })
+//   }
 
-  async signTransaction(tx: any) {
-    // No rate limiting for user-initiated actions
-    return await new RPC(this.provider).signTransaction(tx)
-  }
-}
+//   async signTransaction(tx: any) {
+//     // No rate limiting for user-initiated actions
+//     return await new RPC(this.provider).signTransaction(tx)
+//   }
+// }
 
+// export const useWeb3Auth = () => {
+//   const [loginUserMutation] = useMutation(LOGIN_USER)
+//   const { toast } = useToast()
+//   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null)
+//   const initializationPromise = useRef<Promise<void> | null>(null)
+//   const [provider, setProvider] = useState<IProvider | null>(null)
+//   const { setBalance } = usePaymentStore()
+//   const {
+//     loggedIn,
+//     loading,
+//     error,
+//     setWeb3AuthState,
+//     setLoading,
+//     setError: setStoreError,
+//     setAuth,
+//   } = useAuthStore()
+
+//   const rpc = useMemo(() => 
+//     provider ? RateLimitedRPC.getInstance(provider) : null,
+//     [provider]
+//   )
+
+//   const handlePostConnection = useCallback(async (web3authInstance: Web3AuthNoModal) => {
+//     if (!web3authInstance.provider) return
+
+//     const rpcInstance = RateLimitedRPC.getInstance(web3authInstance.provider)
+//     const accounts = await rpcInstance.getAccounts()
+//     const publicKey = accounts[0]
+//     const user = await web3authInstance.getUserInfo()
+
+//     try {
+//       const result = await loginUserMutation({
+//         variables: { publicKey, password: publicKey }
+//       })
+
+//       if (result.data?.login) {
+//         setAuth(result.data.login)
+//         const balance = await rpcInstance.getBalance()
+//         setBalance(balance)
+//       }
+//     } catch (error) {
+//       console.error('Login mutation error:', error)
+//       throw error
+//     }
+//   }, [loginUserMutation, setAuth, setBalance])
+//   let injectedAdapters: IAdapter<unknown>[] = []
+//   const initialize = useCallback(async () => {
+//     if (initializationPromise.current) return initializationPromise.current
+//     if (web3auth?.connected) return
+
+//     initializationPromise.current = (async () => {
+//       try {
+//         setLoading(true)
+//         const privateKeyProvider = new SolanaPrivateKeyProvider({
+//           config: { chainConfig: CHAIN_CONFIG }
+//         })
+
+//         const web3authInstance = new Web3AuthNoModal({
+//           clientId: CLIENT_ID,
+//           web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+//           chainConfig: CHAIN_CONFIG,
+//         })
+
+//         const web3authOptions: IWeb3AuthCoreOptions = {
+//           clientId: CLIENT_ID,
+//           privateKeyProvider,
+//           web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+//         }
+
+//         const authAdapter = new AuthAdapter({
+//           privateKeyProvider,
+//           adapterSettings: { uxMode: UX_MODE.REDIRECT }
+//         })
+
+//         web3authInstance.configureAdapter(authAdapter)
+
+//         injectedAdapters = getInjectedAdapters({ options: web3authOptions })
+
+//         injectedAdapters.forEach(adapter => {
+//           web3authInstance.configureAdapter(adapter)
+//         })
+
+//         await web3authInstance.init()
+//         setWeb3auth(web3authInstance)
+
+//         if (web3authInstance.connected) {
+//           setProvider(web3authInstance.provider)
+//           await handlePostConnection(web3authInstance)
+//         }
+
+//       } catch (error) {
+//         console.error('Failed to initialize Web3Auth:', error)
+//         setStoreError(error as Error)
+//       } finally {
+//         setLoading(false)
+//         initializationPromise.current = null
+//       }
+//     })()
+
+//     return initializationPromise.current
+//   }, [handlePostConnection, setLoading, setStoreError, web3auth?.connected])
+
+//   useEffect(() => {
+//     initialize()
+//   }, [initialize])
+
+//   const login = useCallback(async () => {
+//     if (!web3auth) {
+//       console.error('Web3Auth not initialized')
+//       return null
+//     }
+
+//     try {
+//       setLoading(true)
+
+//       if (web3auth.connected) {
+//         const userInfo = await web3auth.getUserInfo()
+//         await handlePostConnection(web3auth)
+//         return userInfo
+//       }
+
+//       const web3authProvider = await web3auth.connectTo(WALLET_ADAPTERS.AUTH, {
+//         loginProvider: 'google'
+//       })
+
+//       setWeb3AuthState({
+//         provider: web3authProvider,
+//         loggedIn: true
+//       })
+
+//       await handlePostConnection(web3auth)
+//       return await web3auth.getUserInfo()
+//     } catch (error) {
+//       console.error('Login error:', error)
+//       setStoreError(error as Error)
+//       return null
+//     } finally {
+//       setLoading(false)
+//     }
+//   }, [web3auth, handlePostConnection, setLoading, setStoreError, setWeb3AuthState])
+
+//   const logout = useCallback(async () => {
+//     if (!web3auth) return
+
+//     try {
+//       await web3auth.logout()
+//       useAuthStore.getState().logout()
+//       setBalance({ sol: 0, usdc: 0 })
+//     } catch (error) {
+//       console.error('Logout error:', error)
+//       setStoreError(error as Error)
+//     }
+//   }, [web3auth, setStoreError, setBalance])
+
+//   const signTransaction = useCallback(async (tx: any) => {
+//     if (!rpc) {
+//       throw new Error('Web3 provider not initialized')
+//     }
+
+//     try {
+//       return await rpc.signTransaction({ tx })
+//     } catch (error) {
+//       console.error('Transaction signing error:', error)
+//       throw error
+//     }
+//   }, [rpc])
+
+//   return {
+//     web3auth,
+//     provider,
+//     loggedIn,
+//     loading,
+//     error,
+//     login,
+//     logout,
+//     signTransaction,
+//     injectedAdapters
+//   }
+// }
+
+// export const useWeb3 = () => {
+//   const { provider, loggedIn } = useAuthStore()
+//   const { setBalance } = usePaymentStore()
+//   const lastBalanceCheck = useRef<number>(0)
+//   const MIN_BALANCE_INTERVAL = 2000 // 2 seconds minimum between balance checks
+
+//   // Debug provider state
+//   useEffect(() => {
+//     console.log('Provider state:', {
+//       providerExists: !!provider,
+//       loggedIn,
+//       providerType: provider?.constructor?.name,
+//     })
+//   }, [provider, loggedIn])
+
+//   // Memoize RPC instance
+//   const rpc = useMemo(() => {
+//     if (!provider) {
+//       console.log('No provider available for RPC creation')
+//       return null
+//     }
+//     console.log('Creating new RPC instance')
+//     return new RPC(provider)
+//   }, [provider])
+
+//   // Rate-limited balance fetching
+//   const getBalance = useCallback(async () => {
+//     if (!rpc) {
+//       console.log('No RPC instance available for getBalance')
+//       return null
+//     }
+
+//     const now = Date.now()
+//     if (now - lastBalanceCheck.current < MIN_BALANCE_INTERVAL) {
+//       console.log('Balance check too frequent, skipping')
+//       return null
+//     }
+
+//     try {
+//       console.log('Fetching balance...')
+//       const balance = await rpc.getBalance()
+//       setBalance(balance)
+//       lastBalanceCheck.current = now
+//       console.log('Balance fetched:', balance)
+//       return balance
+//     } catch (error) {
+//       console.error('Error fetching balance:', error)
+//       return null
+//     }
+//   }, [rpc, setBalance])
+
+//   // Memoize and debounce getAccounts
+//   const getAccounts = useCallback(
+//     debounce(async () => {
+//       if (!rpc) {
+//         console.log('No RPC instance available for getAccounts')
+//         return null
+//       }
+//       try {
+//         console.log('Fetching accounts...')
+//         const accounts = await rpc.getAccounts()
+//         console.log('Accounts fetched:', accounts)
+//         return accounts
+//       } catch (error) {
+//         console.error('Error getting accounts:', error)
+//         return null
+//       }
+//     }, 1000),
+//     [rpc]
+//   )
+
+//   // Transaction signing doesn't need rate limiting since it's user-initiated
+//   const signTransaction = useCallback(
+//     async (tx: any) => {
+//       if (!rpc) {
+//         console.log('No RPC instance available for signTransaction')
+//         return null
+//       }
+//       try {
+//         console.log('Signing transaction...')
+//         const result = await rpc.signTransaction({ tx })
+//         console.log('Transaction signed:', result)
+//         return result
+//       } catch (error) {
+//         console.error('Error signing transaction:', error)
+//         throw error // Propagate signing errors
+//       }
+//     },
+//     [rpc]
+//   )
+
+//   // Automatic balance updating when provider changes
+//   useEffect(() => {
+//     if (provider && loggedIn) {
+//       console.log('Provider/login state changed, updating balance')
+//       getBalance()
+//     }
+//   }, [provider, loggedIn, getBalance])
+
+//   return {
+//     rpc,
+//     getBalance,
+//     getAccounts,
+//     signTransaction,
+//   }
+// }
+
+// export default useWeb3Auth
+
+
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { CHAIN_NAMESPACES, IProvider, WALLET_ADAPTERS, WEB3AUTH_NETWORK, UX_MODE, IWeb3AuthCoreOptions, IAdapter } from "@web3auth/base";
+import { getInjectedAdapters } from "@web3auth/default-solana-adapter";
+import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider";
+import { Web3AuthNoModal } from "@web3auth/no-modal";
+import { AuthAdapter } from "@web3auth/auth-adapter";
+import RPC from "@/components/blockchain/solana-rpc";
+import { LOGIN_USER } from '@/graphql/mutations/user';
+import { useMutation } from '@apollo/client';
+import { useAuthStore } from '@/lib/stores/useAuthStore';
+
+const clientId = "BI8MhAUT4vK4cfQZRQ_NEUYOHE3dhD4ouJif9SUgbgBeeZwP6wBlXast2pZsQJlney3nPBDb-PcMl9oF6lV67P0";
+let injectedAdapters: IAdapter<unknown>[] = [];
 export const useWeb3Auth = () => {
-  const [loginUserMutation] = useMutation(LOGIN_USER)
-  const { toast } = useToast()
-  const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null)
-  const initializationPromise = useRef<Promise<void> | null>(null)
-  const [provider, setProvider] = useState<IProvider | null>(null)
-  const { setBalance } = usePaymentStore()
+  const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
+  const [provider, setProvider] = useState<IProvider | null>(null);
+  // const [loggedIn, setLoggedIn] = useState(false);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState<string | null>(null);
+  const [userWallet, setUserWallet] = useState<string | null>(null);
+  const [loginUserMutation] = useMutation(LOGIN_USER);
+  const rpc = useMemo(() => provider ? new RPC(provider) : null, [provider]);
   const {
     loggedIn,
     loading,
@@ -635,228 +942,265 @@ export const useWeb3Auth = () => {
     setAuth,
   } = useAuthStore()
 
-  const rpc = useMemo(() => 
-    provider ? RateLimitedRPC.getInstance(provider) : null,
-    [provider]
-  )
-
-  const handlePostConnection = useCallback(async (web3authInstance: Web3AuthNoModal) => {
-    if (!web3authInstance.provider) return
-
-    const rpcInstance = RateLimitedRPC.getInstance(web3authInstance.provider)
-    const accounts = await rpcInstance.getAccounts()
-    const publicKey = accounts[0]
-    const user = await web3authInstance.getUserInfo()
-
+  const initWeb3Auth = useCallback(async () => {
     try {
-      const result = await loginUserMutation({
-        variables: { publicKey, password: publicKey }
-      })
+      const chainConfig = {
+        chainNamespace: CHAIN_NAMESPACES.SOLANA,
+        chainId: "0x3", // Please use 0x1 for Mainnet, 0x2 for Testnet, 0x3 for Devnet
+        rpcTarget: "https://api.devnet.solana.com",
+        displayName: "Solana Devnet",
+        blockExplorerUrl: "https://explorer.solana.com",
+        ticker: "SOL",
+        tickerName: "Solana Token",
+        logo: "",
+      };
 
-      if (result.data?.login) {
-        setAuth(result.data.login)
-        const balance = await rpcInstance.getBalance()
-        setBalance(balance)
+      const privateKeyProvider = new SolanaPrivateKeyProvider({ config: { chainConfig } });
+
+      const web3authOptions: IWeb3AuthCoreOptions = {
+        clientId,
+        privateKeyProvider,
+        web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+      };
+      const web3auth = new Web3AuthNoModal(web3authOptions);
+
+      setWeb3auth(web3auth);
+
+      const authAdapter = new AuthAdapter({
+        privateKeyProvider,
+        adapterSettings: {
+          uxMode: UX_MODE.REDIRECT,
+        },
+      });
+      web3auth.configureAdapter(authAdapter);
+
+      injectedAdapters = getInjectedAdapters({ options: web3authOptions });
+      injectedAdapters.forEach((adapter) => {
+        web3auth.configureAdapter(adapter);
+      });
+
+      const availableAdapters = injectedAdapters.map((adapter) => adapter.name);
+
+      await web3auth.init();
+      setProvider(web3auth.provider);
+      if (web3auth.connected) {
+        console.log('web3auth is connected')
+
+        const rpc = new RPC(web3auth.provider!);
+        const accounts = await rpc?.getAccounts();
+        const publicKey = accounts![0];
+        const{ idToken }= await web3auth.authenticateUser();
+        const user = await web3auth.getUserInfo();
+
+
+        const userObject= {
+            email: user.email || '',
+            publicKey: publicKey,
+            username: user.name || '',
+            profilePictureUrl: user.profileImage || '',
+        };  
+
+        setUserWallet(userObject.publicKey);
+
+            const result = await loginUserMutation({
+              variables: {
+                publicKey: userObject.publicKey,
+                password: userObject.publicKey,
+              },
+              onCompleted: (data) => {
+                console.log('Mutation completed with data:', data);
+                setAuth(data.login);
+              },
+              onError: (error) => {
+                console.error('Mutation error:', {
+                  message: error.message,
+                  graphQLErrors: error.graphQLErrors?.map(err => ({
+                    message: err.message,
+                    path: err.path,
+                    extensions: err.extensions
+                  })),
+                  networkError: error.networkError
+                });
+              }
+            }).catch(error => {
+              console.error('Caught in mutation catch block:', error);
+              throw error;
+            });
+
+            // toast({
+            //   title: 'Welcome back!',
+            //   description: 'You have successfully logged in.',
+            // })
+            // router.push('/dashboard');
+        
+        // else {
+        //   router.push('/register');
+        // }
+
       }
     } catch (error) {
-      console.error('Login mutation error:', error)
-      throw error
+      console.error(error);
+    }  finally {
+      setLoading(false);
     }
-  }, [loginUserMutation, setAuth, setBalance])
-  let injectedAdapters: IAdapter<unknown>[] = []
-  const initialize = useCallback(async () => {
-    if (initializationPromise.current) return initializationPromise.current
-    if (web3auth?.connected) return
-
-    initializationPromise.current = (async () => {
-      try {
-        setLoading(true)
-        const privateKeyProvider = new SolanaPrivateKeyProvider({
-          config: { chainConfig: CHAIN_CONFIG }
-        })
-
-        const web3authInstance = new Web3AuthNoModal({
-          clientId: CLIENT_ID,
-          web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
-          chainConfig: CHAIN_CONFIG,
-        })
-
-        const web3authOptions: IWeb3AuthCoreOptions = {
-          clientId: CLIENT_ID,
-          privateKeyProvider,
-          web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
-        }
-
-        const authAdapter = new AuthAdapter({
-          privateKeyProvider,
-          adapterSettings: { uxMode: UX_MODE.REDIRECT }
-        })
-
-        web3authInstance.configureAdapter(authAdapter)
-
-        injectedAdapters = getInjectedAdapters({ options: web3authOptions })
-
-        injectedAdapters.forEach(adapter => {
-          web3authInstance.configureAdapter(adapter)
-        })
-
-        await web3authInstance.init()
-        setWeb3auth(web3authInstance)
-
-        if (web3authInstance.connected) {
-          setProvider(web3authInstance.provider)
-          await handlePostConnection(web3authInstance)
-        }
-
-      } catch (error) {
-        console.error('Failed to initialize Web3Auth:', error)
-        setStoreError(error as Error)
-      } finally {
-        setLoading(false)
-        initializationPromise.current = null
-      }
-    })()
-
-    return initializationPromise.current
-  }, [handlePostConnection, setLoading, setStoreError, web3auth?.connected])
+  }, []);
 
   useEffect(() => {
-    initialize()
-  }, [initialize])
+    initWeb3Auth();
+  }, [initWeb3Auth]);
 
   const login = useCallback(async () => {
     if (!web3auth) {
-      console.error('Web3Auth not initialized')
-      return null
+      console.log('Web3Auth not initialized, initializing...');
+      await initWeb3Auth();
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
+      if(web3auth && web3auth.connected) {
 
-      if (web3auth.connected) {
-        const userInfo = await web3auth.getUserInfo()
-        await handlePostConnection(web3auth)
-        return userInfo
+        const user = await web3auth!.getUserInfo();
+        
+        const accounts = await rpc?.getAccounts();
+        
+        const publicKey = accounts?.[0];
+        
+        return {
+          email: user.email,
+          publicKey,
+          profileImage: user.profileImage,
+        };
       }
+      const web3authProvider = await web3auth!.connectTo(WALLET_ADAPTERS.AUTH, {
+        loginProvider: "google",
+      });
 
-      const web3authProvider = await web3auth.connectTo(WALLET_ADAPTERS.AUTH, {
-        loginProvider: 'google'
-      })
+      setProvider(web3authProvider);
 
-      setWeb3AuthState({
-        provider: web3authProvider,
-        loggedIn: true
-      })
-
-      await handlePostConnection(web3auth)
-      return await web3auth.getUserInfo()
-    } catch (error) {
-      console.error('Login error:', error)
-      setStoreError(error as Error)
-      return null
+      const user = await web3auth!.getUserInfo();
+      
+      const accounts = await rpc?.getAccounts();
+      
+      const publicKey = accounts?.[0];
+      
+      return {
+        email: user.email,
+        publicKey,
+        profileImage: user.profileImage,
+      };
+    } catch (err) {
+      console.error("Login failed:", err);
+      return null;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [web3auth, handlePostConnection, setLoading, setStoreError, setWeb3AuthState])
+  }, [web3auth, rpc, initWeb3Auth]);
+
+  const loginWithAdapter = useCallback(async (adapterName: string) => {
+    if (!web3auth) {
+      console.error("Web3Auth not initialized");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const web3authProvider = await web3auth.connectTo(adapterName);
+      setProvider(web3authProvider);
+
+      const user = await web3auth.getUserInfo();
+      
+      const accounts = await rpc?.getAccounts();
+      
+      const publicKey = accounts?.[0];
+
+      try {
+        const result = await loginUserMutation({
+          variables: {
+            publicKey,
+            password: publicKey,
+          },
+        })
+
+        if (result.data?.login) {
+          setAuth(result.data.login)
+
+          // Get and set balance after successful login
+          // const balance = await rpc.getBalance()
+          // setBalance(balance)
+
+          // toast({
+          //   title: 'Welcome back!',
+          //   description: 'You have successfully logged in.',
+          // })
+        }
+      } catch (error) {
+        console.error('Login mutation error:', error)
+        throw error
+      }
+      
+      return {
+        email: user.email || 'adapter',
+        publicKey,
+        profileImage: user.profileImage || 'adapter',
+      };
+    } catch (err) {
+      console.error("Login failed:", err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [web3auth, rpc, initWeb3Auth]);
 
   const logout = useCallback(async () => {
-    if (!web3auth) return
-
-    try {
-      await web3auth.logout()
-      useAuthStore.getState().logout()
-      setBalance({ sol: 0, usdc: 0 })
-    } catch (error) {
-      console.error('Logout error:', error)
-      setStoreError(error as Error)
-    }
-  }, [web3auth, setStoreError, setBalance])
-
-  const signTransaction = useCallback(async (tx: any) => {
-    if (!rpc) {
-      throw new Error('Web3 provider not initialized')
+    if (!web3auth) {
+      console.error("Web3Auth not initialized");
+      return;
     }
 
     try {
-      return await rpc.signTransaction({ tx })
-    } catch (error) {
-      console.error('Transaction signing error:', error)
-      throw error
+      await web3auth.logout();
+      setProvider(null);
+      setAuth(null);
+      localStorage.removeItem('web3auth_logged_in');
+    } catch (err) {
+      console.error("Logout failed:", err);
     }
-  }, [rpc])
+  }, [web3auth]);
+
+  const getUserInfo = useCallback(async () => {
+    try {
+      const user = await web3auth!.getUserInfo();
+      
+      const accounts = await rpc?.getAccounts();
+      
+      return {
+        ...user,
+        publicKey: accounts?.[0],
+      };
+    } catch (err) {
+      console.error("Failed to get user info:", err);
+      return null;
+    }
+  }, [web3auth, rpc]);
+
+  // Check localStorage on mount
+  useEffect(() => {
+    if (web3auth && web3auth?.connected) {
+      setProvider(web3auth.provider);
+    }
+  }, [web3auth]);
 
   return {
     web3auth,
+    injectedAdapters,
     provider,
     loggedIn,
     loading,
     error,
-    login,
-    logout,
-    signTransaction,
-    injectedAdapters
-  }
-}
-
-export const useWeb3 = () => {
-  const { provider } = useAuthStore()
-  const { setBalance } = usePaymentStore()
-  const lastBalanceCheck = useRef<number>(0)
-  const MIN_BALANCE_INTERVAL = 2000
-
-  const rpc = useMemo(() => 
-    provider ? RateLimitedRPC.getInstance(provider) : null,
-    [provider]
-  )
-
-  const getBalance = useCallback(async () => {
-    if (!rpc) return null
-
-    const now = Date.now()
-    if (now - lastBalanceCheck.current < MIN_BALANCE_INTERVAL) {
-      return null
-    }
-
-    try {
-      const balance = await rpc.getBalance()
-      setBalance(balance)
-      lastBalanceCheck.current = now
-      return balance
-    } catch (error) {
-      console.error('Error fetching balance:', error)
-      return null
-    }
-  }, [rpc, setBalance])
-
-  const getAccounts = useCallback(
-    debounce(async () => {
-      if (!rpc) return null
-      try {
-        return await rpc.getAccounts()
-      } catch (error) {
-        console.error('Error getting accounts:', error)
-        return null
-      }
-    }, 1000),
-    [rpc]
-  )
-
-  const signTransaction = useCallback(async (tx: any) => {
-    if (!rpc) return null
-    try {
-      return await rpc.signTransaction({ tx })
-    } catch (error) {
-      console.error('Error signing transaction:', error)
-      return null
-    }
-  }, [rpc])
-
-  return {
     rpc,
-    getBalance,
-    getAccounts,
-    signTransaction,
-  }
-}
-
-export default useWeb3Auth
+    login,
+    loginWithAdapter,
+    logout,
+    getUserInfo,
+  };
+};
