@@ -76,7 +76,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = useCallback(async () => {
     console.log('Checking Auth')
-    const storedAuth = useAuthStore.getState();
+    const storedAuth = useAuthStore.getState()
     const token = storedAuth.authToken
     console.log('Token:', token)
     if (!token) {
@@ -313,26 +313,26 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       // First check if we have auth state in the store
-      const storedAuth = useAuthStore.getState();
-      
+      const storedAuth = useAuthStore.getState()
+
       if (storedAuth.authToken && storedAuth.currentUser) {
         setState((prev) => ({
           ...prev,
           user: storedAuth.currentUser,
           isAuthenticated: true,
           loading: false,
-        }));
-        return;
+        }))
+        return
       }
-      
+
       // If no stored state, then check token and run normal auth check
-      await checkAuth();
-    };
-  
+      await checkAuth()
+    }
+
     initialize().then(() => {
-      initAuth();
-    });
-  }, [initialize, checkAuth]);
+      initAuth()
+    })
+  }, [initialize, checkAuth])
 
   useEffect(() => {
     if (web3auth.current?.connected && !state.user) {

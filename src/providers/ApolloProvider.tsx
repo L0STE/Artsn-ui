@@ -33,7 +33,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 
 // Auth link for adding token
 const authLink = setContext((_, { headers }) => {
-  const storedAuth = useAuthStore.getState();
+  const storedAuth = useAuthStore.getState()
   const token = storedAuth.authToken
   console.log('Token:', token)
   // Return the headers to the context so httpLink can read them

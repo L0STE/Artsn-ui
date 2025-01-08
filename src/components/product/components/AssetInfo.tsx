@@ -8,16 +8,16 @@ import { loadStripe } from '@stripe/stripe-js'
 import { v4 as uuid } from 'uuid'
 import { CreditCard } from 'lucide-react'
 import { useHandleShare } from '@/hooks/use-handle-share'
-import { 
-  // useWeb3, 
-  useWeb3Auth 
+import {
+  // useWeb3,
+  useWeb3Auth,
 } from '@/hooks/use-web3-auth'
 import { useAuthStore } from '@/lib/stores/useAuthStore'
 import { usePaymentStore } from '@/lib/stores/usePaymentStore'
 import { useToast } from '@/hooks/use-toast'
 import { LoginSecondary } from '@/components/login/LoginSecondary'
 import { useRateLimitedBalance } from '@/hooks/use-rate-limited-balance'
-import RPC from "@/components/blockchain/solana-rpc";
+import RPC from '@/components/blockchain/solana-rpc'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,10 +61,12 @@ export default function AssetInfo({ asset }: { asset: AssetInfo }) {
   const router = useRouter()
   const { toast } = useToast()
   const { handleCopy, copied } = useHandleShare()
-  const { provider, web3auth, rpc } = useWeb3Auth();
+  const { provider, web3auth, rpc } = useWeb3Auth()
   // Auth store
   const { currentUser } = useAuthStore()
-  const { isLoading: balanceLoading } = useRateLimitedBalance(currentUser?.publicKey);
+  const { isLoading: balanceLoading } = useRateLimitedBalance(
+    currentUser?.publicKey
+  )
   // Payment store - only use balance, not setBalance
   const { balance } = usePaymentStore()
   console.log('USER BALANCE', balance)
@@ -183,44 +185,44 @@ export default function AssetInfo({ asset }: { asset: AssetInfo }) {
   //   }
   // }, [isBuying, rpc, currentUser, buyTx, signTransaction, toast])
 
-  const handleBuy = async() => {
-    console.log('handleBuy ->', web3auth);
-    if(!web3auth || !web3auth.provider) {
-      console.log('Web3 provider not initialized');
-      return;
+  const handleBuy = async () => {
+    console.log('handleBuy ->', web3auth)
+    if (!web3auth || !web3auth.provider) {
+      console.log('Web3 provider not initialized')
+      return
     }
-    setIsBuying(true);
-    const rpc = new RPC(web3auth.provider!);
-    console.log('rpc ->', rpc);
+    setIsBuying(true)
+    const rpc = new RPC(web3auth.provider!)
+    console.log('rpc ->', rpc)
     const getAccounts = async () => {
-      const accounts = await rpc.getAccounts();
-      console.log('accounts ->', accounts);
-      return accounts;
+      const accounts = await rpc.getAccounts()
+      console.log('accounts ->', accounts)
+      return accounts
     }
 
     if (web3auth && web3auth.connected && web3auth.provider) {
-      const rpc = new RPC(web3auth.provider);
-      const accounts =  await getAccounts();
-      console.log('userAccounts ->',accounts);
+      const rpc = new RPC(web3auth.provider)
+      const accounts = await getAccounts()
+      console.log('userAccounts ->', accounts)
       if (!accounts) {
-        console.error('No accounts found');
-        return;
+        console.error('No accounts found')
+        return
       }
-      const tx = await buyTx();
-      console.log('tx ->', tx); // VersionedTransaction
+      const tx = await buyTx()
+      console.log('tx ->', tx) // VersionedTransaction
       if (tx) {
-        setIsProcessing(true);
-        const signature = await rpc!.signVersionedTransaction({ tx });
-        console.log('signature ->', signature);
+        setIsProcessing(true)
+        const signature = await rpc!.signVersionedTransaction({ tx })
+        console.log('signature ->', signature)
         toast({
           title: 'Transaction sent',
           description: 'Transaction has been sent to the blockchain',
         })
-        setIsBuying(false);
-        setIsProcessing(false);
-        setIsComplete(true);
+        setIsBuying(false)
+        setIsProcessing(false)
+        setIsComplete(true)
       } else {
-        console.error('Transaction is undefined');
+        console.error('Transaction is undefined')
       }
     }
   }

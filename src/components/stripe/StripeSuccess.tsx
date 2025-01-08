@@ -52,7 +52,7 @@ export default function StripeSuccess() {
 
   const verifyPayment = useCallback(
     async (params: PaymentParams) => {
-      const storedAuth = useAuthStore.getState();
+      const storedAuth = useAuthStore.getState()
       const token = storedAuth.authToken
       console.log('Token:', token)
 
@@ -142,7 +142,7 @@ export default function StripeSuccess() {
   // Single useEffect for auth rehydration
   useEffect(() => {
     const checkAuthStatus = async () => {
-      const storedAuth = useAuthStore.getState();
+      const storedAuth = useAuthStore.getState()
       const token = storedAuth.authToken
       console.log('Token:', token)
 

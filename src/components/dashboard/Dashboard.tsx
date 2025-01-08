@@ -485,7 +485,7 @@ export default function DashboardFeature() {
           <div className="portfolio-card-4 md:col-span-5">
             <ArtisansTable assets={userAssets} />
           </div>
-          <div className="w-full flex flex-row gap-4 md:gap-8 md:col-span-5 md:flex-row">
+          <div className="flex w-full flex-row gap-4 md:col-span-5 md:flex-row md:gap-8">
             <div className="portfolio-card-1 md:col-span-3">
               <PortfolioGraph />
             </div>
