@@ -412,7 +412,7 @@ export default function DashboardFeature() {
                   Buying Power
                 </motion.p>
                 <motion.h1 className="text-xl text-secondary md:text-3xl">
-                  ${userBalance?.usdc}
+                  ${userBalance?.usdc ?? 0}
                 </motion.h1>
               </div>
               <motion.p className="md:text-md mb-1 text-xs text-secondary text-zinc-700 dark:text-zinc-300">
@@ -430,7 +430,7 @@ export default function DashboardFeature() {
                   Buying Power
                 </motion.p>
                 <motion.h1 className="text-xl text-secondary md:text-3xl">
-                  {userBalance?.sol?.toFixed(5)}
+                  {userBalance?.sol?.toFixed(5) ?? 0}
                 </motion.h1>
               </div>
               <motion.p className="md:text-md mb-1 text-xs text-secondary text-zinc-700 dark:text-zinc-300">
@@ -451,14 +451,14 @@ export default function DashboardFeature() {
                   ${(currentPrice! / 100000000).toFixed(2)}
                 </motion.h1>
               </div>
-              <div className="ml-4 flex flex-col">
+              {/* <div className="ml-4 flex flex-col">
                 <motion.p className="md:text-md text-xs text-secondary text-zinc-700 dark:text-zinc-300">
                   Daily High
                 </motion.p>
                 <motion.p className="md:text-md mb-1 text-xs text-secondary text-zinc-700 dark:text-zinc-300">
                   ${(dayRange.high / 100000000).toFixed(2)}
                 </motion.p>
-              </div>
+              </div> */}
             </div>
           </Card>
         </div>
@@ -481,21 +481,23 @@ export default function DashboardFeature() {
         </div>
 
         {/* Bento Grid Section */}
-        <div className="grid w-full grid-cols-1 gap-4 md:w-11/12 md:grid-cols-7">
-          <div className="portfolio-card-1 md:col-span-3">
-            <PortfolioGraph />
-          </div>
-          {/* <div className="portfolio-card-2 md:col-span-2">
-            <TopGainer />
-          </div>
-          <div className="portfolio-card-3 md:col-span-2">
-            <TrendingUp />
-          </div> */}
+        <div className="grid w-full grid-cols-1 gap-4 md:w-11/12">
           <div className="portfolio-card-4 md:col-span-5">
             <ArtisansTable assets={userAssets} />
           </div>
-          <div className="portfolio-card-5 md:col-span-2">
-            <InvitationCTA />
+          <div className="w-full flex flex-row gap-4 md:gap-8 md:col-span-5 md:flex-row">
+            <div className="portfolio-card-1 md:col-span-3">
+              <PortfolioGraph />
+            </div>
+            {/* <div className="portfolio-card-2 md:col-span-2">
+              <TopGainer />
+            </div>
+            <div className="portfolio-card-3 md:col-span-2">
+              <TrendingUp />
+            </div> */}
+            <div className="portfolio-card-5 md:col-span-2">
+              <InvitationCTA />
+            </div>
           </div>
         </div>
       </div>

@@ -354,7 +354,7 @@ export default function StripeSuccess() {
             ? 'Purchase Complete!'
             : 'Processing your purchase...'}
         </h2>
-        {!processingState.hasProcessed && <LoadingSpinner />}
+        {/* {!processingState.hasProcessed && <LoadingSpinner />} */}
       </div>
     </div>
   )
