@@ -338,7 +338,7 @@ export function LoginDialog({ className }: LoginDialogProps) {
                               key={adapter.name}
                               onClick={() => {
                                 loginWithAdapter(adapter.name),
-                                console.log('adapter', adapter.name)
+                                  console.log('adapter', adapter.name)
                               }}
                               className="flex items-center gap-2"
                             >

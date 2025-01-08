@@ -1,5 +1,5 @@
+//providers/Web3AuthProvider.tsx
 'use client'
-
 import {
   createContext,
   useContext,
@@ -23,6 +23,7 @@ import RPC from '@/components/blockchain/solana-rpc'
 import { ME_QUERY, IS_USER_REGISTERED } from '@/graphql/queries/user'
 import { CREATE_USER, LOGIN_USER } from '@/graphql/mutations/user'
 import { User } from '@/types/resolver-types'
+import { useAuthStore } from '@/lib/stores/useAuthStore'
 
 // Configuration constants
 const WEB3_AUTH_NETWORK = process.env
@@ -59,6 +60,7 @@ const initialState: AuthState = {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
+  console.log('AUTH PROVIDER MOUNTED')
   const [state, setState] = useState<AuthState>(initialState)
   const [provider, setProvider] = useState<IProvider | null>(null)
   const web3auth = useRef<Web3AuthNoModal | null>(null)
@@ -73,8 +75,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [createUser] = useMutation(CREATE_USER)
 
   const checkAuth = useCallback(async () => {
-    const token = localStorage.getItem('authToken')
-
+    console.log('Checking Auth')
+    const storedAuth = useAuthStore.getState();
+    const token = storedAuth.authToken
+    console.log('Token:', token)
     if (!token) {
       setState((prev) => ({
         ...prev,
@@ -114,6 +118,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [client])
 
   const initialize = useCallback(async () => {
+    console.log('Initializing Web3Auth')
     if (initializationPromise.current) return initializationPromise.current
     if (web3auth.current?.connected) return
 
@@ -206,8 +211,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       setProvider(web3auth.current.provider)
 
       const userInfo = await getUserInfo()
+      console.log('Logged In User info:', userInfo)
       const isRegistered = await checkUserRegistration(userInfo.publicKey)
-
+      console.log('Logged In User is registered:', isRegistered)
       if (isRegistered) {
         const { data } = await loginUserMutation({
           variables: {
@@ -215,7 +221,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             password: userInfo.publicKey,
           },
         })
-
+        console.log('User is registered:', data)
         if (data?.login) {
           const { token, user } = data.login
           localStorage.setItem('authToken', token)
@@ -305,8 +311,28 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [client, router, toast])
 
   useEffect(() => {
-    initialize()
-  }, [initialize])
+    const initAuth = async () => {
+      // First check if we have auth state in the store
+      const storedAuth = useAuthStore.getState();
+      
+      if (storedAuth.authToken && storedAuth.currentUser) {
+        setState((prev) => ({
+          ...prev,
+          user: storedAuth.currentUser,
+          isAuthenticated: true,
+          loading: false,
+        }));
+        return;
+      }
+      
+      // If no stored state, then check token and run normal auth check
+      await checkAuth();
+    };
+  
+    initialize().then(() => {
+      initAuth();
+    });
+  }, [initialize, checkAuth]);
 
   useEffect(() => {
     if (web3auth.current?.connected && !state.user) {

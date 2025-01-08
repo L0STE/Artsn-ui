@@ -52,7 +52,9 @@ export default function StripeSuccess() {
 
   const verifyPayment = useCallback(
     async (params: PaymentParams) => {
-      const token = localStorage.getItem('authToken')
+      const storedAuth = useAuthStore.getState();
+      const token = storedAuth.authToken
+      console.log('Token:', token)
 
       if (!token) {
         throw new Error('Authentication required')
@@ -140,7 +142,9 @@ export default function StripeSuccess() {
   // Single useEffect for auth rehydration
   useEffect(() => {
     const checkAuthStatus = async () => {
-      const token = localStorage.getItem('authToken')
+      const storedAuth = useAuthStore.getState();
+      const token = storedAuth.authToken
+      console.log('Token:', token)
 
       if (!token) {
         router.push('/login')

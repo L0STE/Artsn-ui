@@ -32,14 +32,14 @@ import RPC from '@/components/blockchain/solana-rpc'
 
 interface RegisterFormProps {
   initialData: {
-    publicKey: string;
+    publicKey: string
     userInfo: {
-      email?: string;
-      name?: string;
-      profileImage?: string;
-    };
-  };
-  onClose: () => void;
+      email?: string
+      name?: string
+      profileImage?: string
+    }
+  }
+  onClose: () => void
 }
 
 export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
@@ -54,7 +54,7 @@ export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
     loading: web3Loading,
     injectedAdapters,
     login,
-    loginWithAdapter
+    loginWithAdapter,
   } = useWeb3Auth()
 
   // GraphQL mutations and queries
@@ -74,47 +74,59 @@ export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
     plan: '',
   })
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? Date.now() : value
+      [name]: type === 'checkbox' ? Date.now() : value,
     }))
   }
 
-  const handleLogin = useCallback(async (adapterName: string) => {
-    try {
-      await loginWithAdapter(adapterName)
-      toast({
-        title: 'Connected',
-        description: 'Successfully connected wallet'
-      })
-    } catch (error) {
-      console.error('Login error:', error)
-      toast({
-        title: 'Connection Failed',
-        description: 'Failed to connect wallet',
-        variant: 'destructive'
-      })
-    }
-  }, [loginWithAdapter, toast])
+  const handleLogin = useCallback(
+    async (adapterName: string) => {
+      try {
+        await loginWithAdapter(adapterName)
+        toast({
+          title: 'Connected',
+          description: 'Successfully connected wallet',
+        })
+      } catch (error) {
+        console.error('Login error:', error)
+        toast({
+          title: 'Connection Failed',
+          description: 'Failed to connect wallet',
+          variant: 'destructive',
+        })
+      }
+    },
+    [loginWithAdapter, toast]
+  )
 
   const handleRegistration = async () => {
-    if (!formData.firstName || !formData.lastName || !formData.country || !formData.publicKey) {
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.country ||
+      !formData.publicKey
+    ) {
       toast({
         title: 'Missing Information',
-        description: 'Please fill in all required fields and connect your wallet',
-        variant: 'destructive'
+        description:
+          'Please fill in all required fields and connect your wallet',
+        variant: 'destructive',
       })
       return
     }
-  
+
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'
       const response = await fetch(`${baseUrl}/api/auth/register`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           email: formData.email,
@@ -123,72 +135,50 @@ export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
           firstName: formData.firstName,
           lastName: formData.lastName,
           country: formData.country,
-          profilePictureUrl: initialData?.userInfo?.profileImage || ''
-        })
+          profilePictureUrl: initialData?.userInfo?.profileImage || '',
+        }),
       })
-  
+
       const data = await response.json()
-  
+
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed')
       }
 
-      // export interface User {
-      //   _id?: string
-      //   uuid: string
-      //   email: string
-      //   username: string
-      //   publicKey: string
-      //   firstName?: string
-      //   lastName?: string
-      //   investorInfo?: any
-      //   baseProfile?: any
-      //   createdAt: string
-      //   updatedAt: string
-      //   lastLogin?: string
-      //   isActive: boolean
-      //   isVerified: boolean
-      //   role: string
-      //   verificationToken?: string
-      //   solanaTransactionId?: string
-      //   phoneNumber?: string
-      //   kycInfo?: any
-      // }
-  
       setCurrentUser({
-              _id: data.userId,
-              uuid: data.uuid,
-              publicKey: formData.publicKey,
-              email: formData.email,
-              firstName: formData.firstName,
-              lastName: formData.lastName,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              username: `user_${formData.publicKey.slice(-4)}`,
-              isActive: true,
-              isVerified: false,
-              role: 'USER',
-              baseProfile: {
-                displayName: `${formData.firstName} ${formData.lastName}`,
-                displayRole: 'USER',
-                photoUrl: initialData?.userInfo?.profileImage || '',
-                bio: ''
-              }
-            })
-  
+        _id: data.userId,
+        uuid: data.uuid,
+        publicKey: formData.publicKey,
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        username: `user_${formData.publicKey.slice(-4)}`,
+        isActive: true,
+        isVerified: false,
+        role: 'USER',
+        baseProfile: {
+          displayName: `${formData.firstName} ${formData.lastName}`,
+          displayRole: 'USER',
+          photoUrl: initialData?.userInfo?.profileImage || '',
+          bio: '',
+        },
+      })
+
       toast({
         title: 'Registration Successful',
-        description: 'Your account has been created successfully'
+        description: 'Your account has been created successfully',
       })
-  
+
       setStep(2)
-  
     } catch (error) {
       console.error('Registration error:', error)
       toast({
         title: 'Registration Failed',
-        description: error instanceof Error ? error.message : 'Failed to register user',
-        variant: 'destructive'
+        description:
+          error instanceof Error ? error.message : 'Failed to register user',
+        variant: 'destructive',
       })
     }
   }
@@ -207,7 +197,7 @@ export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
         >
           Close
         </Button>
-        
+
         <Progress
           className="my-6 w-full rounded-full bg-gradient-to-r from-primary to-secondary shadow-sm"
           value={step === 1 ? 50 : 100}
@@ -216,8 +206,10 @@ export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
         {step === 1 ? (
           <div className="flex flex-row gap-6">
             <Card className="flex w-full flex-col border-none bg-primary p-8 text-secondary md:w-1/2">
-              <h3 className="mb-4 text-xl font-bold">FILL YOUR ACCOUNT INFORMATION</h3>
-              
+              <h3 className="mb-4 text-xl font-bold">
+                FILL YOUR ACCOUNT INFORMATION
+              </h3>
+
               <div className="mb-4 flex flex-col gap-4">
                 <input
                   type="text"
@@ -228,7 +220,7 @@ export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
                   className="rounded border p-2"
                   required
                 />
-                
+
                 <input
                   type="text"
                   name="lastName"
@@ -238,7 +230,7 @@ export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
                   className="rounded border p-2"
                   required
                 />
-                
+
                 <select
                   name="country"
                   value={formData.country}
@@ -265,7 +257,7 @@ export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
                     >
                       Google
                     </Button>
-                    
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
@@ -275,33 +267,38 @@ export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
                         >
                           Connect Wallet
                           <div className="ml-2 flex">
-                            {['phantom', 'solflare', 'backpack', 'ledger'].map(icon => (
-                              <img
-                                key={icon}
-                                src={`/login/${icon}_icon.svg`}
-                                alt={icon}
-                                className="h-5 w-5"
-                              />
-                            ))}
+                            {['phantom', 'solflare', 'backpack', 'ledger'].map(
+                              (icon) => (
+                                <img
+                                  key={icon}
+                                  src={`/login/${icon}_icon.svg`}
+                                  alt={icon}
+                                  className="h-5 w-5"
+                                />
+                              )
+                            )}
                           </div>
                         </Button>
                       </DropdownMenuTrigger>
-                      
+
                       <DropdownMenuContent className="z-[201] w-56">
                         <DropdownMenuGroup>
-                          {injectedAdapters?.map((adapter: IAdapter<unknown>) => (
-                            <DropdownMenuItem
-                              key={adapter.name}
-                              onClick={() => handleLogin(adapter.name)}
-                            >
-                              <img
-                                src={`/login/${adapter.name.toLowerCase()}_icon.svg`}
-                                alt={adapter.name}
-                                className="mr-2 h-5 w-5"
-                              />
-                              {adapter.name.charAt(0).toUpperCase() + adapter.name.slice(1)}
-                            </DropdownMenuItem>
-                          ))}
+                          {injectedAdapters?.map(
+                            (adapter: IAdapter<unknown>) => (
+                              <DropdownMenuItem
+                                key={adapter.name}
+                                onClick={() => handleLogin(adapter.name)}
+                              >
+                                <img
+                                  src={`/login/${adapter.name.toLowerCase()}_icon.svg`}
+                                  alt={adapter.name}
+                                  className="mr-2 h-5 w-5"
+                                />
+                                {adapter.name.charAt(0).toUpperCase() +
+                                  adapter.name.slice(1)}
+                              </DropdownMenuItem>
+                            )
+                          )}
                         </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -316,7 +313,7 @@ export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
               >
                 Next
               </Button>
-              
+
               <div className="mt-4 text-sm text-gray-600">
                 By continuing, you agree to our Terms and Conditions.
               </div>
@@ -340,18 +337,19 @@ export function RegisterForm({ initialData, onClose }: RegisterFormProps) {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500">
                 <Check className="h-8 w-8 text-white" />
               </div>
-              
+
               <h3 className="mb-4 text-2xl font-bold">Congratulations!</h3>
               <p className="mb-4">Your account has been created</p>
-              
+
               {formData.publicKey && (
                 <p className="mb-4">
                   <strong>
-                    Wallet: {formData.publicKey.slice(0, 4)}...{formData.publicKey.slice(-4)}
+                    Wallet: {formData.publicKey.slice(0, 4)}...
+                    {formData.publicKey.slice(-4)}
                   </strong>
                 </p>
               )}
-              
+
               <Button
                 onClick={() => {
                   onClose()

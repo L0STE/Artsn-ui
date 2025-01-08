@@ -1,3 +1,4 @@
+//components/dashboard/Dashboard.tsx
 'use client'
 import { Suspense, useState, useEffect, useMemo } from 'react'
 import { Binoculars } from 'lucide-react'
@@ -43,9 +44,10 @@ import { useSolanaPrice } from '@/hooks/use-solana-price'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { HeliusMplCoreAsset } from '@/types'
 import { rpcManager } from '@/lib/rpc/rpc-manager'
+
 const SolanaRPC = rpcManager.getConnection()
 // Dynamically import Joyride with ssr disabled
-const Joyride = dynamic(() => import('react-joyride'), { 
+const Joyride = dynamic(() => import('react-joyride'), {
   ssr: false,
   loading: () => <LoadingSpinner />,
 })
@@ -219,16 +221,18 @@ export default function DashboardFeature() {
       console.log('user assets', assets)
       setUserAssets(assets)
       const listingArray: any[] = []
-  
+
       for (let i = 0; i < assets.length; i++) {
         try {
-          const listing = await getListingByWatch(assets[i].grouping[0].group_value)
+          const listing = await getListingByWatch(
+            assets[i].grouping[0].group_value
+          )
           if (!listing) continue
-          
+
           const existingIndex = listingArray.findIndex(
             (item) => item.associatedId === listing.listing
           )
-          
+
           if (existingIndex !== -1) {
             listingArray[existingIndex].quantity += 1
           } else {
@@ -244,7 +248,7 @@ export default function DashboardFeature() {
           continue // Skip this listing but continue processing others
         }
       }
-      
+
       setFractions(listingArray)
     } catch (error) {
       console.error('Error fetching user assets:', error)
@@ -261,7 +265,7 @@ export default function DashboardFeature() {
   useEffect(() => {
     const initializeDashboard = async () => {
       setIsMounted(true)
-      
+
       // Handle tour logic
       try {
         const artisanTour = localStorage.getItem('artisanTour')
@@ -274,7 +278,7 @@ export default function DashboardFeature() {
         } else {
           const { completed, date } = JSON.parse(artisanTour)
           const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-          
+
           if (!completed || (completed && new Date(date) < sevenDaysAgo)) {
             setRunTour(true)
           } else {
@@ -288,7 +292,7 @@ export default function DashboardFeature() {
         setRunTour(false)
       }
     }
-  
+
     initializeDashboard()
   }, [])
 
@@ -302,10 +306,7 @@ export default function DashboardFeature() {
 
       console.log('Fetching user data')
       try {
-        await Promise.all([
-          fetchUserAssets(authUser.publicKey),
-          getBalance(),
-        ])
+        await Promise.all([fetchUserAssets(authUser.publicKey), getBalance()])
       } catch (error) {
         console.error('Error initializing user data:', error)
         toast({

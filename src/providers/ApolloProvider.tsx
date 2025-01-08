@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuthStore } from '@/lib/stores/useAuthStore'
 import {
   ApolloProvider,
   ApolloClient,
@@ -32,9 +33,9 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 
 // Auth link for adding token
 const authLink = setContext((_, { headers }) => {
-  // Get the authentication token from local storage if it exists
-  const token = localStorage.getItem('authToken')
-
+  const storedAuth = useAuthStore.getState();
+  const token = storedAuth.authToken
+  console.log('Token:', token)
   // Return the headers to the context so httpLink can read them
   return {
     headers: {

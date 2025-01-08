@@ -86,7 +86,6 @@ export const userResolvers: IResolvers<any, Context> = {
           { expiresIn: '24h' }
         )
 
-        console.log('Login successful, token generated')
         return {
           token,
           user: {

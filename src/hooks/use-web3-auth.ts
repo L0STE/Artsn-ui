@@ -9,8 +9,11 @@ import {
   IWeb3AuthCoreOptions,
   IAdapter,
 } from '@web3auth/base'
-import { WalletConnectModal } from "@walletconnect/modal";
-import { WalletConnectV2Adapter, getWalletConnectV2Settings } from "@web3auth/wallet-connect-v2-adapter";
+import { WalletConnectModal } from '@walletconnect/modal'
+import {
+  WalletConnectV2Adapter,
+  getWalletConnectV2Settings,
+} from '@web3auth/wallet-connect-v2-adapter'
 import { getInjectedAdapters } from '@web3auth/default-solana-adapter'
 import { SolanaPrivateKeyProvider } from '@web3auth/solana-provider'
 import { Web3AuthNoModal } from '@web3auth/no-modal'
@@ -36,8 +39,8 @@ interface RPCFunctions {
 export const useWeb3Auth = () => {
   const [loginUserMutation] = useMutation(LOGIN_USER)
   const { toast } = useToast()
-  const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
-  const [provider, setProvider] = useState<IProvider | null>(null);
+  const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null)
+  const [provider, setProvider] = useState<IProvider | null>(null)
 
   // Auth store state and actions
   const {
@@ -59,70 +62,150 @@ export const useWeb3Auth = () => {
     return new RPC(provider)
   }, [provider])
 
+  // const init = async () => {
+  //   try {
+  //     const chainConfig = {
+  //       chainNamespace: CHAIN_NAMESPACES.SOLANA,
+  //       chainId: '0x3', // Please use 0x1 for Mainnet, 0x2 for Testnet, 0x3 for Devnet
+  //       rpcTarget: 'https://api.devnet.solana.com',
+  //       displayName: 'Solana Devnet',
+  //       blockExplorerUrl: 'https://explorer.solana.com',
+  //       ticker: 'SOL',
+  //       tickerName: 'Solana Token',
+  //       logo: '',
+  //     }
+
+  //     const privateKeyProvider = new SolanaPrivateKeyProvider({
+  //       config: { chainConfig },
+  //     })
+
+  //     const web3authOptions: IWeb3AuthCoreOptions = {
+  //       clientId,
+  //       privateKeyProvider,
+  //       web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+  //     }
+  //     const web3auth = new Web3AuthNoModal(web3authOptions)
+
+  //     setWeb3auth(web3auth)
+
+  //     const authAdapter = new AuthAdapter({
+  //       privateKeyProvider,
+  //       adapterSettings: {
+  //         uxMode: UX_MODE.REDIRECT,
+  //       },
+  //     })
+  //     web3auth.configureAdapter(authAdapter)
+
+  //     // adding wallet connect v2 adapter
+  //     // const defaultWcSettings = await getWalletConnectV2Settings(CHAIN_NAMESPACES.SOLANA, ["0x3"], clientId);
+  //     // const walletConnectModal = new WalletConnectModal({ projectId: clientId });
+  //     // const walletConnectV2Adapter = new WalletConnectV2Adapter({
+  //     //   adapterSettings: {
+  //     //     qrcodeModal: walletConnectModal,
+  //     //     ...defaultWcSettings.adapterSettings,
+  //     //   },
+  //     //   loginSettings: { ...defaultWcSettings.loginSettings },
+  //     // });
+  //     // web3auth.configureAdapter(walletConnectV2Adapter);
+
+  //     injectedAdapters = getInjectedAdapters({ options: web3authOptions })
+  //     injectedAdapters.forEach((adapter) => {
+  //       web3auth.configureAdapter(adapter)
+  //     })
+
+  //     await web3auth.init()
+  //     setProvider(web3auth.provider)
+  //   } catch (error) {
+  //     console.error(error)
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   init()
+  // }, [])
+
   const init = async () => {
+    console.log('Initializing Web3Auth')
+    setLoading(true)
     try {
       const chainConfig = {
         chainNamespace: CHAIN_NAMESPACES.SOLANA,
-        chainId: "0x3", // Please use 0x1 for Mainnet, 0x2 for Testnet, 0x3 for Devnet
-        rpcTarget: "https://api.devnet.solana.com",
-        displayName: "Solana Devnet",
-        blockExplorerUrl: "https://explorer.solana.com",
-        ticker: "SOL",
-        tickerName: "Solana Token",
-        logo: "",
-      };
+        chainId: '0x3', // Please use 0x1 for Mainnet, 0x2 for Testnet, 0x3 for Devnet
+        rpcTarget: 'https://api.devnet.solana.com',
+        displayName: 'Solana Devnet',
+        blockExplorerUrl: 'https://explorer.solana.com',
+        ticker: 'SOL',
+        tickerName: 'Solana Token',
+        logo: '',
+      }
 
-      const privateKeyProvider = new SolanaPrivateKeyProvider({ config: { chainConfig } });
+      const privateKeyProvider = new SolanaPrivateKeyProvider({
+        config: { chainConfig },
+      })
 
       const web3authOptions: IWeb3AuthCoreOptions = {
         clientId,
         privateKeyProvider,
         web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
-      };
-      const web3auth = new Web3AuthNoModal(web3authOptions);
-
-      setWeb3auth(web3auth);
+      }
+      const web3auth = new Web3AuthNoModal(web3authOptions)
+      
+      setWeb3auth(web3auth)
 
       const authAdapter = new AuthAdapter({
         privateKeyProvider,
         adapterSettings: {
           uxMode: UX_MODE.REDIRECT,
         },
-      });
-      web3auth.configureAdapter(authAdapter);
+      })
+      web3auth.configureAdapter(authAdapter)
 
-      // adding wallet connect v2 adapter
-      // const defaultWcSettings = await getWalletConnectV2Settings(CHAIN_NAMESPACES.SOLANA, ["0x3"], clientId);
-      // const walletConnectModal = new WalletConnectModal({ projectId: clientId });
-      // const walletConnectV2Adapter = new WalletConnectV2Adapter({
-      //   adapterSettings: {
-      //     qrcodeModal: walletConnectModal,
-      //     ...defaultWcSettings.adapterSettings,
-      //   },
-      //   loginSettings: { ...defaultWcSettings.loginSettings },
-      // });
-      // web3auth.configureAdapter(walletConnectV2Adapter);
-
-      injectedAdapters = getInjectedAdapters({ options: web3authOptions });
+      injectedAdapters = getInjectedAdapters({ options: web3authOptions })
       injectedAdapters.forEach((adapter) => {
-        web3auth.configureAdapter(adapter);
-      });
+        web3auth.configureAdapter(adapter)
+      })
 
-      await web3auth.init();
-      setProvider(web3auth.provider);
+      await web3auth.init()
+      console.log('Web3Auth initialized')
+
+      // Check for existing connection after initialization
+      if (web3auth.connected) {
+        console.log('Found existing Web3Auth connection')
+        const web3authProvider = web3auth.provider
+        setProvider(web3authProvider)
+        
+        setWeb3AuthState({
+          provider: web3authProvider,
+          loggedIn: true,
+        })
+
+        // Handle post-connection flow for existing connection
+        try {
+          await handlePostConnection(web3auth)
+          console.log('Successfully processed existing connection')
+        } catch (error) {
+          console.error('Error handling existing connection:', error)
+          // Even if post-connection fails, keep the provider state
+          // as user might still be able to perform some operations
+        }
+      }
     } catch (error) {
-      console.error(error);
+      console.error('Error initializing Web3Auth:', error)
+      setStoreError(error as Error)
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    init();
-  }, []);
+    init()
+  }, [])
 
   const handlePostConnection = async (web3authInstance: Web3AuthNoModal) => {
     const rpc = new RPC(web3authInstance.provider!)
     const accounts = await rpc.getAccounts()
     const publicKey = accounts[0]
+    console.log('publicKey', publicKey)
     const { idToken } = await web3authInstance.authenticateUser()
     const user = await web3authInstance.getUserInfo()
 
@@ -153,6 +236,7 @@ export const useWeb3Auth = () => {
   }
 
   const login = useCallback(async () => {
+    console.log('attempting login with email')
     if (!web3auth) {
       console.log('Web3Auth not initialized')
       return
@@ -163,18 +247,20 @@ export const useWeb3Auth = () => {
 
       if (web3auth?.connected) {
         const userInfo = await getUserInfo()
+        await handlePostConnection(web3auth!)
+        console.log('user connected', userInfo)
         return userInfo
       }
-
+      console.log('user not connected, connecting with google')
       const web3authProvider = await web3auth!.connectTo(WALLET_ADAPTERS.AUTH, {
         loginProvider: 'google',
       })
-
+      console.log('web3authProvider', web3authProvider)
       setWeb3AuthState({
         provider: web3authProvider,
         loggedIn: true,
       })
-
+      console.log('processing post connection')
       await handlePostConnection(web3auth!)
       return await getUserInfo()
     } catch (error) {
@@ -237,74 +323,85 @@ export const useWeb3Auth = () => {
               isUserRegistered(publicKey: $publicKey)
             }
           `,
-          variables: { publicKey }
+          variables: { publicKey },
         }),
-      });
-  
-      const data = await response.json();
-      return data.data?.isUserRegistered || false;
-    } catch (error) {
-      console.error('Error checking registration:', error);
-      return false;
-    }
-  };
+      })
 
-  const loginWithAdapter = useCallback(async (adapterName: string) => {
-    if (!web3auth) {
-      console.error("Web3Auth not initialized");
-      return;
-    }
-  
-    try {
-      setLoading(true);
-      
-      const web3authProvider = await web3auth.connectTo(adapterName);
-      
-      if (!web3authProvider) {
-        throw new Error('Failed to get provider from adapter');
-      }
-  
-      const userInfo = await web3auth.getUserInfo();
-      const rpc = new RPC(web3authProvider);
-      const accounts = await rpc.getAccounts();
-      const publicKey = accounts[0];
-  
-      // Check if user is registered
-      const isRegistered = await checkUserRegistration(publicKey);
-      
-      if (!isRegistered) {
-        // Store auth info temporarily
-        sessionStorage.setItem('pendingRegistration', JSON.stringify({
-          publicKey,
-          userInfo
-        }));
-        
-        // Redirect to registration
-        window.location.href = '/register';
-        return;
-      }
-  
-      // Continue with normal login flow for registered users
-      setWeb3AuthState({
-        provider: web3authProvider,
-        loggedIn: true
-      });
-  
-      await handlePostConnection(web3auth);
-  
-      return {
-        ...userInfo,
-        publicKey
-      };
-  
+      const data = await response.json()
+      return data.data?.isUserRegistered || false
     } catch (error) {
-      console.error('Adapter login error:', error);
-      setStoreError(error as Error);
-      throw error;
-    } finally {
-      setLoading(false);
+      console.error('Error checking registration:', error)
+      return false
     }
-  }, [web3auth, setLoading, setWeb3AuthState, setStoreError, handlePostConnection]);
+  }
+
+  const loginWithAdapter = useCallback(
+    async (adapterName: string) => {
+      if (!web3auth) {
+        console.error('Web3Auth not initialized')
+        return
+      }
+
+      try {
+        setLoading(true)
+
+        const web3authProvider = await web3auth.connectTo(adapterName)
+
+        if (!web3authProvider) {
+          throw new Error('Failed to get provider from adapter')
+        }
+
+        const userInfo = await web3auth.getUserInfo()
+        const rpc = new RPC(web3authProvider)
+        const accounts = await rpc.getAccounts()
+        const publicKey = accounts[0]
+
+        // Check if user is registered
+        const isRegistered = await checkUserRegistration(publicKey)
+
+        if (!isRegistered) {
+          // Store auth info temporarily
+          sessionStorage.setItem(
+            'pendingRegistration',
+            JSON.stringify({
+              publicKey,
+              userInfo,
+            })
+          )
+
+          // Redirect to registration
+          window.location.href = '/register'
+          return
+        }
+
+        // Continue with normal login flow for registered users
+        setWeb3AuthState({
+          provider: web3authProvider,
+          loggedIn: true,
+        })
+
+        await handlePostConnection(web3auth)
+
+        return {
+          ...userInfo,
+          publicKey,
+        }
+      } catch (error) {
+        console.error('Adapter login error:', error)
+        setStoreError(error as Error)
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+    [
+      web3auth,
+      setLoading,
+      setWeb3AuthState,
+      setStoreError,
+      handlePostConnection,
+    ]
+  )
 
   // Transaction signing utility
   const signTransaction = useCallback(
