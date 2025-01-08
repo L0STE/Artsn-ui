@@ -177,6 +177,7 @@ export const fetchObjectDetails = async (
 ): Promise<CollectionV1 | undefined> => {
   try {
     const objectKey = publicKey(object)
+    console.log('fetching object details for ->', objectKey)
     const _obj = await fetchCollectionV1(umi, objectKey)
 
     return _obj as CollectionV1

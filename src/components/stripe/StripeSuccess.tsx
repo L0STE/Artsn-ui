@@ -297,7 +297,11 @@ export default function StripeSuccess() {
   if (authLoading || web3Loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <LoadingSpinner />
+        <h2 className="mb-4 text-xl font-semibold">
+          {processingState.hasProcessed
+            ? 'Purchase Complete!'
+            : 'Processing your purchase...'}
+        </h2>
       </div>
     )
   }

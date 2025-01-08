@@ -13,6 +13,7 @@ import { useAuthStore } from '@/lib/stores/useAuthStore'
 import { usePaymentStore } from '@/lib/stores/usePaymentStore'
 import { useToast } from '@/hooks/use-toast'
 import { LoginSecondary } from '@/components/login/LoginSecondary'
+import { useRateLimitedBalance } from '@/hooks/use-rate-limited-balance'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,15 +57,15 @@ export default function AssetInfo({ asset }: { asset: AssetInfo }) {
   const router = useRouter()
   const { toast } = useToast()
   const { handleCopy, copied } = useHandleShare()
-
+  
   // Auth store
   const { currentUser } = useAuthStore()
-
+  const { isLoading: balanceLoading } = useRateLimitedBalance(currentUser?.publicKey);
   // Payment store - only use balance, not setBalance
   const { balance } = usePaymentStore()
-
+  console.log('USER BALANCE', balance)
   // Web3 utilities
-  const { rpc, getBalance, signTransaction } = useWeb3()
+  const { rpc, signTransaction } = useWeb3()
 
   // Local state
   const [amount, setAmount] = useState(1)
@@ -77,32 +78,32 @@ export default function AssetInfo({ asset }: { asset: AssetInfo }) {
   const decrement = () => amount > 1 && setAmount(amount - 1)
 
   // Memoized balance fetcher
-  const fetchBalance = useCallback(async () => {
-    if (!currentUser?.publicKey || !rpc || !getBalance) return
+  // const fetchBalance = useCallback(async () => {
+  //   if (!currentUser?.publicKey || !rpc || !getBalance) return
 
-    try {
-      const newBalance = await getBalance()
-      // Instead of using payment store, handle balance updates through the Web3 provider
-      if (newBalance) {
-        // Only update if balance has changed
-        if (JSON.stringify(newBalance) !== JSON.stringify(balance)) {
-          // Update balance through proper store action/dispatch
-          usePaymentStore.getState().setBalance(newBalance)
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching balance:', error)
-    }
-  }, [currentUser?.publicKey, rpc, getBalance])
+  //   try {
+  //     const newBalance = await getBalance()
+  //     // Instead of using payment store, handle balance updates through the Web3 provider
+  //     if (newBalance) {
+  //       // Only update if balance has changed
+  //       if (JSON.stringify(newBalance) !== JSON.stringify(balance)) {
+  //         // Update balance through proper store action/dispatch
+  //         usePaymentStore.getState().setBalance(newBalance)
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching balance:', error)
+  //   }
+  // }, [currentUser?.publicKey, rpc, getBalance])
 
-  // Single effect for initial balance fetch
-  useEffect(() => {
-    fetchBalance()
-    // Set up polling interval for balance updates
-    const intervalId = setInterval(fetchBalance, 30000) // Poll every 30 seconds
+  // // Single effect for initial balance fetch
+  // useEffect(() => {
+  //   fetchBalance()
+  //   // Set up polling interval for balance updates
+  //   const intervalId = setInterval(fetchBalance, 30000) // Poll every 30 seconds
 
-    return () => clearInterval(intervalId)
-  }, [fetchBalance])
+  //   return () => clearInterval(intervalId)
+  // }, [fetchBalance])
 
   // Buy with crypto - Memoized to prevent recreations
   const buyTx = useCallback(async () => {
@@ -162,8 +163,6 @@ export default function AssetInfo({ asset }: { asset: AssetInfo }) {
       })
 
       setIsComplete(true)
-      // Fetch updated balance after successful transaction
-      await fetchBalance()
     } catch (error) {
       console.error('Buy transaction failed:', error)
       toast({
@@ -178,7 +177,7 @@ export default function AssetInfo({ asset }: { asset: AssetInfo }) {
       setIsBuying(false)
       setIsProcessing(false)
     }
-  }, [isBuying, rpc, currentUser, buyTx, signTransaction, toast, fetchBalance])
+  }, [isBuying, rpc, currentUser, buyTx, signTransaction, toast])
 
   // Buy with Stripe
   const asyncStripe = loadStripe(

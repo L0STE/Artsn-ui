@@ -70,19 +70,19 @@ export default function DashboardFeature() {
 
   const { toast } = useToast()
   const rpc = provider ? new RPC(provider) : null
-  const getBalance = async () => {
-    try {
-      if (!rpc) {
-        throw new Error('RPC provider is not available')
-      }
-      const balance = await rpc.getBalance()
-      console.log('balance', balance)
-      setUserBalance(balance)
-      return balance
-    } catch (error) {
-      console.error('Error fetching balance', error)
-    }
-  }
+  // const getBalance = async () => {
+  //   try {
+  //     if (!rpc) {
+  //       throw new Error('RPC provider is not available')
+  //     }
+  //     const balance = await rpc.getBalance()
+  //     console.log('balance', balance)
+  //     setUserBalance(balance)
+  //     return balance
+  //   } catch (error) {
+  //     console.error('Error fetching balance', error)
+  //   }
+  // }
 
   const user = useMemo(() => {
     if (!authUser) {
@@ -306,7 +306,7 @@ export default function DashboardFeature() {
 
       console.log('Fetching user data')
       try {
-        await Promise.all([fetchUserAssets(authUser.publicKey), getBalance()])
+        await Promise.all([fetchUserAssets(authUser.publicKey)])
       } catch (error) {
         console.error('Error initializing user data:', error)
         toast({
